@@ -1,7 +1,8 @@
 import express from 'express';
 import { loginAdmin,getAdminDashboard,createTest } from '../controllers/adminController.js';
-import { getAllTests,getTestById,generateTestCode,publishTest,unpublishTest,activateTest,endTest,deleteTest,getTestParticipants,cloneTest } from '../controllers/adminController.js';
+import { getAllTests,getTestById,publishTest,unpublishTest,activateTest,endTest,deleteTest,getTestParticipants,cloneTest } from '../controllers/adminController.js';
 import {getTestForEdit,updateTestInfo,addQuestion,deleteQuestion,updateQuestion,reorderQuestions,getSkillCategories} from '../controllers/adminController.js';
+import {getTestDetails,getTestQuestions,generateTestCode,archiveTest,getTestAnalytics } from '../controllers/adminController.js';
 import { authMiddleware,isAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -15,20 +16,12 @@ router.get('/manage-tests/',authMiddleware, isAdmin, getAllTests);
 // Get single test by ID
 router.get('/manage-tests/:id',authMiddleware, isAdmin, getTestById);
 
-// Generate test code
-router.post('/manage-tests/:id/generate-code',authMiddleware, isAdmin, generateTestCode);
-
 // Test state management
 router.put('/manage-tests/:id/publish',authMiddleware, isAdmin, publishTest);
 router.put('/manage-tests/:id/unpublish',authMiddleware, isAdmin, unpublishTest);
-router.put('/manage-tests/:id/activate',authMiddleware, isAdmin, activateTest);
-router.put('/manage-tests/:id/end',authMiddleware, isAdmin, endTest);
 
 // Delete test
 router.delete('/manage-tests/:id',authMiddleware, isAdmin, deleteTest);
-
-// Get test participants
-router.get('/manage-tests/:id/participants',authMiddleware, isAdmin, getTestParticipants);
 
 // Clone test
 router.post('/manage-tests/:id/clone',authMiddleware, isAdmin, cloneTest);
@@ -41,5 +34,16 @@ router.put('/tests/:id/questions/:questionId',authMiddleware, isAdmin, updateQue
 router.delete('/tests/:id/questions/:questionId',authMiddleware, isAdmin, deleteQuestion);
 router.put('/tests/:id/questions/reorder',authMiddleware, isAdmin, reorderQuestions);
 router.get('/skill-categories',authMiddleware, isAdmin, getSkillCategories);
+
+router.get('/tests/:id',authMiddleware, isAdmin, getTestDetails);              // GET test details
+router.get('/tests/:id/questions',authMiddleware, isAdmin, getTestQuestions);         // GET test questions
+router.get('/tests/:id/participants',authMiddleware, isAdmin, getTestParticipants);   // GET test participants
+router.get('/tests/:id/analytics',authMiddleware, isAdmin, getTestAnalytics);   
+
+router.post('/tests/:id/generate-code',authMiddleware, isAdmin, generateTestCode);    // POST generate test code
+router.put('/tests/:id/activate',authMiddleware, isAdmin, activateTest);             // PUT activate test
+router.put('/tests/:id/end',authMiddleware, isAdmin, endTest);                       // PUT end test
+router.put('/tests/:id/archive',authMiddleware, isAdmin, archiveTest);               // PUT archive test
+
 
 export default router;

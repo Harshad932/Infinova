@@ -6,14 +6,10 @@ const ManageTests = () => {
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTest, setSelectedTest] = useState(null);
-  const [showCodeModal, setShowCodeModal] = useState(false);
-  const [generatedCode, setGeneratedCode] = useState('');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [showParticipantsModal, setShowParticipantsModal] = useState(false);
-  const [participants, setParticipants] = useState([]);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({});
@@ -65,7 +61,15 @@ const ManageTests = () => {
       }
 
       const data = await response.json();
-      setTests(data.tests || []);
+      const processedTests = (data.tests || []).map(test => {
+        let status = 'draft';
+        if (test.isTestEnded) status = 'completed';
+        else if (test.isActive) status = 'active';
+        else if (test.isPublished) status = 'published';
+
+        return { ...test, status };
+      });
+      setTests(processedTests || []);
       setPagination(data.pagination || {});
     } catch (error) {
       console.error('Error fetching tests:', error);
@@ -102,33 +106,19 @@ const ManageTests = () => {
     }
   }, [filterStatus]);
 
-  const generateTestCode = async (testId) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/admin/manage-tests/${testId}/generate-code`, {
-        method: 'POST',
-        headers: getApiHeaders()
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate test code');
-      }
-
-      const data = await response.json();
-      setGeneratedCode(data.testCode);
-      setSelectedTest(testId);
-      setShowCodeModal(true);
-      
-      // Update the test in local state
-      setTests(prev => prev.map(test => 
-        test.id === testId ? { ...test, testCode: data.testCode } : test
-      ));
-    } catch (error) {
-      console.error('Error generating test code:', error);
-      setError('Failed to generate test code. Please try again.');
+  // Handle card click - navigate to test detail page if published
+  const handleTestCardClick = (test) => {
+    // Navigate to test detail page if test is published or active
+    if (test.isPublished || test.isActive) {
+      navigate(`/admin/test-detail/${test.id}`);
     }
   };
 
-  const handleConfirmAction = (action, testId) => {
+  const handleConfirmAction = (action, testId, event) => {
+    // Prevent card click when clicking action buttons
+    if (event) {
+      event.stopPropagation();
+    }
     setConfirmAction({ action, testId });
     setShowConfirmModal(true);
   };
@@ -140,12 +130,6 @@ const ManageTests = () => {
       let response;
       
       switch(action) {
-        case 'activate':
-          response = await fetch(`${API_BASE_URL}/admin/manage-tests/${testId}/activate`, {
-            method: 'PUT',
-            headers: getApiHeaders()
-          });
-          break;
         case 'publish':
           response = await fetch(`${API_BASE_URL}/admin/manage-tests/${testId}/publish`, {
             method: 'PUT',
@@ -154,12 +138,6 @@ const ManageTests = () => {
           break;
         case 'unpublish':
           response = await fetch(`${API_BASE_URL}/admin/manage-tests/${testId}/unpublish`, {
-            method: 'PUT',
-            headers: getApiHeaders()
-          });
-          break;
-        case 'endTest':
-          response = await fetch(`${API_BASE_URL}/admin/manage-tests/${testId}/end`, {
             method: 'PUT',
             headers: getApiHeaders()
           });
@@ -191,27 +169,6 @@ const ManageTests = () => {
     setConfirmAction(null);
   };
 
-  const viewParticipants = async (testId) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/admin/manage-tests/${testId}/participants`, {
-        method: 'GET',
-        headers: getApiHeaders()
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch participants');
-      }
-
-      const data = await response.json();
-      setParticipants(data.participants || []);
-      setSelectedTest(testId);
-      setShowParticipantsModal(true);
-    } catch (error) {
-      console.error('Error fetching participants:', error);
-      setError('Failed to fetch participants. Please try again.');
-    }
-  };
-
   const getStatusBadge = (status) => {
     switch(status) {
       case 'draft': return 'status-draft';
@@ -241,13 +198,12 @@ const ManageTests = () => {
     });
   };
 
-  const getParticipantStatusBadge = (status) => {
-    switch(status) {
-      case 'completed': return 'status-completed';
-      case 'in_progress': return 'status-active';
-      case 'registered': return 'status-published';
-      default: return 'status-draft';
+  // Handle edit button click
+  const handleEditClick = (testId, event) => {
+    if (event) {
+      event.stopPropagation();
     }
+    navigate(`/admin/edit-test/${testId}`);
   };
 
   if (loading && tests.length === 0) {
@@ -329,7 +285,14 @@ const ManageTests = () => {
           </div>
         ) : (
           tests.map(test => (
-            <div key={test.id} className="test-card">
+            <div 
+              key={test.id} 
+              className={`test-card ${(test.status === 'published' || test.status === 'active') ? 'clickable' : ''}`}
+              onClick={() => handleTestCardClick(test)}
+              style={{ 
+                cursor: (test.status === 'published' || test.status === 'active') ? 'pointer' : 'default' 
+              }}
+            >
               <div className="test-card-header">
                 <div className="test-title-section">
                   <h3 className="test-title">{test.title}</h3>
@@ -337,6 +300,7 @@ const ManageTests = () => {
                     {getStatusText(test.status)}
                   </span>
                 </div>
+                {/* Show test code only if it exists */}
                 {test.testCode && (
                   <div className="test-code">
                     Code: <span className="code-text">{test.testCode}</span>
@@ -383,76 +347,49 @@ const ManageTests = () => {
                 <div className="test-meta">
                   <span className="created-date">Created: {formatDate(test.createdAt)}</span>
                 </div>
+
+                {/* Show click instruction for published tests */}
+                {(test.status === 'published' || test.status === 'active') && (
+                  <div className="click-instruction">
+                    <small>💡 Click card to view test details and manage participants</small>
+                  </div>
+                )}
               </div>
 
               <div className="test-card-actions">
                 <div className="action-row">
+                  {/* Edit Button - Available for all statuses */}
                   <button 
-                    onClick={() => navigate(`/admin/edit-test/${test.id}`)}
+                    onClick={(e) => handleEditClick(test.id, e)}
                     className="action-btn edit-btn"
                   >
                     Edit
                   </button>
                   
-                  {!test.testCode && (
-                    <button 
-                      onClick={() => generateTestCode(test.id)}
-                      className="action-btn generate-code-btn"
-                    >
-                      Generate Code
-                    </button>
-                  )}
-
-                  {test.participants > 0 && (
-                    <button 
-                      onClick={() => viewParticipants(test.id)}
-                      className="action-btn participants-btn"
-                    >
-                      View Users
-                    </button>
-                  )}
-                </div>
-
-                <div className="action-row">
+                  {/* Publish Button - Only for draft tests */}
                   {test.status === 'draft' && (
                     <button 
-                      onClick={() => handleConfirmAction('publish', test.id)}
+                      onClick={(e) => handleConfirmAction('publish', test.id, e)}
                       className="action-btn publish-btn"
                     >
                       Publish
                     </button>
                   )}
 
-                  {test.status === 'published' && (
+                  {/* Unpublish Button - For published and active tests */}
+                  {(test.status === 'published' || test.status === 'active') && (
                     <button 
-                      onClick={() => handleConfirmAction('activate', test.id)}
-                      className="action-btn activate-btn"
-                    >
-                      Start Test
-                    </button>
-                  )}
-
-                  {test.status === 'active' && (
-                    <button 
-                      onClick={() => handleConfirmAction('endTest', test.id)}
-                      className="action-btn end-test-btn"
-                    >
-                      End Test
-                    </button>
-                  )}
-
-                  {test.status === 'published' && (
-                    <button 
-                      onClick={() => handleConfirmAction('unpublish', test.id)}
+                      onClick={(e) => handleConfirmAction('unpublish', test.id, e)}
                       className="action-btn unpublish-btn"
                     >
                       Unpublish
                     </button>
                   )}
 
-                  {(test.status === 'draft' || test.status === 'published') && (
+                  {/* Delete Button - Only for draft tests */}
+                  {test.status === 'draft' && (
                     <button 
-                      onClick={() => handleConfirmAction('delete', test.id)}
+                      onClick={(e) => handleConfirmAction('delete', test.id, e)}
                       className="action-btn delete-btn"
                     >
                       Delete
@@ -490,46 +427,6 @@ const ManageTests = () => {
         </div>
       )}
 
-      {/* Generate Code Modal */}
-      {showCodeModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h3>Test Code Generated</h3>
-              <button 
-                onClick={() => setShowCodeModal(false)}
-                className="close-btn"
-              >
-                ×
-              </button>
-            </div>
-            <div className="modal-body">
-              <p>Your test code has been generated:</p>
-              <div className="generated-code">
-                <span className="code-display">{generatedCode}</span>
-                <button 
-                  onClick={() => navigator.clipboard.writeText(generatedCode)}
-                  className="copy-btn"
-                >
-                  Copy
-                </button>
-              </div>
-              <p className="code-note">
-                Share this code with participants to allow them to join the test.
-              </p>
-            </div>
-            <div className="modal-actions">
-              <button 
-                onClick={() => setShowCodeModal(false)}
-                className="modal-btn primary"
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Confirmation Modal */}
       {showConfirmModal && (
         <div className="modal-overlay">
@@ -541,6 +438,12 @@ const ManageTests = () => {
               <p>Are you sure you want to {confirmAction?.action.replace(/([A-Z])/g, ' $1').toLowerCase()} this test?</p>
               {confirmAction?.action === 'delete' && (
                 <p className="warning-text">This action cannot be undone.</p>
+              )}
+              {confirmAction?.action === 'publish' && (
+                <p className="info-text">Once published, users will be able to see the test and register for it.</p>
+              )}
+              {confirmAction?.action === 'unpublish' && (
+                <p className="warning-text">This will make the test unavailable to users and stop any ongoing sessions.</p>
               )}
             </div>
             <div className="modal-actions">
@@ -555,69 +458,6 @@ const ManageTests = () => {
                 className="modal-btn primary"
               >
                 Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Participants Modal */}
-      {showParticipantsModal && (
-        <div className="modal-overlay">
-          <div className="modal large-modal">
-            <div className="modal-header">
-              <h3>Test Participants</h3>
-              <button 
-                onClick={() => setShowParticipantsModal(false)}
-                className="close-btn"
-              >
-                ×
-              </button>
-            </div>
-            <div className="modal-body">
-              {participants.length === 0 ? (
-                <p>No participants found for this test.</p>
-              ) : (
-                <div className="participants-table">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Status</th>
-                        <th>Score</th>
-                        <th>Registration</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {participants.map(participant => (
-                        <tr key={participant.id}>
-                          <td>{participant.name}</td>
-                          <td>{participant.email}</td>
-                          <td>
-                            <span className={`status-badge ${getParticipantStatusBadge(participant.status)}`}>
-                              {participant.status?.replace('_', ' ') || 'Unknown'}
-                            </span>
-                          </td>
-                          <td>
-                            {participant.score ? `${participant.score}%` : '-'}
-                          </td>
-                          <td>
-                            {formatDate(participant.registeredAt)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-            <div className="modal-actions">
-              <button 
-                onClick={() => setShowParticipantsModal(false)}
-                className="modal-btn primary"
-              >
-                Close
               </button>
             </div>
           </div>

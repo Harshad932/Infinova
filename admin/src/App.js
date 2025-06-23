@@ -5,6 +5,7 @@ import AdminDashboard from './components/AdminDashboard';
 import CreateTest from './components/CreateTest';
 import ManageTests from './components/ManageTests';
 import EditTest from './components/EditTest';
+import TestDetail from './components/TestDetails';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/admin/create-test" element={<CreateTest />} />
         <Route path="/admin/manage-tests" element={<ManageTests />} />
         <Route path="/admin/edit-test/:id" element={<EditTest />} />
+        <Route path="/admin/test-detail/:id" element={<TestDetail />} />
       </Routes>
     </Router>
   );

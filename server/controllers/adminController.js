@@ -377,63 +377,6 @@ export const getTestById = async (req, res) => {
   }
 };
 
-// Generate test code
-export const generateTestCode = async (req, res) => {
-  const { id } = req.params;
-  const adminId = req.user.id;
-  
-  try {
-    // Generate unique 6-character code
-    let testCode;
-    let isUnique = false;
-    let attempts = 0;
-    
-    while (!isUnique && attempts < 10) {
-      testCode = crypto.randomBytes(3).toString('hex').toUpperCase();
-      
-      // Check if code already exists
-      const existingCode = await pool.query(
-        'SELECT id FROM tests WHERE test_code = $1',
-        [testCode]
-      );
-      
-      if (existingCode.rows.length === 0) {
-        isUnique = true;
-      }
-      attempts++;
-    }
-    
-    if (!isUnique) {
-      return res.status(500).json({ message: 'Failed to generate unique test code' });
-    }
-    
-    // Update test with generated code
-    const updateQuery = `
-      UPDATE tests 
-      SET test_code = $1, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $2 AND created_by = $3
-      RETURNING *
-    `;
-    
-    const result = await pool.query(updateQuery, [testCode, id, adminId]);
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Test not found' });
-    }
-    
-    res.json({ 
-      message: 'Test code generated successfully',
-      testCode,
-      test: result.rows[0]
-    });
-    
-  } catch (error) {
-    console.error('Error generating test code:', error);
-    res.status(500).json({ message: 'Internal server error while generating test code' });
-  }
-};
-
-// Publish test
 export const publishTest = async (req, res) => {
   const { id } = req.params;
   const adminId = req.user.id;
@@ -493,6 +436,461 @@ export const publishTest = async (req, res) => {
   } catch (error) {
     console.error('Error publishing test:', error);
     res.status(500).json({ message: 'Internal server error while publishing test' });
+  }
+};
+
+// Generate test code
+export const generateTestCode = async (req, res) => {
+  const { id } = req.params;
+  const adminId = req.user.id;
+  
+  try {
+    const client = await pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+      
+      // Check if test exists and is published
+      const testCheck = await client.query(
+        'SELECT * FROM tests WHERE id = $1 AND created_by = $2',
+        [id, adminId]
+      );
+      
+      if (testCheck.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ message: 'Test not found' });
+      }
+      
+      const test = testCheck.rows[0];
+      
+      if (!test.is_published) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ message: 'Test must be published before generating code' });
+      }
+      
+      if (test.test_code) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ message: 'Test code already exists' });
+      }
+      
+      // Generate unique test code
+      let testCode;
+      let isUnique = false;
+      let attempts = 0;
+      
+      while (!isUnique && attempts < 10) {
+        testCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+        
+        const existingCode = await client.query(
+          'SELECT id FROM tests WHERE test_code = $1',
+          [testCode]
+        );
+        
+        if (existingCode.rows.length === 0) {
+          isUnique = true;
+        }
+        attempts++;
+      }
+      
+      if (!isUnique) {
+        await client.query('ROLLBACK');
+        return res.status(500).json({ message: 'Failed to generate unique test code' });
+      }
+      
+      // Update test with generated code and set as active
+      const updateQuery = `
+        UPDATE tests 
+        SET test_code = $1, is_active = true, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $2 AND created_by = $3
+        RETURNING *
+      `;
+      
+      const result = await client.query(updateQuery, [testCode, id, adminId]);
+      
+      // Update test controls
+      await client.query(
+        `UPDATE test_controls 
+         SET is_test_live = true, test_start_time = CURRENT_TIMESTAMP, updated_by = $2
+         WHERE test_id = $1`,
+        [id, adminId]
+      );
+      
+      // If no test_controls record exists, create one
+      await client.query(
+        `INSERT INTO test_controls (test_id, is_test_live, test_start_time, updated_by)
+        SELECT $1, true, CURRENT_TIMESTAMP, $2::INTEGER
+        WHERE NOT EXISTS (SELECT 1 FROM test_controls WHERE test_id = $1)`,
+        [id, adminId]
+    );
+
+      
+      await client.query('COMMIT');
+      
+      res.json({
+        message: 'Test code generated successfully',
+        testCode: testCode,
+        test: result.rows[0]
+      });
+      
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+    
+  } catch (error) {
+    console.error('Error generating test code:', error);
+    res.status(500).json({ message: 'Internal server error while generating test code' });
+  }
+};
+
+// Delete test
+export const deleteTest = async (req, res) => {
+  const { id } = req.params;
+  const adminId = req.user.id;
+  
+  try {
+    const client = await pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+      
+      // Check if test exists and is not active
+      const testCheck = await client.query(
+        'SELECT * FROM tests WHERE id = $1 AND created_by = $2',
+        [id, adminId]
+      );
+      
+      if (testCheck.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ message: 'Test not found' });
+      }
+      
+      if (testCheck.rows[0].is_active) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ message: 'Cannot delete an active test' });
+      }
+      
+      // Check if test has participants
+      const participantCheck = await client.query(
+        'SELECT COUNT(*) as count FROM test_sessions WHERE test_id = $1',
+        [id]
+      );
+      
+      if (participantCheck.rows[0].count > 0) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ message: 'Cannot delete test with participants' });
+      }
+      
+      // Delete test (cascade will handle related records)
+      await client.query('DELETE FROM tests WHERE id = $1 AND created_by = $2', [id, adminId]);
+      
+      await client.query('COMMIT');
+      
+      res.json({ message: 'Test deleted successfully' });
+      
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+    
+  } catch (error) {
+    console.error('Error deleting test:', error);
+    res.status(500).json({ message: 'Internal server error while deleting test' });
+  }
+};
+
+// Get test details by ID
+export const getTestDetails = async (req, res) => {
+  const { id } = req.params;
+  const adminId = req.user.id;
+  
+  try {
+    // Get test details with comprehensive information
+    const testQuery = `
+      SELECT 
+        t.*,
+        tc.is_registration_open as "isRegistrationOpen",
+        tc.is_test_live as "isActive",
+        tc.is_test_ended as "isTestEnded",
+        tc.test_start_time as "testStartTime",
+        tc.test_end_time as "testEndTime",
+        tc.max_participants as "maxParticipants",
+        tc.current_participants as "currentParticipants",
+        tc.proctoring_enabled as "proctoringEnabled",
+        COUNT(DISTINCT q.id) as "totalQuestions",
+        COUNT(DISTINCT tr.user_id) as "totalRegistered",
+        COUNT(DISTINCT ts.user_id) as "totalParticipants",
+        COUNT(DISTINCT CASE WHEN ts.session_status = 'completed' THEN ts.user_id END) as "completedParticipants",
+        ARRAY_AGG(DISTINCT q.skill_category_name) FILTER (WHERE q.skill_category_name IS NOT NULL) as "skillCategories"
+      FROM tests t
+      LEFT JOIN test_controls tc ON t.id = tc.test_id
+      LEFT JOIN questions q ON t.id = q.test_id
+      LEFT JOIN test_registrations tr ON t.id = tr.test_id
+      LEFT JOIN test_sessions ts ON t.id = ts.test_id
+      WHERE t.id = $1 AND t.created_by = $2
+      GROUP BY t.id, tc.is_registration_open, tc.is_test_live, tc.is_test_ended, 
+               tc.test_start_time, tc.test_end_time, tc.max_participants, 
+               tc.current_participants, tc.proctoring_enabled
+    `;
+
+    const testResult = await pool.query(testQuery, [id, adminId]);
+
+    if (testResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Test not found' });
+    }
+
+    const test = testResult.rows[0];
+
+    // Determine test status based on flags
+    let status = 'draft';
+    if (test.isTestEnded) {
+      status = 'completed';
+    } else if (test.isActive) {
+      status = 'active';
+    } else if (test.is_published) {
+      status = 'published';
+    }
+
+    // Format the response
+    const testDetails = {
+      id: test.id,
+      title: test.title,
+      description: test.description,
+      instructions: test.instructions,
+      rules: test.rules,
+      timePerQuestion: test.time_per_question,
+      totalQuestions: test.total_questions,
+      isActive: test.isActive,
+      isPublished: test.is_published,
+      isTestEnded: test.isTestEnded,
+      testCode: test.test_code,
+      skillCategories: test.skillCategories || [],
+      status: status,
+      createdAt: test.created_at,
+      updatedAt: test.updated_at,
+      createdBy: test.created_by,
+      // Additional stats
+      totalRegistered: test.totalRegistered || 0,
+      totalParticipants: test.totalParticipants || 0,
+      completedParticipants: test.completedParticipants || 0,
+      maxParticipants: test.maxParticipants,
+      currentParticipants: test.currentParticipants || 0,
+      proctoringEnabled: test.proctoringEnabled || false,
+      testStartTime: test.testStartTime,
+      testEndTime: test.testEndTime
+    };
+
+    res.json(testDetails);
+
+  } catch (error) {
+    console.error('Error fetching test details:', error);
+    res.status(500).json({ message: 'Internal server error while fetching test details' });
+  }
+};
+
+// Get test questions
+export const getTestQuestions = async (req, res) => {
+  const { id } = req.params;
+  const adminId = req.user.id;
+  
+  try {
+    // Verify test ownership
+    const testCheck = await pool.query(
+      'SELECT id FROM tests WHERE id = $1 AND created_by = $2',
+      [id, adminId]
+    );
+    
+    if (testCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'Test not found' });
+    }
+
+    // Get questions with options
+    const questionsQuery = `
+      SELECT 
+        q.id,
+        q.question_text as "questionText",
+        q.skill_category_name as "skillCategoryName",
+        q.question_order as "questionOrder",
+        q.explanation,
+        q.created_at as "createdAt",
+        q.updated_at as "updatedAt",
+        json_agg(
+          json_build_object(
+            'id', qo.id,
+            'optionText', qo.option_text,
+            'optionOrder', qo.option_order,
+            'marks', qo.marks,
+            'isCorrect', qo.is_correct
+          ) ORDER BY qo.option_order
+        ) as options
+      FROM questions q
+      LEFT JOIN question_options qo ON q.id = qo.question_id
+      WHERE q.test_id = $1
+      GROUP BY q.id, q.question_text, q.skill_category_name, q.question_order, 
+               q.explanation, q.created_at, q.updated_at
+      ORDER BY q.question_order
+    `;
+
+    const questionsResult = await pool.query(questionsQuery, [id]);
+
+    res.json({
+      questions: questionsResult.rows
+    });
+
+  } catch (error) {
+    console.error('Error fetching test questions:', error);
+    res.status(500).json({ message: 'Internal server error while fetching questions' });
+  }
+};
+
+// Archive test
+export const archiveTest = async (req, res) => {
+  const { id } = req.params;
+  const adminId = req.user.id;
+  
+  try {
+    const client = await pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+      
+      // Check if test exists
+      const testCheck = await client.query(
+        'SELECT * FROM tests WHERE id = $1 AND created_by = $2',
+        [id, adminId]
+      );
+      
+      if (testCheck.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ message: 'Test not found' });
+      }
+      
+      // Add archived flag to tests table if it doesn't exist
+      try {
+        await client.query('ALTER TABLE tests ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT FALSE');
+      } catch (alterError) {
+        // Column might already exist, ignore error
+      }
+      
+      // Archive the test
+      const updateQuery = `
+        UPDATE tests 
+        SET is_archived = true, is_active = false, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $1 AND created_by = $2
+        RETURNING *
+      `;
+      
+      const result = await client.query(updateQuery, [id, adminId]);
+      
+      // Update test controls to stop all activities
+      await client.query(
+        `UPDATE test_controls 
+         SET is_registration_open = false, is_test_live = false, updated_by = $2
+         WHERE test_id = $1`,
+        [id, adminId]
+      );
+      
+      await client.query('COMMIT');
+      
+      res.json({
+        message: 'Test archived successfully',
+        test: result.rows[0]
+      });
+      
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+    
+  } catch (error) {
+    console.error('Error archiving test:', error);
+    res.status(500).json({ message: 'Internal server error while archiving test' });
+  }
+};
+
+// Get test analytics/statistics
+export const getTestAnalytics = async (req, res) => {
+  const { id } = req.params;
+  const adminId = req.user.id;
+  
+  try {
+    // Verify test ownership
+    const testCheck = await pool.query(
+      'SELECT id FROM tests WHERE id = $1 AND created_by = $2',
+      [id, adminId]
+    );
+    
+    if (testCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'Test not found' });
+    }
+
+    // Get comprehensive analytics
+    const analyticsQuery = `
+      WITH test_stats AS (
+        SELECT 
+          COUNT(DISTINCT tr.user_id) as total_registered,
+          COUNT(DISTINCT ts.user_id) as total_participants,
+          COUNT(DISTINCT CASE WHEN ts.session_status = 'completed' THEN ts.user_id END) as completed_participants,
+          COUNT(DISTINCT CASE WHEN ts.session_status = 'in_progress' THEN ts.user_id END) as in_progress_participants,
+          COUNT(DISTINCT CASE WHEN ts.is_passed = true THEN ts.user_id END) as passed_participants,
+          AVG(CASE WHEN ts.session_status = 'completed' THEN ts.percentage_score END) as average_score,
+          MAX(CASE WHEN ts.session_status = 'completed' THEN ts.percentage_score END) as highest_score,
+          MIN(CASE WHEN ts.session_status = 'completed' THEN ts.percentage_score END) as lowest_score,
+          AVG(CASE WHEN ts.session_status = 'completed' THEN 
+            EXTRACT(EPOCH FROM (ts.end_time - ts.start_time))/60 END) as average_duration_minutes
+        FROM tests t
+        LEFT JOIN test_registrations tr ON t.id = tr.test_id
+        LEFT JOIN test_sessions ts ON t.id = ts.test_id
+        WHERE t.id = $1
+      ),
+      skill_stats AS (
+        SELECT 
+          usr.skill_category_name,
+          COUNT(*) as attempts,
+          AVG(usr.percentage) as average_performance,
+          COUNT(CASE WHEN usr.performance_level = 'excellent' THEN 1 END) as excellent_count,
+          COUNT(CASE WHEN usr.performance_level = 'good' THEN 1 END) as good_count,
+          COUNT(CASE WHEN usr.performance_level = 'average' THEN 1 END) as average_count,
+          COUNT(CASE WHEN usr.performance_level = 'below_average' THEN 1 END) as below_average_count,
+          COUNT(CASE WHEN usr.performance_level = 'poor' THEN 1 END) as poor_count
+        FROM user_skill_results usr
+        JOIN test_sessions ts ON usr.session_id = ts.id
+        WHERE ts.test_id = $1 AND ts.session_status = 'completed'
+        GROUP BY usr.skill_category_name
+      )
+      SELECT 
+        (SELECT row_to_json(test_stats.*) FROM test_stats) as overall_stats,
+        (SELECT COALESCE(json_agg(skill_stats.*), '[]'::json) FROM skill_stats) as skill_statistics
+    `;
+
+    const analyticsResult = await pool.query(analyticsQuery, [id]);
+    
+    const analytics = {
+      overallStats: analyticsResult.rows[0].overall_stats || {
+        total_registered: 0,
+        total_participants: 0,
+        completed_participants: 0,
+        in_progress_participants: 0,
+        passed_participants: 0,
+        average_score: 0,
+        highest_score: 0,
+        lowest_score: 0,
+        average_duration_minutes: 0
+      },
+      skillStatistics: analyticsResult.rows[0].skill_statistics || []
+    };
+
+    res.json(analytics);
+
+  } catch (error) {
+    console.error('Error fetching test analytics:', error);
+    res.status(500).json({ message: 'Internal server error while fetching analytics' });
   }
 };
 
@@ -704,65 +1102,8 @@ export const endTest = async (req, res) => {
   }
 };
 
-// Delete test
-export const deleteTest = async (req, res) => {
-  const { id } = req.params;
-  const adminId = req.user.id;
-  
-  try {
-    const client = await pool.connect();
-    
-    try {
-      await client.query('BEGIN');
-      
-      // Check if test exists and is not active
-      const testCheck = await client.query(
-        'SELECT * FROM tests WHERE id = $1 AND created_by = $2',
-        [id, adminId]
-      );
-      
-      if (testCheck.rows.length === 0) {
-        await client.query('ROLLBACK');
-        return res.status(404).json({ message: 'Test not found' });
-      }
-      
-      if (testCheck.rows[0].is_active) {
-        await client.query('ROLLBACK');
-        return res.status(400).json({ message: 'Cannot delete an active test' });
-      }
-      
-      // Check if test has participants
-      const participantCheck = await client.query(
-        'SELECT COUNT(*) as count FROM test_sessions WHERE test_id = $1',
-        [id]
-      );
-      
-      if (participantCheck.rows[0].count > 0) {
-        await client.query('ROLLBACK');
-        return res.status(400).json({ message: 'Cannot delete test with participants' });
-      }
-      
-      // Delete test (cascade will handle related records)
-      await client.query('DELETE FROM tests WHERE id = $1 AND created_by = $2', [id, adminId]);
-      
-      await client.query('COMMIT');
-      
-      res.json({ message: 'Test deleted successfully' });
-      
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
-    
-  } catch (error) {
-    console.error('Error deleting test:', error);
-    res.status(500).json({ message: 'Internal server error while deleting test' });
-  }
-};
-
 // Get test participants
+// Enhanced version of getTestParticipants with better data handling
 export const getTestParticipants = async (req, res) => {
   const { id } = req.params;
   const adminId = req.user.id;
@@ -770,13 +1111,15 @@ export const getTestParticipants = async (req, res) => {
   try {
     // Verify test ownership
     const testCheck = await pool.query(
-      'SELECT id FROM tests WHERE id = $1 AND created_by = $2',
+      'SELECT id, total_questions FROM tests WHERE id = $1 AND created_by = $2',
       [id, adminId]
     );
     
     if (testCheck.rows.length === 0) {
       return res.status(404).json({ message: 'Test not found' });
     }
+
+    const totalQuestions = testCheck.rows[0].total_questions;
     
     const query = `
       SELECT 
@@ -786,30 +1129,139 @@ export const getTestParticipants = async (req, res) => {
         u.phone,
         u.registration_number as "registrationNumber",
         u.organization,
-        ts.session_status as status,
-        ts.percentage_score as score,
-        ts.total_score as "totalScore",
-        ts.total_possible_score as "totalPossibleScore",
-        ts.is_passed as "isPassed",
+        u.created_at as "userCreatedAt",
+        
+        -- Session information
+        ts.id as "sessionId",
+        ts.session_status as "sessionStatus",
         ts.start_time as "startTime",
         ts.end_time as "endTime",
-        ts.created_at as "registeredAt",
-        tr.registration_status as "registrationStatus"
+        ts.current_question_order as "currentQuestion",
+        ts.total_score as "totalScore",
+        ts.total_possible_score as "totalPossibleScore",
+        ts.percentage_score as "percentageScore",
+        ts.is_passed as "isPassed",
+        ts.created_at as "sessionCreatedAt",
+        
+        -- Registration information
+        tr.id as "registrationId",
+        tr.registration_status as "registrationStatus",
+        tr.registered_at as "registeredAt",
+        tr.approved_at as "approvedAt",
+        
+        -- Response count for progress calculation
+        (SELECT COUNT(*) FROM user_responses ur WHERE ur.session_id = ts.id) as "answeredQuestions",
+        
+        -- Calculate status priority: session_status > registration_status > 'not_registered'
+        CASE 
+          WHEN ts.session_status IS NOT NULL THEN ts.session_status
+          WHEN tr.registration_status IS NOT NULL THEN tr.registration_status
+          ELSE 'not_registered'
+        END as "status"
+        
       FROM users u
       LEFT JOIN test_sessions ts ON u.id = ts.user_id AND ts.test_id = $1
       LEFT JOIN test_registrations tr ON u.id = tr.user_id AND tr.test_id = $1
       WHERE (ts.id IS NOT NULL OR tr.id IS NOT NULL)
-      ORDER BY ts.created_at DESC, tr.registered_at DESC
+      ORDER BY 
+        CASE 
+          WHEN ts.session_status = 'in_progress' THEN 1
+          WHEN ts.session_status = 'completed' THEN 2
+          WHEN tr.registration_status = 'registered' THEN 3
+          WHEN tr.registration_status = 'approved' THEN 4
+          ELSE 5
+        END,
+        ts.created_at DESC NULLS LAST,
+        tr.registered_at DESC NULLS LAST
     `;
     
     const result = await pool.query(query, [id]);
     
-    const participants = result.rows.map(participant => ({
-      ...participant,
-      status: participant.status || participant.registrationStatus || 'registered'
-    }));
+    const participants = result.rows.map(participant => {
+      // Calculate progress information
+      let progress = {
+        current: 0,
+        total: totalQuestions || 0,
+        percentage: 0
+      };
+      
+      if (participant.sessionStatus === 'completed') {
+        progress.current = totalQuestions || 0;
+        progress.percentage = 100;
+      } else if (participant.sessionStatus === 'in_progress') {
+        progress.current = participant.answeredQuestions || participant.currentQuestion || 0;
+        progress.percentage = totalQuestions > 0 ? Math.round((progress.current / totalQuestions) * 100) : 0;
+      }
+      
+      // Determine final status with more clarity
+      let finalStatus = participant.status;
+      if (participant.sessionStatus) {
+        finalStatus = participant.sessionStatus;
+      } else if (participant.registrationStatus) {
+        finalStatus = participant.registrationStatus;
+      }
+      
+      return {
+        id: participant.id,
+        name: participant.name,
+        email: participant.email,
+        phone: participant.phone,
+        registrationNumber: participant.registrationNumber,
+        organization: participant.organization,
+        
+        // Session data
+        sessionId: participant.sessionId,
+        startTime: participant.startTime,
+        endTime: participant.endTime,
+        totalScore: participant.totalScore,
+        totalPossibleScore: participant.totalPossibleScore,
+        percentageScore: participant.percentageScore,
+        isPassed: participant.isPassed,
+        
+        // Registration data
+        registrationId: participant.registrationId,
+        registeredAt: participant.registeredAt || participant.sessionCreatedAt,
+        approvedAt: participant.approvedAt,
+        
+        // Computed fields
+        status: finalStatus,
+        progress: progress,
+        currentQuestion: participant.currentQuestion || 0,
+        answeredQuestions: participant.answeredQuestions || 0,
+        
+        // Time calculations
+        duration: participant.startTime && participant.endTime 
+          ? Math.round((new Date(participant.endTime) - new Date(participant.startTime)) / (1000 * 60)) // minutes
+          : null,
+        
+        // Status flags for easy filtering
+        isCompleted: participant.sessionStatus === 'completed',
+        isInProgress: participant.sessionStatus === 'in_progress',
+        isRegistered: !!participant.registrationId,
+        hasStarted: !!participant.sessionId
+      };
+    });
     
-    res.json({ participants });
+    // Additional summary statistics
+    const summary = {
+      total: participants.length,
+      completed: participants.filter(p => p.isCompleted).length,
+      inProgress: participants.filter(p => p.isInProgress).length,
+      registered: participants.filter(p => p.isRegistered && !p.hasStarted).length,
+      passed: participants.filter(p => p.isPassed).length,
+      averageScore: participants.length > 0 
+        ? participants
+            .filter(p => p.percentageScore !== null)
+            .reduce((sum, p) => sum + (p.percentageScore || 0), 0) / 
+          Math.max(1, participants.filter(p => p.percentageScore !== null).length)
+        : 0
+    };
+    
+    res.json({ 
+      participants,
+      summary,
+      totalQuestions: totalQuestions || 0
+    });
     
   } catch (error) {
     console.error('Error fetching test participants:', error);
