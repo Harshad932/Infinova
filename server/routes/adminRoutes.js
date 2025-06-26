@@ -1,8 +1,8 @@
 import express from 'express';
 import { loginAdmin,getAdminDashboard,createTest } from '../controllers/adminController.js';
-import { getAllTests,getTestById,publishTest,unpublishTest,activateTest,endTest,deleteTest,getTestParticipants,cloneTest } from '../controllers/adminController.js';
+import { getAllTests,getTestById,publishTest,unpublishTest,activateTest,endTest,deleteTest,getTestParticipants } from '../controllers/adminController.js';
 import {getTestForEdit,updateTestInfo,addQuestion,deleteQuestion,updateQuestion,reorderQuestions,getSkillCategories} from '../controllers/adminController.js';
-import {getTestDetails,getTestQuestions,generateTestCode,archiveTest,getTestAnalytics } from '../controllers/adminController.js';
+import {getTestDetails,getTestQuestions,generateTestCode } from '../controllers/adminController.js';
 import { authMiddleware,isAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -23,9 +23,6 @@ router.put('/manage-tests/:id/unpublish',authMiddleware, isAdmin, unpublishTest)
 // Delete test
 router.delete('/manage-tests/:id',authMiddleware, isAdmin, deleteTest);
 
-// Clone test
-router.post('/manage-tests/:id/clone',authMiddleware, isAdmin, cloneTest);
-
 // In your routes file
 router.get('/tests/:id',authMiddleware, isAdmin, getTestForEdit);
 router.put('/tests/:id/info',authMiddleware, isAdmin, updateTestInfo);
@@ -37,13 +34,11 @@ router.get('/skill-categories',authMiddleware, isAdmin, getSkillCategories);
 
 router.get('/tests/:id',authMiddleware, isAdmin, getTestDetails);              // GET test details
 router.get('/tests/:id/questions',authMiddleware, isAdmin, getTestQuestions);         // GET test questions
-router.get('/tests/:id/participants',authMiddleware, isAdmin, getTestParticipants);   // GET test participants
-router.get('/tests/:id/analytics',authMiddleware, isAdmin, getTestAnalytics);   
+router.get('/tests/:id/participants',authMiddleware, isAdmin, getTestParticipants);   // GET test participants 
 
 router.post('/tests/:id/generate-code',authMiddleware, isAdmin, generateTestCode);    // POST generate test code
 router.put('/tests/:id/activate',authMiddleware, isAdmin, activateTest);             // PUT activate test
-router.put('/tests/:id/end',authMiddleware, isAdmin, endTest);                       // PUT end test
-router.put('/tests/:id/archive',authMiddleware, isAdmin, archiveTest);               // PUT archive test
+router.put('/tests/:id/end',authMiddleware, isAdmin, endTest);                       // PUT end test               // PUT archive test
 
 
 export default router;

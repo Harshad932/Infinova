@@ -13,7 +13,6 @@ const EditTest = () => {
     instructions: '',
     rules: '',
     timePerQuestion: 15,
-    passingPercentage: 60,
     isActive: false,
     isPublished: false
   });
@@ -37,13 +36,11 @@ const EditTest = () => {
     questionText: '',
     skillCategoryName: '',
     options: [
-      { text: '', marks: 0, isCorrect: false },
-      { text: '', marks: 0, isCorrect: false },
-      { text: '', marks: 0, isCorrect: false },
-      { text: '', marks: 0, isCorrect: false }
+      { text: '', marks: 0 },
+      { text: '', marks: 0 },
+      { text: '', marks: 0 },
+      { text: '', marks: 0 }
     ],
-    explanation: '',
-    difficultyLevel: 'medium'
   });
 
   // API configuration
@@ -78,7 +75,6 @@ const EditTest = () => {
         instructions: data.instructions || '',
         rules: data.rules || '',
         timePerQuestion: data.timePerQuestion || 15,
-        passingPercentage: data.passingPercentage || 60,
         isActive: data.isActive || false,
         isPublished: data.isPublished || false
       });
@@ -124,9 +120,7 @@ const EditTest = () => {
       options: prev.options.map((option, index) => 
         index === optionIndex 
           ? { ...option, [field]: value }
-          : field === 'isCorrect' && value 
-            ? { ...option, isCorrect: false }
-            : option
+          : option
       )
     }));
   };
@@ -178,11 +172,6 @@ const EditTest = () => {
         throw new Error('At least 2 options are required');
       }
 
-      const hasCorrectAnswer = newQuestion.options.some(opt => opt.isCorrect);
-      if (!hasCorrectAnswer) {
-        throw new Error('Please mark at least one correct answer');
-      }
-
       const questionData = {
         ...newQuestion,
         options: validOptions,
@@ -212,13 +201,11 @@ const EditTest = () => {
         questionText: '',
         skillCategoryName: '',
         options: [
-          { text: '', marks: 0, isCorrect: false },
-          { text: '', marks: 0, isCorrect: false },
-          { text: '', marks: 0, isCorrect: false },
-          { text: '', marks: 0, isCorrect: false }
+          { text: '', marks: 0 },
+          { text: '', marks: 0 },
+          { text: '', marks: 0 },
+          { text: '', marks: 0 }
         ],
-        explanation: '',
-        difficultyLevel: 'medium'
       });
 
       setShowQuestionModal(false);
@@ -240,13 +227,11 @@ const EditTest = () => {
       questionText: question.questionText,
       skillCategoryName: question.skillCategoryName,
       options: question.options || [
-        { text: '', marks: 0, isCorrect: false },
-        { text: '', marks: 0, isCorrect: false },
-        { text: '', marks: 0, isCorrect: false },
-        { text: '', marks: 0, isCorrect: false }
+        { text: '', marks: 0 },
+        { text: '', marks: 0 },
+        { text: '', marks: 0 },
+        { text: '', marks: 0 }
       ],
-      explanation: question.explanation || '',
-      difficultyLevel: question.difficultyLevel || 'medium'
     });
     setShowQuestionModal(true);
   };
@@ -319,13 +304,11 @@ const EditTest = () => {
       questionText: '',
       skillCategoryName: '',
       options: [
-        { text: '', marks: 0, isCorrect: false },
-        { text: '', marks: 0, isCorrect: false },
-        { text: '', marks: 0, isCorrect: false },
-        { text: '', marks: 0, isCorrect: false }
+        { text: '', marks: 0 },
+        { text: '', marks: 0 },
+        { text: '', marks: 0 },
+        { text: '', marks: 0 }
       ],
-      explanation: '',
-      difficultyLevel: 'medium'
     });
     setEditingQuestion(null);
   };
@@ -449,31 +432,16 @@ const EditTest = () => {
                 />
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="timePerQuestion">Time per Question (seconds)</label>
-                  <input
-                    type="number"
-                    id="timePerQuestion"
-                    value={testInfo.timePerQuestion}
-                    onChange={(e) => handleTestInfoChange('timePerQuestion', parseInt(e.target.value))}
-                    min="5"
-                    max="300"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="passingPercentage">Passing Percentage (%)</label>
-                  <input
-                    type="number"
-                    id="passingPercentage"
-                    value={testInfo.passingPercentage}
-                    onChange={(e) => handleTestInfoChange('passingPercentage', parseFloat(e.target.value))}
-                    min="0"
-                    max="100"
-                    step="0.1"
-                  />
-                </div>
+              <div className="form-group">
+                <label htmlFor="timePerQuestion">Time per Question (seconds)</label>
+                <input
+                  type="number"
+                  id="timePerQuestion"
+                  value={testInfo.timePerQuestion}
+                  onChange={(e) => handleTestInfoChange('timePerQuestion', parseInt(e.target.value))}
+                  min="5"
+                  max="300"
+                />
               </div>
 
               <div className="form-actions">
@@ -518,7 +486,6 @@ const EditTest = () => {
                       <div className="question-info">
                         <span className="question-number">Q{index + 1}</span>
                         <span className="skill-category">{question.skillCategoryName}</span>
-                        <span className="difficulty">{question.difficultyLevel}</span>
                       </div>
                       <div className="question-actions">
                         <button 
@@ -541,20 +508,13 @@ const EditTest = () => {
                       
                       <div className="options-list">
                         {question.options?.map((option, optIndex) => (
-                          <div key={optIndex} className={`option ${option.isCorrect ? 'correct' : ''}`}>
+                          <div key={optIndex} className="option">
                             <span className="option-label">{String.fromCharCode(65 + optIndex)}.</span>
                             <span className="option-text">{option.text}</span>
                             <span className="option-marks">({option.marks} marks)</span>
-                            {option.isCorrect && <span className="correct-indicator">✓</span>}
                           </div>
                         ))}
                       </div>
-
-                      {question.explanation && (
-                        <div className="explanation">
-                          <strong>Explanation:</strong> {question.explanation}
-                        </div>
-                      )}
                     </div>
                   </div>
                 ))}
@@ -594,37 +554,22 @@ const EditTest = () => {
                 />
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="skillCategory">Skill Category *</label>
-                  <input
-                    type="text"
-                    id="skillCategory"
-                    value={newQuestion.skillCategoryName}
-                    onChange={(e) => handleQuestionChange('skillCategoryName', e.target.value)}
-                    placeholder="e.g., Communication, Technical, Behavioral"
-                    list="skillCategories"
-                    required
-                  />
-                  <datalist id="skillCategories">
-                    {availableSkills.map(skill => (
-                      <option key={skill} value={skill} />
-                    ))}
-                  </datalist>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="difficulty">Difficulty Level</label>
-                  <select
-                    id="difficulty"
-                    value={newQuestion.difficultyLevel}
-                    onChange={(e) => handleQuestionChange('difficultyLevel', e.target.value)}
-                  >
-                    <option value="easy">Easy</option>
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
-                  </select>
-                </div>
+              <div className="form-group">
+                <label htmlFor="skillCategory">Skill Category *</label>
+                <input
+                  type="text"
+                  id="skillCategory"
+                  value={newQuestion.skillCategoryName}
+                  onChange={(e) => handleQuestionChange('skillCategoryName', e.target.value)}
+                  placeholder="e.g., Communication, Technical, Behavioral"
+                  list="skillCategories"
+                  required
+                />
+                <datalist id="skillCategories">
+                  {availableSkills.map(skill => (
+                    <option key={skill} value={skill} />
+                  ))}
+                </datalist>
               </div>
 
               <div className="options-section">
@@ -633,16 +578,6 @@ const EditTest = () => {
                   <div key={index} className="option-input">
                     <div className="option-header">
                       <span className="option-label">Option {String.fromCharCode(65 + index)}</span>
-                      <div className="option-controls">
-                        <label className="checkbox-label">
-                          <input
-                            type="checkbox"
-                            checked={option.isCorrect}
-                            onChange={(e) => handleOptionChange(index, 'isCorrect', e.target.checked)}
-                          />
-                          Correct Answer
-                        </label>
-                      </div>
                     </div>
                     
                     <input
@@ -665,17 +600,7 @@ const EditTest = () => {
                   </div>
                 ))}
               </div>
-
-              <div className="form-group">
-                <label htmlFor="explanation">Explanation (Optional)</label>
-                <textarea
-                  id="explanation"
-                  value={newQuestion.explanation}
-                  onChange={(e) => handleQuestionChange('explanation', e.target.value)}
-                  placeholder="Explain the correct answer"
-                  rows="2"
-                />
-              </div>
+              
             </div>
 
             <div className="modal-actions">

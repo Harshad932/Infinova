@@ -64,7 +64,7 @@ const TestDetail = () => {
 
       setTest({ ...testData, status });
 
-      console.log('Test Data:', status);
+      console.log('Test Data:', testData);
 
       // Fetch questions
       const questionsResponse = await fetch(`${API_BASE_URL}/admin/tests/${testId}/questions`, {
@@ -380,7 +380,7 @@ const TestDetail = () => {
                     <span className="stat-label">Total Questions</span>
                   </div>
                   <div className="stat-item">
-                    <span className="stat-number">{test.timePerQuestion || 0}s</span>
+                    <span className="stat-number">{test.time_per_question || 0}s</span>
                     <span className="stat-label">Time per Question</span>
                   </div>
                   <div className="stat-item">

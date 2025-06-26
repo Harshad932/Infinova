@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import adminRoutes from './routes/adminRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -9,19 +10,24 @@ dotenv.config();
 const app = express();
 const PORT =process.env.PORT || 3001;
 
+const allowedOrigins = process.env.CORS_ORIGINS.split(',');
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN,
-  credentials: true,
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps or curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true
 }));
 
 // Middleware to parse JSON bodies
 app.use(express.json());    
 
-// app.get('/', (req, res) => {
-//   res.send('Welcome to the Admin API'); 
-// });
-
 app.use('/api/admin', adminRoutes);
+app.use('/api/user', userRoutes);
 
 try {
   app.listen(PORT, () => {

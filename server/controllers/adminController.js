@@ -5,7 +5,7 @@ import crypto from "crypto";
 import {pool}  from "../config/db.js";
 
 export const loginAdmin = async (req, res) => {
-  const { email, password } = req.body;;
+  const { email, password } = req.body;
 
   const admin = await findAdminByEmail(email);
 
@@ -20,7 +20,7 @@ export const loginAdmin = async (req, res) => {
     { id: admin.id, email: admin.email, role: admin.role },
     process.env.JWT_SECRET,
     { expiresIn: '1h' }
-  );
+    );
 
   res.json({ token ,admin: { username: admin.username, email: admin.email }});
 }
@@ -196,7 +196,6 @@ export const getAllTests = async (req, res) => {
         t.rules,
         t.time_per_question as "timePerQuestion",
         t.total_questions as "totalQuestions",
-        t.passing_percentage as "passingPercentage",
         t.is_active as "isActive",
         t.is_published as "isPublished",
         t.test_code as "testCode",
@@ -205,7 +204,6 @@ export const getAllTests = async (req, res) => {
         tc.is_test_live as "isTestLive",
         tc.is_test_ended as "isTestEnded",
         tc.current_participants as "currentParticipants",
-        tc.max_participants as "maxParticipants",
         COALESCE(participant_stats.total_participants, 0) as participants,
         COALESCE(participant_stats.completed_participants, 0) as "completedParticipants",
         COALESCE(participant_stats.in_progress_participants, 0) as "inProgressParticipants",
@@ -254,7 +252,7 @@ export const getAllTests = async (req, res) => {
     }
     
     baseQuery += ` 
-      GROUP BY t.id, tc.is_test_live, tc.is_test_ended, tc.current_participants, tc.max_participants, participant_stats.total_participants, participant_stats.completed_participants, participant_stats.in_progress_participants
+      GROUP BY t.id, tc.is_test_live, tc.is_test_ended, tc.current_participants, participant_stats.total_participants, participant_stats.completed_participants, participant_stats.in_progress_participants
       ORDER BY t.updated_at DESC
     `;
     
@@ -338,7 +336,6 @@ export const getTestById = async (req, res) => {
         tc.is_test_live as "isTestLive",
         tc.is_test_ended as "isTestEnded",
         tc.current_participants as "currentParticipants",
-        tc.max_participants as "maxParticipants",
         COALESCE(participant_stats.total_participants, 0) as participants,
         COALESCE(participant_stats.completed_participants, 0) as "completedParticipants",
         ARRAY_AGG(DISTINCT q.skill_category_name) FILTER (WHERE q.skill_category_name IS NOT NULL) as "skillCategories"
@@ -354,7 +351,7 @@ export const getTestById = async (req, res) => {
         GROUP BY test_id
       ) participant_stats ON t.id = participant_stats.test_id
       WHERE t.id = $1 AND t.created_by = $2
-      GROUP BY t.id, tc.is_test_live, tc.is_test_ended, tc.current_participants, tc.max_participants, participant_stats.total_participants, participant_stats.completed_participants
+      GROUP BY t.id, tc.is_test_live, tc.is_test_ended, tc.current_participants, participant_stats.total_participants, participant_stats.completed_participants
     `;
     
     const result = await pool.query(query, [id, adminId]);
@@ -510,15 +507,15 @@ export const generateTestCode = async (req, res) => {
       // Update test controls
       await client.query(
         `UPDATE test_controls 
-         SET is_test_live = true, test_start_time = CURRENT_TIMESTAMP, updated_by = $2
+         SET is_test_live = true, updated_by = $2
          WHERE test_id = $1`,
         [id, adminId]
       );
       
       // If no test_controls record exists, create one
       await client.query(
-        `INSERT INTO test_controls (test_id, is_test_live, test_start_time, updated_by)
-        SELECT $1, true, CURRENT_TIMESTAMP, $2::INTEGER
+        `INSERT INTO test_controls (test_id, is_test_live, updated_by)
+        SELECT $1, true, $2::INTEGER
         WHERE NOT EXISTS (SELECT 1 FROM test_controls WHERE test_id = $1)`,
         [id, adminId]
     );
@@ -616,9 +613,6 @@ export const getTestDetails = async (req, res) => {
         tc.is_registration_open as "isRegistrationOpen",
         tc.is_test_live as "isActive",
         tc.is_test_ended as "isTestEnded",
-        tc.test_start_time as "testStartTime",
-        tc.test_end_time as "testEndTime",
-        tc.max_participants as "maxParticipants",
         tc.current_participants as "currentParticipants",
         tc.proctoring_enabled as "proctoringEnabled",
         COUNT(DISTINCT q.id) as "totalQuestions",
@@ -632,8 +626,7 @@ export const getTestDetails = async (req, res) => {
       LEFT JOIN test_registrations tr ON t.id = tr.test_id
       LEFT JOIN test_sessions ts ON t.id = ts.test_id
       WHERE t.id = $1 AND t.created_by = $2
-      GROUP BY t.id, tc.is_registration_open, tc.is_test_live, tc.is_test_ended, 
-               tc.test_start_time, tc.test_end_time, tc.max_participants, 
+      GROUP BY t.id, tc.is_registration_open, tc.is_test_live, tc.is_test_ended,  
                tc.current_participants, tc.proctoring_enabled
     `;
 
@@ -677,11 +670,8 @@ export const getTestDetails = async (req, res) => {
       totalRegistered: test.totalRegistered || 0,
       totalParticipants: test.totalParticipants || 0,
       completedParticipants: test.completedParticipants || 0,
-      maxParticipants: test.maxParticipants,
       currentParticipants: test.currentParticipants || 0,
       proctoringEnabled: test.proctoringEnabled || false,
-      testStartTime: test.testStartTime,
-      testEndTime: test.testEndTime
     };
 
     res.json(testDetails);
@@ -715,7 +705,6 @@ export const getTestQuestions = async (req, res) => {
         q.question_text as "questionText",
         q.skill_category_name as "skillCategoryName",
         q.question_order as "questionOrder",
-        q.explanation,
         q.created_at as "createdAt",
         q.updated_at as "updatedAt",
         json_agg(
@@ -723,15 +712,13 @@ export const getTestQuestions = async (req, res) => {
             'id', qo.id,
             'optionText', qo.option_text,
             'optionOrder', qo.option_order,
-            'marks', qo.marks,
-            'isCorrect', qo.is_correct
+            'marks', qo.marks
           ) ORDER BY qo.option_order
         ) as options
       FROM questions q
       LEFT JOIN question_options qo ON q.id = qo.question_id
       WHERE q.test_id = $1
-      GROUP BY q.id, q.question_text, q.skill_category_name, q.question_order, 
-               q.explanation, q.created_at, q.updated_at
+      GROUP BY q.id, q.question_text, q.skill_category_name, q.question_order, q.created_at, q.updated_at
       ORDER BY q.question_order
     `;
 
@@ -744,153 +731,6 @@ export const getTestQuestions = async (req, res) => {
   } catch (error) {
     console.error('Error fetching test questions:', error);
     res.status(500).json({ message: 'Internal server error while fetching questions' });
-  }
-};
-
-// Archive test
-export const archiveTest = async (req, res) => {
-  const { id } = req.params;
-  const adminId = req.user.id;
-  
-  try {
-    const client = await pool.connect();
-    
-    try {
-      await client.query('BEGIN');
-      
-      // Check if test exists
-      const testCheck = await client.query(
-        'SELECT * FROM tests WHERE id = $1 AND created_by = $2',
-        [id, adminId]
-      );
-      
-      if (testCheck.rows.length === 0) {
-        await client.query('ROLLBACK');
-        return res.status(404).json({ message: 'Test not found' });
-      }
-      
-      // Add archived flag to tests table if it doesn't exist
-      try {
-        await client.query('ALTER TABLE tests ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT FALSE');
-      } catch (alterError) {
-        // Column might already exist, ignore error
-      }
-      
-      // Archive the test
-      const updateQuery = `
-        UPDATE tests 
-        SET is_archived = true, is_active = false, updated_at = CURRENT_TIMESTAMP
-        WHERE id = $1 AND created_by = $2
-        RETURNING *
-      `;
-      
-      const result = await client.query(updateQuery, [id, adminId]);
-      
-      // Update test controls to stop all activities
-      await client.query(
-        `UPDATE test_controls 
-         SET is_registration_open = false, is_test_live = false, updated_by = $2
-         WHERE test_id = $1`,
-        [id, adminId]
-      );
-      
-      await client.query('COMMIT');
-      
-      res.json({
-        message: 'Test archived successfully',
-        test: result.rows[0]
-      });
-      
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
-    
-  } catch (error) {
-    console.error('Error archiving test:', error);
-    res.status(500).json({ message: 'Internal server error while archiving test' });
-  }
-};
-
-// Get test analytics/statistics
-export const getTestAnalytics = async (req, res) => {
-  const { id } = req.params;
-  const adminId = req.user.id;
-  
-  try {
-    // Verify test ownership
-    const testCheck = await pool.query(
-      'SELECT id FROM tests WHERE id = $1 AND created_by = $2',
-      [id, adminId]
-    );
-    
-    if (testCheck.rows.length === 0) {
-      return res.status(404).json({ message: 'Test not found' });
-    }
-
-    // Get comprehensive analytics
-    const analyticsQuery = `
-      WITH test_stats AS (
-        SELECT 
-          COUNT(DISTINCT tr.user_id) as total_registered,
-          COUNT(DISTINCT ts.user_id) as total_participants,
-          COUNT(DISTINCT CASE WHEN ts.session_status = 'completed' THEN ts.user_id END) as completed_participants,
-          COUNT(DISTINCT CASE WHEN ts.session_status = 'in_progress' THEN ts.user_id END) as in_progress_participants,
-          COUNT(DISTINCT CASE WHEN ts.is_passed = true THEN ts.user_id END) as passed_participants,
-          AVG(CASE WHEN ts.session_status = 'completed' THEN ts.percentage_score END) as average_score,
-          MAX(CASE WHEN ts.session_status = 'completed' THEN ts.percentage_score END) as highest_score,
-          MIN(CASE WHEN ts.session_status = 'completed' THEN ts.percentage_score END) as lowest_score,
-          AVG(CASE WHEN ts.session_status = 'completed' THEN 
-            EXTRACT(EPOCH FROM (ts.end_time - ts.start_time))/60 END) as average_duration_minutes
-        FROM tests t
-        LEFT JOIN test_registrations tr ON t.id = tr.test_id
-        LEFT JOIN test_sessions ts ON t.id = ts.test_id
-        WHERE t.id = $1
-      ),
-      skill_stats AS (
-        SELECT 
-          usr.skill_category_name,
-          COUNT(*) as attempts,
-          AVG(usr.percentage) as average_performance,
-          COUNT(CASE WHEN usr.performance_level = 'excellent' THEN 1 END) as excellent_count,
-          COUNT(CASE WHEN usr.performance_level = 'good' THEN 1 END) as good_count,
-          COUNT(CASE WHEN usr.performance_level = 'average' THEN 1 END) as average_count,
-          COUNT(CASE WHEN usr.performance_level = 'below_average' THEN 1 END) as below_average_count,
-          COUNT(CASE WHEN usr.performance_level = 'poor' THEN 1 END) as poor_count
-        FROM user_skill_results usr
-        JOIN test_sessions ts ON usr.session_id = ts.id
-        WHERE ts.test_id = $1 AND ts.session_status = 'completed'
-        GROUP BY usr.skill_category_name
-      )
-      SELECT 
-        (SELECT row_to_json(test_stats.*) FROM test_stats) as overall_stats,
-        (SELECT COALESCE(json_agg(skill_stats.*), '[]'::json) FROM skill_stats) as skill_statistics
-    `;
-
-    const analyticsResult = await pool.query(analyticsQuery, [id]);
-    
-    const analytics = {
-      overallStats: analyticsResult.rows[0].overall_stats || {
-        total_registered: 0,
-        total_participants: 0,
-        completed_participants: 0,
-        in_progress_participants: 0,
-        passed_participants: 0,
-        average_score: 0,
-        highest_score: 0,
-        lowest_score: 0,
-        average_duration_minutes: 0
-      },
-      skillStatistics: analyticsResult.rows[0].skill_statistics || []
-    };
-
-    res.json(analytics);
-
-  } catch (error) {
-    console.error('Error fetching test analytics:', error);
-    res.status(500).json({ message: 'Internal server error while fetching analytics' });
   }
 };
 
@@ -1004,7 +844,7 @@ export const activateTest = async (req, res) => {
       // Update test controls
       await client.query(
         `UPDATE test_controls 
-         SET is_test_live = true, test_start_time = CURRENT_TIMESTAMP, updated_by = $2
+         SET is_test_live = true, updated_by = $2
          WHERE test_id = $1`,
         [id, adminId]
       );
@@ -1058,11 +898,12 @@ export const endTest = async (req, res) => {
       
       // End all active sessions
       await client.query(
-        `UPDATE test_sessions 
-         SET session_status = 'terminated', end_time = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-         WHERE test_id = $1 AND session_status = 'in_progress'`,
-        [id]
-      );
+  `UPDATE test_sessions 
+   SET session_status = 'terminated', updated_at = CURRENT_TIMESTAMP
+   WHERE test_id = $1 AND session_status = 'in_progress'`,
+  [id]
+);
+
       
       // Update test to inactive
       const updateQuery = `
@@ -1077,7 +918,7 @@ export const endTest = async (req, res) => {
       // Update test controls
       await client.query(
         `UPDATE test_controls 
-         SET is_test_live = false, is_test_ended = true, test_end_time = CURRENT_TIMESTAMP, updated_by = $2
+         SET is_test_live = false, is_test_ended = true, updated_by = $2
          WHERE test_id = $1`,
         [id, adminId]
       );
@@ -1127,20 +968,12 @@ export const getTestParticipants = async (req, res) => {
         u.name,
         u.email,
         u.phone,
-        u.registration_number as "registrationNumber",
-        u.organization,
         u.created_at as "userCreatedAt",
         
         -- Session information
         ts.id as "sessionId",
         ts.session_status as "sessionStatus",
-        ts.start_time as "startTime",
-        ts.end_time as "endTime",
         ts.current_question_order as "currentQuestion",
-        ts.total_score as "totalScore",
-        ts.total_possible_score as "totalPossibleScore",
-        ts.percentage_score as "percentageScore",
-        ts.is_passed as "isPassed",
         ts.created_at as "sessionCreatedAt",
         
         -- Registration information
@@ -1211,12 +1044,6 @@ export const getTestParticipants = async (req, res) => {
         
         // Session data
         sessionId: participant.sessionId,
-        startTime: participant.startTime,
-        endTime: participant.endTime,
-        totalScore: participant.totalScore,
-        totalPossibleScore: participant.totalPossibleScore,
-        percentageScore: participant.percentageScore,
-        isPassed: participant.isPassed,
         
         // Registration data
         registrationId: participant.registrationId,
@@ -1228,11 +1055,6 @@ export const getTestParticipants = async (req, res) => {
         progress: progress,
         currentQuestion: participant.currentQuestion || 0,
         answeredQuestions: participant.answeredQuestions || 0,
-        
-        // Time calculations
-        duration: participant.startTime && participant.endTime 
-          ? Math.round((new Date(participant.endTime) - new Date(participant.startTime)) / (1000 * 60)) // minutes
-          : null,
         
         // Status flags for easy filtering
         isCompleted: participant.sessionStatus === 'completed',
@@ -1248,13 +1070,6 @@ export const getTestParticipants = async (req, res) => {
       completed: participants.filter(p => p.isCompleted).length,
       inProgress: participants.filter(p => p.isInProgress).length,
       registered: participants.filter(p => p.isRegistered && !p.hasStarted).length,
-      passed: participants.filter(p => p.isPassed).length,
-      averageScore: participants.length > 0 
-        ? participants
-            .filter(p => p.percentageScore !== null)
-            .reduce((sum, p) => sum + (p.percentageScore || 0), 0) / 
-          Math.max(1, participants.filter(p => p.percentageScore !== null).length)
-        : 0
     };
     
     res.json({ 
@@ -1266,138 +1081,6 @@ export const getTestParticipants = async (req, res) => {
   } catch (error) {
     console.error('Error fetching test participants:', error);
     res.status(500).json({ message: 'Internal server error while fetching participants' });
-  }
-};
-
-// Clone test
-export const cloneTest = async (req, res) => {
-  const { id } = req.params;
-  const { title, description } = req.body;
-  const adminId = req.user.id;
-  
-  try {
-    const client = await pool.connect();
-    
-    try {
-      await client.query('BEGIN');
-      
-      // Get original test
-      const originalTest = await client.query(
-        'SELECT * FROM tests WHERE id = $1 AND created_by = $2',
-        [id, adminId]
-      );
-      
-      if (originalTest.rows.length === 0) {
-        await client.query('ROLLBACK');
-        return res.status(404).json({ message: 'Original test not found' });
-      }
-      
-      const original = originalTest.rows[0];
-      
-      // Create new test
-      const newTestQuery = `
-        INSERT INTO tests (title, description, instructions, rules, time_per_question, passing_percentage, created_by)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-        RETURNING *
-      `;
-      
-      const newTestValues = [
-        title || `${original.title} (Copy)`,
-        description || original.description,
-        original.instructions,
-        original.rules,
-        original.time_per_question,
-        original.passing_percentage,
-        adminId
-      ];
-      
-      const newTest = await client.query(newTestQuery, newTestValues);
-      const newTestId = newTest.rows[0].id;
-      
-      // Copy questions
-      const questionsQuery = `
-        SELECT * FROM questions WHERE test_id = $1 ORDER BY question_order
-      `;
-      
-      const questions = await client.query(questionsQuery, [id]);
-      
-      for (const question of questions.rows) {
-        // Insert new question
-        const newQuestionQuery = `
-          INSERT INTO questions (test_id, skill_category_name, question_text, question_order, explanation, difficulty_level)
-          VALUES ($1, $2, $3, $4, $5, $6)
-          RETURNING *
-        `;
-        
-        const newQuestionValues = [
-          newTestId,
-          question.skill_category_name,
-          question.question_text,
-          question.question_order,
-          question.explanation,
-          question.difficulty_level
-        ];
-        
-        const newQuestion = await client.query(newQuestionQuery, newQuestionValues);
-        const newQuestionId = newQuestion.rows[0].id;
-        
-        // Copy options
-        const optionsQuery = `
-          SELECT * FROM question_options WHERE question_id = $1 ORDER BY option_order
-        `;
-        
-        const options = await client.query(optionsQuery, [question.id]);
-        
-        for (const option of options.rows) {
-          const newOptionQuery = `
-            INSERT INTO question_options (question_id, option_text, option_order, marks, is_correct)
-            VALUES ($1, $2, $3, $4, $5)
-          `;
-          
-          const newOptionValues = [
-            newQuestionId,
-            option.option_text,
-            option.option_order,
-            option.marks,
-            option.is_correct
-          ];
-          
-          await client.query(newOptionQuery, newOptionValues);
-        }
-      }
-      
-      // Update total questions count
-      await client.query(
-        'UPDATE tests SET total_questions = $1 WHERE id = $2',
-        [questions.rows.length, newTestId]
-      );
-      
-      // Create test control entry
-      const controlQuery = `
-        INSERT INTO test_controls (test_id, is_registration_open, is_test_live, is_test_ended, updated_by)
-        VALUES ($1, $2, $3, $4, $5)
-      `;
-      
-      const controlValues = [newTestId, true, false, false, adminId];
-      await client.query(controlQuery, controlValues);
-      
-      await client.query('COMMIT');
-      
-      res.status(201).json({
-        message: 'Test cloned successfully',
-        test: newTest.rows[0]
-      });
-      
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
-    
-  } catch (error) {
-    console.error('Error cloning test:', error);
-    res.status(500).json({ message: 'Internal server error while cloning test' });
   }
 };
 
@@ -1422,8 +1105,7 @@ export const getTestForEdit = async (req, res) => {
         t.*,
         tc.is_test_live as "isTestLive",
         tc.is_test_ended as "isTestEnded",
-        tc.current_participants as "currentParticipants",
-        tc.max_participants as "maxParticipants"
+        tc.current_participants as "currentParticipants"
       FROM tests t
       LEFT JOIN test_controls tc ON t.id = tc.test_id
       WHERE t.id = $1 AND t.created_by = $2
@@ -1444,21 +1126,18 @@ export const getTestForEdit = async (req, res) => {
         q.question_text as "questionText",
         q.skill_category_name as "skillCategoryName",
         q.question_order as "questionOrder",
-        q.explanation,
-        q.difficulty_level as "difficultyLevel",
         JSON_AGG(
           JSON_BUILD_OBJECT(
             'id', qo.id,
             'text', qo.option_text,
             'marks', qo.marks,
-            'isCorrect', qo.is_correct,
             'optionOrder', qo.option_order
           ) ORDER BY qo.option_order
         ) as options
       FROM questions q
       LEFT JOIN question_options qo ON q.id = qo.question_id
       WHERE q.test_id = $1
-      GROUP BY q.id, q.question_text, q.skill_category_name, q.question_order, q.explanation, q.difficulty_level
+      GROUP BY q.id, q.question_text, q.skill_category_name, q.question_order
       ORDER BY q.question_order
     `;
     
@@ -1497,7 +1176,6 @@ export const updateTestInfo = async (req, res) => {
     instructions, 
     rules, 
     timePerQuestion, 
-    passingPercentage 
   } = req.body;
   
   try {
@@ -1525,10 +1203,6 @@ export const updateTestInfo = async (req, res) => {
       return res.status(400).json({ message: 'Time per question must be between 5 and 300 seconds' });
     }
     
-    if (passingPercentage && (passingPercentage < 0 || passingPercentage > 100)) {
-      return res.status(400).json({ message: 'Passing percentage must be between 0 and 100' });
-    }
-    
     // Update test
     const updateQuery = `
       UPDATE tests 
@@ -1538,9 +1212,8 @@ export const updateTestInfo = async (req, res) => {
         instructions = $3,
         rules = $4,
         time_per_question = $5,
-        passing_percentage = $6,
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $7 AND created_by = $8
+      WHERE id = $6 AND created_by = $7
       RETURNING *
     `;
     
@@ -1550,7 +1223,6 @@ export const updateTestInfo = async (req, res) => {
       instructions?.trim() || null,
       rules?.trim() || null,
       timePerQuestion || 15,
-      passingPercentage || 60,
       id,
       adminId
     ];
@@ -1575,9 +1247,7 @@ export const addQuestion = async (req, res) => {
   const { 
     questionText, 
     skillCategoryName, 
-    options, 
-    explanation, 
-    difficultyLevel,
+    options,  
     questionOrder 
   } = req.body;
   
@@ -1636,8 +1306,8 @@ export const addQuestion = async (req, res) => {
       
       // Insert question
       const questionQuery = `
-        INSERT INTO questions (test_id, skill_category_name, question_text, question_order, explanation, difficulty_level)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO questions (test_id, skill_category_name, question_text, question_order)
+        VALUES ($1, $2, $3, $4)
         RETURNING *
       `;
       
@@ -1646,8 +1316,6 @@ export const addQuestion = async (req, res) => {
         skillCategoryName.trim(),
         questionText.trim(),
         nextOrder,
-        explanation?.trim() || null,
-        difficultyLevel || 'medium'
       ];
       
       const questionResult = await client.query(questionQuery, questionValues);
@@ -1659,8 +1327,8 @@ export const addQuestion = async (req, res) => {
         const option = options[i];
         
         const optionQuery = `
-          INSERT INTO question_options (question_id, option_text, option_order, marks, is_correct)
-          VALUES ($1, $2, $3, $4, $5)
+          INSERT INTO question_options (question_id, option_text, option_order, marks)
+          VALUES ($1, $2, $3, $4)
           RETURNING *
         `;
         
@@ -1669,7 +1337,6 @@ export const addQuestion = async (req, res) => {
           option.text.trim(),
           i + 1,
           option.marks,
-          option.isCorrect || false
         ];
         
         const optionResult = await client.query(optionQuery, optionValues);
@@ -1714,9 +1381,7 @@ export const updateQuestion = async (req, res) => {
   const { 
     questionText, 
     skillCategoryName, 
-    options, 
-    explanation, 
-    difficultyLevel 
+    options,  
   } = req.body;
   
   try {
@@ -1769,18 +1434,14 @@ export const updateQuestion = async (req, res) => {
         SET 
           question_text = $1,
           skill_category_name = $2,
-          explanation = $3,
-          difficulty_level = $4,
           updated_at = CURRENT_TIMESTAMP
-        WHERE id = $5 AND test_id = $6
+        WHERE id = $3 AND test_id = $4
         RETURNING *
       `;
       
       const questionValues = [
         questionText.trim(),
         skillCategoryName.trim(),
-        explanation?.trim() || null,
-        difficultyLevel || 'medium',
         questionId,
         id
       ];
@@ -1796,8 +1457,8 @@ export const updateQuestion = async (req, res) => {
         const option = options[i];
         
         const optionQuery = `
-          INSERT INTO question_options (question_id, option_text, option_order, marks, is_correct)
-          VALUES ($1, $2, $3, $4, $5)
+          INSERT INTO question_options (question_id, option_text, option_order, marks)
+          VALUES ($1, $2, $3, $4)
           RETURNING *
         `;
         
@@ -1806,7 +1467,6 @@ export const updateQuestion = async (req, res) => {
           option.text.trim(),
           i + 1,
           option.marks,
-          option.isCorrect || false
         ];
         
         const optionResult = await client.query(optionQuery, optionValues);
