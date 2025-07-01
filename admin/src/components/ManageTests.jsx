@@ -63,11 +63,27 @@ const ManageTests = () => {
       const data = await response.json();
       const processedTests = (data.tests || []).map(test => {
         let status = 'draft';
-        if (test.isTestEnded) status = 'completed';
-        else if (test.isActive) status = 'active';
-        else if (test.isPublished) status = 'published';
+        // Updated status logic based on new database schema
+        if (test.is_test_ended) status = 'completed';
+        else if (test.is_active && test.is_live) status = 'active';
+        else if (test.is_published) status = 'published';
 
-        return { ...test, status };
+        return { 
+          ...test, 
+          status,
+          // Map database fields to component expectations
+          testCode: test.test_code,
+          totalQuestions: test.total_questions,
+          totalCategories: test.total_categories,
+          totalSubcategories: test.total_subcategories,
+          timePerQuestion: test.time_per_question,
+          participants: test.participants || 0,
+          completedParticipants: test.completed_participants || 0,
+          isActive: test.is_active,
+          isPublished: test.is_published,
+          isLive: test.is_live,
+          createdAt: test.created_at
+        };
       });
       setTests(processedTests || []);
       setPagination(data.pagination || {});
@@ -206,6 +222,14 @@ const ManageTests = () => {
     navigate(`/admin/edit-test/${testId}`);
   };
 
+  // Handle results button click
+  const handleResultsClick = (testId, event) => {
+    if (event) {
+      event.stopPropagation();
+    }
+    navigate(`/admin/test-results/${testId}`);
+  };
+
   if (loading && tests.length === 0) {
     return (
       <div className="loading-container">
@@ -317,6 +341,14 @@ const ManageTests = () => {
                     <span className="info-value">{test.totalQuestions || 0}</span>
                   </div>
                   <div className="info-item">
+                    <span className="info-label">Categories:</span>
+                    <span className="info-value">{test.totalCategories || 0}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Subcategories:</span>
+                    <span className="info-value">{test.totalSubcategories || 0}</span>
+                  </div>
+                  <div className="info-item">
                     <span className="info-label">Time per Q:</span>
                     <span className="info-value">{test.timePerQuestion || 0}s</span>
                   </div>
@@ -330,15 +362,20 @@ const ManageTests = () => {
                   </div>
                 </div>
 
-                {test.skillCategories && test.skillCategories.length > 0 && (
-                  <div className="skill-categories">
-                    <span className="categories-label">Skills:</span>
-                    <div className="categories-list">
-                      {test.skillCategories.slice(0, 3).map((skill, index) => (
-                        <span key={index} className="skill-tag">{skill}</span>
+                {/* Show category and subcategory breakdown if available */}
+                {test.categoryBreakdown && test.categoryBreakdown.length > 0 && (
+                  <div className="category-breakdown">
+                    <span className="breakdown-label">Structure:</span>
+                    <div className="breakdown-list">
+                      {test.categoryBreakdown.slice(0, 2).map((category, index) => (
+                        <span key={index} className="category-tag">
+                          {category.name} ({category.subcategories} subcats)
+                        </span>
                       ))}
-                      {test.skillCategories.length > 3 && (
-                        <span className="skill-tag more">+{test.skillCategories.length - 3} more</span>
+                      {test.categoryBreakdown.length > 2 && (
+                        <span className="category-tag more">
+                          +{test.categoryBreakdown.length - 2} more
+                        </span>
                       )}
                     </div>
                   </div>
@@ -348,7 +385,7 @@ const ManageTests = () => {
                   <span className="created-date">Created: {formatDate(test.createdAt)}</span>
                 </div>
 
-                {/* Show click instruction for published tests */}
+                {/* Show click instruction for published/active tests */}
                 {(test.status === 'published' || test.status === 'active') && (
                   <div className="click-instruction">
                     <small>💡 Click card to view test details and manage participants</small>
@@ -358,13 +395,15 @@ const ManageTests = () => {
 
               <div className="test-card-actions">
                 <div className="action-row">
-                  {/* Edit Button - Available for all statuses */}
-                  <button 
-                    onClick={(e) => handleEditClick(test.id, e)}
-                    className="action-btn edit-btn"
-                  >
-                    Edit
-                  </button>
+                  {/* Edit Button - Available for all statuses except completed */}
+                  {test.status !== 'completed' && (
+                    <button 
+                      onClick={(e) => handleEditClick(test.id, e)}
+                      className="action-btn edit-btn"
+                    >
+                      Edit
+                    </button>
+                  )}
                   
                   {/* Publish Button - Only for draft tests */}
                   {test.status === 'draft' && (
@@ -376,8 +415,8 @@ const ManageTests = () => {
                     </button>
                   )}
 
-                  {/* Unpublish Button - For published and active tests */}
-                  {(test.status === 'published' || test.status === 'active') && (
+                  {/* Unpublish Button - For published tests only */}
+                  {test.status === 'published' && (
                     <button 
                       onClick={(e) => handleConfirmAction('unpublish', test.id, e)}
                       className="action-btn unpublish-btn"
@@ -386,8 +425,18 @@ const ManageTests = () => {
                     </button>
                   )}
 
+                  {/* Results Button - For completed tests or active tests with participants */}
+                  {(test.status === 'completed' || (test.status === 'active' && test.completedParticipants > 0)) && (
+                    <button 
+                      onClick={(e) => handleResultsClick(test.id, e)}
+                      className="action-btn results-btn"      
+                    >
+                      Results
+                    </button>
+                  )}
+
                   {/* Delete Button - Only for draft tests */}
-                  {test.status === 'draft' && (
+                  {(test.status === 'draft' || test.status === 'completed') && (
                     <button 
                       onClick={(e) => handleConfirmAction('delete', test.id, e)}
                       className="action-btn delete-btn"
@@ -440,10 +489,10 @@ const ManageTests = () => {
                 <p className="warning-text">This action cannot be undone.</p>
               )}
               {confirmAction?.action === 'publish' && (
-                <p className="info-text">Once published, users will be able to see the test and register for it.</p>
+                <p className="info-text">Once published, the test will be available for activation and user registration.</p>
               )}
               {confirmAction?.action === 'unpublish' && (
-                <p className="warning-text">This will make the test unavailable to users and stop any ongoing sessions.</p>
+                <p className="warning-text">This will make the test unavailable and deactivate it if currently active.</p>
               )}
             </div>
             <div className="modal-actions">
