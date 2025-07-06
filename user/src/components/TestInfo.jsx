@@ -39,7 +39,7 @@ const TestInfo = () => {
   };
 
   const handleRegisterClick = () => {
-    navigate(`/login/${testId}`);
+    navigate(`/login-verification/${testId}`);
   };
 
   if (loading) {
@@ -135,8 +135,8 @@ const TestInfo = () => {
           <div className="detail-card">
             <div className="detail-icon">🎯</div>
             <div className="detail-content">
-              <h4 className="detail-title">Skill Categories</h4>
-              <p className="detail-value">Multiple Skills</p>
+              <h4 className="detail-title">Question Format</h4>
+              <p className="detail-value">Multiple Choice (5 Options)</p>
             </div>
           </div>
 
@@ -145,6 +145,43 @@ const TestInfo = () => {
             <div className="detail-content">
               <h4 className="detail-title">Participants</h4>
               <p className="detail-value">{testData.current_participants || 0} registered</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Response Format Section */}
+        <div className="response-format-section">
+          <h3 className="section-title">Response Format</h3>
+          <div className="response-format-content">
+            <p className="format-description">
+              Each question will have the following response options:
+            </p>
+            <div className="response-options">
+              <div className="option-item">
+                <span className="option-label">A.</span>
+                <span className="option-text">Strongly Agree</span>
+                <span className="option-marks">(5 marks)</span>
+              </div>
+              <div className="option-item">
+                <span className="option-label">B.</span>
+                <span className="option-text">Agree</span>
+                <span className="option-marks">(4 marks)</span>
+              </div>
+              <div className="option-item">
+                <span className="option-label">C.</span>
+                <span className="option-text">Neutral</span>
+                <span className="option-marks">(3 marks)</span>
+              </div>
+              <div className="option-item">
+                <span className="option-label">D.</span>
+                <span className="option-text">Disagree</span>
+                <span className="option-marks">(2 marks)</span>
+              </div>
+              <div className="option-item">
+                <span className="option-label">E.</span>
+                <span className="option-text">Strongly Disagree</span>
+                <span className="option-marks">(1 mark)</span>
+              </div>
             </div>
           </div>
         </div>
@@ -196,6 +233,14 @@ const TestInfo = () => {
             <div className="note-item">
               <span className="note-icon">📊</span>
               <span className="note-text">Results will be available to administrators only</span>
+            </div>
+            <div className="note-item">
+              <span className="note-icon">⏰</span>
+              <span className="note-text">Each question has a time limit - answer carefully</span>
+            </div>
+            <div className="note-item">
+              <span className="note-icon">🎯</span>
+              <span className="note-text">Choose the option that best represents your opinion</span>
             </div>
           </div>
         </div>

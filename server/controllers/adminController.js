@@ -876,7 +876,7 @@ export const generateTestCode = async (req, res) => {
       // Update test controls
       await client.query(
         `UPDATE test_controls 
-         SET is_test_live = true, updated_by = $2
+         SET is_test_live = true, is_test_started = true, updated_by = $2
          WHERE test_id = $1`,
         [id, adminId]
       );

@@ -50,16 +50,49 @@ const Homepage = () => {
   };
 
   const getTestStatus = (test) => {
-    const now = new Date();
-    const startTime = test.test_start_time ? new Date(test.test_start_time) : null;
-    const endTime = test.test_end_time ? new Date(test.test_end_time) : null;
-
-    if (endTime && now > endTime) {
+    if (test.status) {
+      return test.status;
+    }
+    
+    // Fallback logic if status is not provided
+    if (test.is_test_ended) {
       return 'completed';
-    } else if (startTime && now < startTime) {
-      return 'upcoming';
-    } else {
+    } else if (test.is_test_started && test.is_test_live) {
       return 'active';
+    } else if (test.is_registration_open) {
+      return 'registration_open';
+    } else {
+      return 'upcoming';
+    }
+  };
+
+  const getStatusDisplay = (status) => {
+    switch (status) {
+      case 'active':
+        return 'Active';
+      case 'registration_open':
+        return 'Registration Open';
+      case 'upcoming':
+        return 'Upcoming';
+      case 'completed':
+        return 'Completed';
+      default:
+        return 'Unknown';
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'active':
+        return 'status-active';
+      case 'registration_open':
+        return 'status-registration';
+      case 'upcoming':
+        return 'status-upcoming';
+      case 'completed':
+        return 'status-completed';
+      default:
+        return 'status-unknown';
     }
   };
 
@@ -81,7 +114,7 @@ const Homepage = () => {
         <div className="homepage-header">
           <div className="header-content">
             <h1 className="main-title">Welcome to Infinova Test Platform</h1>
-            <p className="main-subtitle">Discover and participate in available skill assessment tests</p>
+            <p className="main-subtitle">Discover and participate in comprehensive skill assessment tests</p>
           </div>
           <div className="header-decoration">
             <div className="decoration-circle"></div>
@@ -130,13 +163,13 @@ const Homepage = () => {
                   return (
                     <div 
                       key={test.id} 
-                      className={`test-card ${status}`}
+                      className={`test-card ${getStatusColor(status)}`}
                       onClick={() => handleTestClick(test.id)}
                     >
                       <div className="test-card-header">
                         <div className="test-status-badge">
-                          <span className={`status-indicator ${status}`}></span>
-                          {status.charAt(0).toUpperCase() + status.slice(1)}
+                          <span className={`status-indicator ${getStatusColor(status)}`}></span>
+                          {getStatusDisplay(status)}
                         </div>
                         <div className="test-code">
                           Code: {test.test_code || 'TBD'}
@@ -165,21 +198,22 @@ const Homepage = () => {
                           <div className="detail-item">
                             <span className="detail-icon">👥</span>
                             <span className="detail-text">
-                              {test.current_participants || 0} Registered
+                              {test.total_registered || 0} Registered
                             </span>
                           </div>
                         </div>
 
-                        {test.test_start_time && (
-                          <div className="test-timing">
-                            <div className="timing-item">
-                              <span className="timing-label">Starts:</span>
-                              <span className="timing-value">
-                                {formatDate(test.test_start_time)}
-                              </span>
-                            </div>
+                        {/* Test Structure Info */}
+                        <div className="test-structure">
+                          <div className="structure-item">
+                            <span className="structure-label">Assessment Type:</span>
+                            <span className="structure-value">5-Point Likert Scale</span>
                           </div>
-                        )}
+                          <div className="structure-item">
+                            <span className="structure-label">Scoring:</span>
+                            <span className="structure-value">1-5 marks per question</span>
+                          </div>
+                        </div>
                       </div>
 
                       <div className="test-card-footer">
@@ -187,9 +221,16 @@ const Homepage = () => {
                           <span className="meta-text">
                             Created: {formatDate(test.created_at)}
                           </span>
+                          {test.is_registration_open && (
+                            <span className="registration-status">
+                              Registration Open
+                            </span>
+                          )}
                         </div>
                         <div className="test-action">
-                          <span className="action-text">View Details →</span>
+                          <span className="action-text">
+                            {status === 'registration_open' ? 'Register Now →' : 'View Details →'}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -198,6 +239,23 @@ const Homepage = () => {
               </div>
             </>
           )}
+        </div>
+
+        {/* Information Section */}
+        <div className="info-section">
+          <div className="info-card">
+            <h3 className="info-title">About Our Assessment</h3>
+            <p className="info-description">
+              Our tests use a comprehensive 5-point Likert scale assessment system:
+            </p>
+            <ul className="info-list">
+              <li><strong>Strongly Agree (5 marks)</strong> - Complete agreement</li>
+              <li><strong>Agree (4 marks)</strong> - Partial agreement</li>
+              <li><strong>Neutral (3 marks)</strong> - No strong opinion</li>
+              <li><strong>Disagree (2 marks)</strong> - Partial disagreement</li>
+              <li><strong>Strongly Disagree (1 mark)</strong> - Complete disagreement</li>
+            </ul>
+          </div>
         </div>
 
         {/* Footer Section */}
