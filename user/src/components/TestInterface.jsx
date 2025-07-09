@@ -48,9 +48,7 @@ const TestInterface = () => {
     setUserId(storedUserId);
     setOptions(fixedOptions);
     
-    initializeTest();
-    setupHeartbeat();
-    
+    initializeTest();  
 
     return () => {
       cleanup();
@@ -80,6 +78,13 @@ const TestInterface = () => {
     fetchCurrentQuestion();
   }
 }, [userId, testId, currentQuestionIndex, testData]);
+
+useEffect(() => {
+  if (userId && testId && sessionToken) {
+    setupHeartbeat();
+  }
+}, [userId, testId, sessionToken]);
+
 
   // Initialize test and fetch first question
   const initializeTest = async () => {
@@ -201,9 +206,17 @@ const TestInterface = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // Check if test is completed
+  // Check if test is completed
         if (data.isCompleted) {
-          handleTestCompletion();
+          setIsTestCompleted(true);
+          // Clear session data
+          localStorage.removeItem('testSessionToken');
+          localStorage.removeItem('testId');
+          localStorage.removeItem('userId');
+          
+          // Navigate to thank you page
+          navigate('/thank-you');
+          return; 
         } else {
           // Move to next question
           setCurrentQuestionIndex(prev => prev + 1);
@@ -251,7 +264,15 @@ const TestInterface = () => {
 
       if (response.ok) {
         if (data.isCompleted) {
-          handleTestCompletion();
+          setIsTestCompleted(true);
+          // Clear session data
+          localStorage.removeItem('testSessionToken');
+          localStorage.removeItem('testId');
+          localStorage.removeItem('userId');
+          
+          // Navigate to thank you page
+          navigate('/thank-you');
+          return;
         } else {
           setCurrentQuestionIndex(prev => prev + 1);
           await fetchCurrentQuestion();
@@ -264,6 +285,7 @@ const TestInterface = () => {
 
   // Handle test completion
   const handleTestCompletion = async () => {
+    if (isTestCompleted) return;
     setIsTestCompleted(true);
     
     try {
@@ -298,6 +320,9 @@ const TestInterface = () => {
   // Setup heartbeat to maintain session
   const setupHeartbeat = () => {
     heartbeatInterval.current = setInterval(async () => {
+
+      if (isTestCompleted) return;
+
       try {
         console.log('Sending heartbeat for test:', testId, 'user:', userId);
         await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/user/test/heartbeat`, {
@@ -316,36 +341,6 @@ const TestInterface = () => {
       }
     }, 30000); // Every 30 seconds
   };
-
-  // Setup tab switch monitorin
-
-  const setupTabSwitchMonitoring = () => {
-  const handleVisibilityChange = () => {
-    if (document.hidden) {
-      setTabSwitchWarning(true);
-    } else {
-      setTabSwitchWarning(false);
-    }
-  };
-
-  const handleFocusChange = () => {
-    if (document.hasFocus()) {
-      setTabSwitchWarning(false);
-    } else {
-      setTabSwitchWarning(true);
-    }
-  };
-
-  document.addEventListener('visibilitychange', handleVisibilityChange);
-  window.addEventListener('focus', handleFocusChange);
-  window.addEventListener('blur', handleFocusChange);
-
-  return () => {
-    document.removeEventListener('visibilitychange', handleVisibilityChange);
-    window.removeEventListener('focus', handleFocusChange);
-    window.removeEventListener('blur', handleFocusChange);
-  };
-};
 
   // Cleanup function
   const cleanup = () => {

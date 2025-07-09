@@ -2,7 +2,18 @@ import jwt from "jsonwebtoken";
 import {findAdminByEmail} from "../models/adminModel.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+import nodemailer from 'nodemailer';
+import PDFDocument from 'pdfkit';
+import ExcelJS from 'exceljs';
 import {pool}  from "../config/db.js";
+
+const transporter = nodemailer.createTransport({
+  service: 'Gmail',
+  auth: {
+    user: process.env.EMAIL, 
+    pass: process.env.APP_PASSWORD, 
+  },
+});
 
 export const loginAdmin = async (req, res) => {
   const { email, password } = req.body;
@@ -2293,4 +2304,1068 @@ export const reorderQuestion = async (req, res) => {
   } finally {
     client.release();
   }
+};
+
+// Get test results with basic test info
+export const getTestResults = async (req, res) => {
+  const testId = req.params.id;
+  const adminId = req.user.id;
+  
+  try {
+    const query = `
+      SELECT 
+        t.*,
+        tc.is_test_live,
+        tc.is_test_ended,
+        tc.current_participants,
+        tc.completed_participants
+      FROM tests t
+      LEFT JOIN test_controls tc ON t.id = tc.test_id
+      WHERE t.id = $1 AND t.created_by = $2
+    `;
+    
+    const result = await pool.query(query, [testId, adminId]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Test not found' });
+    }
+    
+    const testData = result.rows[0];
+    
+    res.json({ 
+      test: {
+        id: testData.id,
+        title: testData.title,
+        description: testData.description,
+        test_code: testData.test_code,
+        total_questions: testData.total_questions,
+        total_categories: testData.total_categories,
+        total_subcategories: testData.total_subcategories,
+        is_live: testData.is_live,
+        is_test_ended: testData.is_test_ended,
+        participants: testData.current_participants || 0,
+        completed_participants: testData.completed_participants || 0,
+        created_at: testData.created_at
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error fetching test results:', error);
+    res.status(500).json({ message: 'Internal server error while fetching test results' });
+  }
+};
+
+// Get participants list with pagination and search
+export const getTestParticipantsForResults = async (req, res) => {
+  const testId = req.params.id;
+  const { page = 1, limit = 10, search = '' } = req.query;
+  const adminId = req.user.id;
+  
+  try {
+    // Verify test ownership
+    const testCheck = await pool.query('SELECT id FROM tests WHERE id = $1 AND created_by = $2', [testId, adminId]);
+    if (testCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'Test not found' });
+    }
+    
+    const offset = (page - 1) * limit;
+    let whereClause = 'WHERE ts.test_id = $1';
+    let queryParams = [testId];
+    
+    if (search.trim()) {
+      whereClause += ' AND (u.name ILIKE $3 OR u.email ILIKE $3)';
+      queryParams.push(`%${search.trim()}%`);
+    }
+    
+    const participantsQuery = `
+      SELECT 
+        u.id,
+        u.name,
+        u.email,
+        u.phone,
+        ts.session_status,
+        ts.started_at,
+        ts.completed_at,
+        ts.questions_answered,
+        ts.total_questions,
+        COALESCE(AVG(cr.average_percentage), 0) as overall_percentage
+      FROM users u
+      JOIN test_sessions ts ON u.id = ts.user_id
+      LEFT JOIN category_results cr ON ts.id = cr.session_id
+      ${whereClause}
+      GROUP BY u.id, u.name, u.email, u.phone, ts.session_status, ts.started_at, ts.completed_at, ts.questions_answered, ts.total_questions
+      ORDER BY ts.completed_at DESC NULLS LAST, ts.started_at DESC
+      LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}
+    `;
+    
+    queryParams.push(limit, offset);
+    
+    const countQuery = `
+      SELECT COUNT(DISTINCT u.id) as total
+      FROM users u
+      JOIN test_sessions ts ON u.id = ts.user_id
+      ${whereClause}
+    `;
+    
+    const [participants, countResult] = await Promise.all([
+      pool.query(participantsQuery, queryParams),
+      pool.query(countQuery, queryParams.slice(0, -2))
+    ]);
+    
+    const total = parseInt(countResult.rows[0].total);
+    const totalPages = Math.ceil(total / limit);
+    
+    res.json({
+      participants: participants.rows,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages,
+        totalItems: total,
+        itemsPerPage: parseInt(limit),
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error fetching participants:', error);
+    res.status(500).json({ message: 'Internal server error while fetching participants' });
+  }
+};
+
+// Get individual participant detailed results
+export const getParticipantResults = async (req, res) => {
+  const { participantId } = req.params;
+  const testId = req.params.id;
+  const adminId = req.user.id;
+  
+  try {
+    // Verify test ownership
+    const testCheck = await pool.query('SELECT id FROM tests WHERE id = $1 AND created_by = $2', [testId, adminId]);
+    if (testCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'Test not found' });
+    }
+    
+    // Get participant session
+    const sessionQuery = `
+      SELECT ts.*, u.name, u.email, u.phone
+      FROM test_sessions ts
+      JOIN users u ON ts.user_id = u.id
+      WHERE ts.test_id = $1 AND ts.user_id = $2
+    `;
+    
+    const sessionResult = await pool.query(sessionQuery, [testId, participantId]);
+    
+    if (sessionResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Participant not found' });
+    }
+    
+    const sessionData = sessionResult.rows[0];
+    
+    // Get category results
+    const categoryQuery = `
+      SELECT 
+        cr.*,
+        tc.name as category_name
+      FROM category_results cr
+      JOIN test_categories tc ON cr.category_id = tc.id
+      WHERE cr.session_id = $1
+      ORDER BY tc.display_order
+    `;
+    
+    // Get subcategory results
+    const subcategoryQuery = `
+      SELECT 
+        sr.*,
+        tsc.name as subcategory_name,
+        tc.name as category_name
+      FROM subcategory_results sr
+      JOIN test_subcategories tsc ON sr.subcategory_id = tsc.id
+      JOIN test_categories tc ON sr.category_id = tc.id
+      WHERE sr.session_id = $1
+      ORDER BY tc.display_order, tsc.display_order
+    `;
+    
+    const [categoryResults, subcategoryResults] = await Promise.all([
+      pool.query(categoryQuery, [sessionData.id]),
+      pool.query(subcategoryQuery, [sessionData.id])
+    ]);
+    
+    // Calculate overall percentage
+    const overallPercentage = categoryResults.rows.length > 0 
+      ? categoryResults.rows.reduce((sum, cat) => sum + parseFloat(cat.average_percentage), 0) / categoryResults.rows.length
+      : 0;
+    
+    res.json({
+      participant: {
+        id: sessionData.user_id,
+        name: sessionData.name,
+        email: sessionData.email,
+        phone: sessionData.phone
+      },
+      session: {
+        status: sessionData.session_status,
+        started_at: sessionData.started_at,
+        completed_at: sessionData.completed_at,
+        questions_answered: sessionData.questions_answered,
+        total_questions: sessionData.total_questions
+      },
+      overallPercentage: overallPercentage.toFixed(2),
+      categoryResults: categoryResults.rows.map(cat => ({
+        categoryId: cat.category_id,
+        categoryName: cat.category_name,
+        totalSubcategories: cat.total_subcategories,
+        totalQuestions: cat.total_questions,
+        totalMarksObtained: cat.total_marks_obtained,
+        maxPossibleMarks: cat.max_possible_marks,
+        averagePercentage: parseFloat(cat.average_percentage).toFixed(2)
+      })),
+      subcategoryResults: subcategoryResults.rows.map(sub => ({
+        subcategoryId: sub.subcategory_id,
+        subcategoryName: sub.subcategory_name,
+        categoryName: sub.category_name,
+        totalQuestions: sub.total_questions,
+        totalMarksObtained: sub.total_marks_obtained,
+        maxPossibleMarks: sub.max_possible_marks,
+        percentageScore: parseFloat(sub.percentage_score).toFixed(2)
+      }))
+    });
+    
+  } catch (error) {
+    console.error('Error fetching participant results:', error);
+    res.status(500).json({ message: 'Internal server error while fetching participant results' });
+  }
+};
+
+// Get overall test results
+export const getOverallTestResults = async (req, res) => {
+  const testId = req.params.id;
+  const adminId = req.user.id;
+  
+  try {
+    // Verify test ownership
+    const testCheck = await pool.query('SELECT title FROM tests WHERE id = $1 AND created_by = $2', [testId, adminId]);
+    if (testCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'Test not found' });
+    }
+    
+    // Get overall statistics
+    const statsQuery = `
+      SELECT 
+        COUNT(DISTINCT ts.user_id) as total_participants,
+        COUNT(DISTINCT CASE WHEN ts.session_status = 'completed' THEN ts.user_id END) as completed_participants,
+        AVG(CASE WHEN ts.session_status = 'completed' THEN ts.questions_answered END) as avg_questions_answered,
+        AVG(CASE WHEN cr.average_percentage IS NOT NULL THEN cr.average_percentage END) as overall_average_percentage
+      FROM test_sessions ts
+      LEFT JOIN category_results cr ON ts.id = cr.session_id
+      WHERE ts.test_id = $1
+    `;
+    
+    // Get category averages
+    const categoryAveragesQuery = `
+      SELECT 
+        tc.name as category_name,
+        AVG(cr.average_percentage) as average_score,
+        COUNT(DISTINCT cr.session_id) as participant_count
+      FROM test_categories tc
+      LEFT JOIN category_results cr ON tc.id = cr.category_id
+      LEFT JOIN test_sessions ts ON cr.session_id = ts.id AND ts.session_status = 'completed'
+      WHERE tc.test_id = $1
+      GROUP BY tc.id, tc.name, tc.display_order
+      ORDER BY tc.display_order
+    `;
+    
+    // Get performance distribution
+    const performanceQuery = `
+  SELECT 
+    performance_range,
+    COUNT(*) as count
+  FROM (
+    SELECT 
+      ts.id,
+      AVG(cr.average_percentage) as avg_percentage,
+      CASE 
+        WHEN AVG(cr.average_percentage) >= 80 THEN 'Excellent (80-100%)'
+        WHEN AVG(cr.average_percentage) >= 60 THEN 'Good (60-79%)'
+        WHEN AVG(cr.average_percentage) >= 40 THEN 'Average (40-59%)'
+        ELSE 'Below Average (0-39%)'
+      END as performance_range
+    FROM test_sessions ts
+    JOIN category_results cr ON ts.id = cr.session_id
+    WHERE ts.test_id = $1 AND ts.session_status = 'completed'
+    GROUP BY ts.id
+  ) session_averages
+  GROUP BY performance_range
+  ORDER BY 
+    CASE performance_range
+      WHEN 'Excellent (80-100%)' THEN 1
+      WHEN 'Good (60-79%)' THEN 2
+      WHEN 'Average (40-59%)' THEN 3
+      ELSE 4
+    END
+`;
+    
+    const [statsResult, categoryAveragesResult, performanceResult] = await Promise.all([
+      pool.query(statsQuery, [testId]),
+      pool.query(categoryAveragesQuery, [testId]),
+      pool.query(performanceQuery, [testId])
+    ]);
+    
+    const stats = statsResult.rows[0];
+    
+    res.json({
+      testTitle: testCheck.rows[0].title,
+      statistics: {
+        totalParticipants: parseInt(stats.total_participants) || 0,
+        completedParticipants: parseInt(stats.completed_participants) || 0,
+        averageQuestionsAnswered: parseFloat(stats.avg_questions_answered) || 0,
+        overallAveragePercentage: parseFloat(stats.overall_average_percentage) || 0
+      },
+      categoryAverages: categoryAveragesResult.rows.map(cat => ({
+        categoryName: cat.category_name,
+        averageScore: parseFloat(cat.average_score) || 0,
+        participantCount: parseInt(cat.participant_count) || 0
+      })),
+      performanceDistribution: performanceResult.rows.map(perf => ({
+        name: perf.performance_range,
+        count: parseInt(perf.count)
+      }))
+    });
+    
+  } catch (error) {
+    console.error('Error fetching overall results:', error);
+    res.status(500).json({ message: 'Internal server error while fetching overall results' });
+  }
+};
+
+// Generate PDF report for participant
+const generateParticipantPDF = async (participantData) => {
+  const doc = new PDFDocument();
+  const chunks = [];
+  
+  doc.on('data', (chunk) => chunks.push(chunk));
+  
+  // Header
+  doc.fontSize(20).text('Test Results Report', { align: 'center' });
+  doc.moveDown();
+  
+  // Participant Info
+  doc.fontSize(14).text(`Name: ${participantData.participant.name}`);
+  doc.text(`Email: ${participantData.participant.email}`);
+  doc.text(`Overall Score: ${participantData.overallPercentage}%`);
+  doc.moveDown();
+  
+  // Category Results
+  doc.fontSize(16).text('Category Performance:', { underline: true });
+  doc.moveDown();
+  
+  participantData.categoryResults.forEach(category => {
+    doc.fontSize(12)
+       .text(`${category.categoryName}: ${category.averagePercentage}%`)
+       .text(`  Questions: ${category.totalQuestions}`)
+       .text(`  Marks: ${category.totalMarksObtained}/${category.maxPossibleMarks}`)
+       .moveDown(0.5);
+  });
+  
+  doc.moveDown();
+  
+  // Subcategory Results
+  doc.fontSize(16).text('Subcategory Performance:', { underline: true });
+  doc.moveDown();
+  
+  participantData.subcategoryResults.forEach(subcategory => {
+    doc.fontSize(12)
+       .text(`${subcategory.subcategoryName}: ${subcategory.percentageScore}%`)
+       .text(`  Category: ${subcategory.categoryName}`)
+       .text(`  Questions: ${subcategory.totalQuestions}`)
+       .moveDown(0.5);
+  });
+  
+  doc.end();
+  
+  return new Promise((resolve) => {
+    doc.on('end', () => {
+      resolve(Buffer.concat(chunks));
+    });
+  });
+};
+
+// Export participant results as PDF
+export const exportParticipantPDF = async (req, res) => {
+  const {  participantId } = req.params;
+  const testId = req.params.id;
+  const adminId = req.user.id;
+  
+  try {
+    // Get participant results (reuse the logic from getParticipantResults)
+    const testCheck = await pool.query('SELECT id FROM tests WHERE id = $1 AND created_by = $2', [testId, adminId]);
+    if (testCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'Test not found' });
+    }
+    
+    // Get participant data (simplified version of getParticipantResults)
+    const sessionQuery = `
+      SELECT ts.*, u.name, u.email, u.phone
+      FROM test_sessions ts
+      JOIN users u ON ts.user_id = u.id
+      WHERE ts.test_id = $1 AND ts.user_id = $2
+    `;
+    
+    const sessionResult = await pool.query(sessionQuery, [testId, participantId]);
+    
+    if (sessionResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Participant not found' });
+    }
+    
+    const sessionData = sessionResult.rows[0];
+    
+    // Get results data
+    const categoryQuery = `
+      SELECT 
+        cr.*,
+        tc.name as category_name
+      FROM category_results cr
+      JOIN test_categories tc ON cr.category_id = tc.id
+      WHERE cr.session_id = $1
+      ORDER BY tc.display_order
+    `;
+    
+    const subcategoryQuery = `
+      SELECT 
+        sr.*,
+        tsc.name as subcategory_name,
+        tc.name as category_name
+      FROM subcategory_results sr
+      JOIN test_subcategories tsc ON sr.subcategory_id = tsc.id
+      JOIN test_categories tc ON sr.category_id = tc.id
+      WHERE sr.session_id = $1
+      ORDER BY tc.display_order, tsc.display_order
+    `;
+    
+    const [categoryResults, subcategoryResults] = await Promise.all([
+      pool.query(categoryQuery, [sessionData.id]),
+      pool.query(subcategoryQuery, [sessionData.id])
+    ]);
+    
+    const overallPercentage = categoryResults.rows.length > 0 
+      ? categoryResults.rows.reduce((sum, cat) => sum + parseFloat(cat.average_percentage), 0) / categoryResults.rows.length
+      : 0;
+    
+    const participantData = {
+      participant: {
+        name: sessionData.name,
+        email: sessionData.email,
+        phone: sessionData.phone
+      },
+      overallPercentage: overallPercentage.toFixed(2),
+      categoryResults: categoryResults.rows.map(cat => ({
+        categoryName: cat.category_name,
+        totalQuestions: cat.total_questions,
+        totalMarksObtained: cat.total_marks_obtained,
+        maxPossibleMarks: cat.max_possible_marks,
+        averagePercentage: parseFloat(cat.average_percentage).toFixed(2)
+      })),
+      subcategoryResults: subcategoryResults.rows.map(sub => ({
+        subcategoryName: sub.subcategory_name,
+        categoryName: sub.category_name,
+        totalQuestions: sub.total_questions,
+        percentageScore: parseFloat(sub.percentage_score).toFixed(2)
+      }))
+    };
+    
+    const pdfBuffer = await generateParticipantPDF(participantData);
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="participant_${participantId}_results.pdf"`);
+    res.send(pdfBuffer);
+    
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    res.status(500).json({ message: 'Internal server error while generating PDF' });
+  }
+};
+
+// Export participant results as Excel
+export const exportParticipantExcel = async (req, res) => {
+  const {  participantId } = req.params;
+  const testId = req.params.id;
+  const adminId = req.user.id;
+  
+  try {
+    // Get participant data (similar to PDF export)
+    const testCheck = await pool.query('SELECT id FROM tests WHERE id = $1 AND created_by = $2', [testId, adminId]);
+    if (testCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'Test not found' });
+    }
+    
+    const sessionQuery = `
+      SELECT ts.*, u.name, u.email, u.phone
+      FROM test_sessions ts
+      JOIN users u ON ts.user_id = u.id
+      WHERE ts.test_id = $1 AND ts.user_id = $2
+    `;
+    
+    const sessionResult = await pool.query(sessionQuery, [testId, participantId]);
+    
+    if (sessionResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Participant not found' });
+    }
+    
+    const sessionData = sessionResult.rows[0];
+    
+    const categoryQuery = `
+      SELECT 
+        cr.*,
+        tc.name as category_name
+      FROM category_results cr
+      JOIN test_categories tc ON cr.category_id = tc.id
+      WHERE cr.session_id = $1
+      ORDER BY tc.display_order
+    `;
+    
+    const subcategoryQuery = `
+      SELECT 
+        sr.*,
+        tsc.name as subcategory_name,
+        tc.name as category_name
+      FROM subcategory_results sr
+      JOIN test_subcategories tsc ON sr.subcategory_id = tsc.id
+      JOIN test_categories tc ON sr.category_id = tc.id
+      WHERE sr.session_id = $1
+      ORDER BY tc.display_order, tsc.display_order
+    `;
+    
+    const [categoryResults, subcategoryResults] = await Promise.all([
+      pool.query(categoryQuery, [sessionData.id]),
+      pool.query(subcategoryQuery, [sessionData.id])
+    ]);
+    
+    const workbook = new ExcelJS.Workbook();
+    
+    // Participant Info Sheet
+    const infoSheet = workbook.addWorksheet('Participant Info');
+    infoSheet.addRow(['Name', sessionData.name]);
+    infoSheet.addRow(['Email', sessionData.email]);
+    infoSheet.addRow(['Phone', sessionData.phone]);
+    infoSheet.addRow(['Test Status', sessionData.session_status]);
+    infoSheet.addRow(['Questions Answered', sessionData.questions_answered]);
+    infoSheet.addRow(['Total Questions', sessionData.total_questions]);
+    
+    // Category Results Sheet
+    const categorySheet = workbook.addWorksheet('Category Results');
+    categorySheet.addRow(['Category Name', 'Questions', 'Marks Obtained', 'Max Marks', 'Percentage']);
+    
+    categoryResults.rows.forEach(cat => {
+      categorySheet.addRow([
+        cat.category_name,
+        cat.total_questions,
+        cat.total_marks_obtained,
+        cat.max_possible_marks,
+        parseFloat(cat.average_percentage).toFixed(2)
+      ]);
+    });
+    
+    // Subcategory Results Sheet
+    const subcategorySheet = workbook.addWorksheet('Subcategory Results');
+    subcategorySheet.addRow(['Subcategory Name', 'Category', 'Questions', 'Marks Obtained', 'Max Marks', 'Percentage']);
+    
+    subcategoryResults.rows.forEach(sub => {
+      subcategorySheet.addRow([
+        sub.subcategory_name,
+        sub.category_name,
+        sub.total_questions,
+        sub.total_marks_obtained,
+        sub.max_possible_marks,
+        parseFloat(sub.percentage_score).toFixed(2)
+      ]);
+    });
+    
+    const buffer = await workbook.xlsx.writeBuffer();
+    
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="participant_${participantId}_results.xlsx"`);
+    res.send(buffer);
+    
+  } catch (error) {
+    console.error('Error generating Excel:', error);
+    res.status(500).json({ message: 'Internal server error while generating Excel' });
+  }
+};
+
+// Export participant results as CSV
+export const exportParticipantCSV = async (req, res) => {
+  const {  participantId } = req.params;
+  const testId = req.params.id;
+  const adminId = req.user.id;
+  
+  try {
+    // Get participant data (similar to other exports)
+    const testCheck = await pool.query('SELECT id FROM tests WHERE id = $1 AND created_by = $2', [testId, adminId]);
+    if (testCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'Test not found' });
+    }
+    
+    const sessionQuery = `
+      SELECT ts.*, u.name, u.email, u.phone
+      FROM test_sessions ts
+      JOIN users u ON ts.user_id = u.id
+      WHERE ts.test_id = $1 AND ts.user_id = $2
+    `;
+    
+    const sessionResult = await pool.query(sessionQuery, [testId, participantId]);
+    
+    if (sessionResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Participant not found' });
+    }
+    
+    const sessionData = sessionResult.rows[0];
+    
+    const subcategoryQuery = `
+      SELECT 
+        sr.*,
+        tsc.name as subcategory_name,
+        tc.name as category_name
+      FROM subcategory_results sr
+      JOIN test_subcategories tsc ON sr.subcategory_id = tsc.id
+      JOIN test_categories tc ON sr.category_id = tc.id
+      WHERE sr.session_id = $1
+      ORDER BY tc.display_order, tsc.display_order
+    `;
+    
+    const subcategoryResults = await pool.query(subcategoryQuery, [sessionData.id]);
+    
+    let csvContent = 'Category,Subcategory,Questions,Marks Obtained,Max Marks,Percentage\n';
+    
+    subcategoryResults.rows.forEach(sub => {
+      csvContent += `"${sub.category_name}","${sub.subcategory_name}",${sub.total_questions},${sub.total_marks_obtained},${sub.max_possible_marks},${parseFloat(sub.percentage_score).toFixed(2)}\n`;
+    });
+    
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="participant_${participantId}_results.csv"`);
+    res.send(csvContent);
+    
+  } catch (error) {
+    console.error('Error generating CSV:', error);
+    res.status(500).json({ message: 'Internal server error while generating CSV' });
+  }
+};
+
+// Export overall results
+export const exportOverallResults = async (req, res) => {
+  const {  format } = req.params;
+  const testId = req.params.id;
+  const adminId = req.user.id;
+  
+  try {
+    // Verify test ownership
+    const testCheck = await pool.query('SELECT title FROM tests WHERE id = $1 AND created_by = $2', [testId, adminId]);
+    if (testCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'Test not found' });
+    }
+    
+    // Get all participants with their results
+    const participantsQuery = `
+      SELECT 
+        u.name,
+        u.email,
+        u.phone,
+        ts.session_status,
+        ts.started_at,
+        ts.completed_at,
+        ts.questions_answered,
+        ts.total_questions,
+        AVG(cr.average_percentage) as overall_percentage
+      FROM users u
+      JOIN test_sessions ts ON u.id = ts.user_id
+      LEFT JOIN category_results cr ON ts.id = cr.session_id
+      WHERE ts.test_id = $1
+      GROUP BY u.id, u.name, u.email, u.phone, ts.session_status, ts.started_at, ts.completed_at, ts.questions_answered, ts.total_questions
+      ORDER BY ts.completed_at DESC NULLS LAST
+    `;
+    
+    const participantsResult = await pool.query(participantsQuery, [testId]);
+    
+    if (format === 'csv') {
+      let csvContent = 'Name,Email,Phone,Status,Started At,Completed At,Questions Answered,Total Questions,Overall Percentage\n';
+      
+      participantsResult.rows.forEach(participant => {
+        csvContent += `"${participant.name}","${participant.email}","${participant.phone}","${participant.session_status}","${participant.started_at || ''}","${participant.completed_at || ''}",${participant.questions_answered},${participant.total_questions},${parseFloat(participant.overall_percentage || 0).toFixed(2)}\n`;
+      });
+      
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="overall_results.csv"`);
+      res.send(csvContent);
+      
+    } else if (format === 'excel') {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Overall Results');
+      
+      worksheet.addRow(['Name', 'Email', 'Phone', 'Status', 'Started At', 'Completed At', 'Questions Answered', 'Total Questions', 'Overall Percentage']);
+      
+      participantsResult.rows.forEach(participant => {
+        worksheet.addRow([
+          participant.name,
+          participant.email,
+          participant.phone,
+          participant.session_status,
+          participant.started_at,
+          participant.completed_at,
+          participant.questions_answered,
+          participant.total_questions,
+          parseFloat(participant.overall_percentage || 0).toFixed(2)
+        ]);
+      });
+      
+      const buffer = await workbook.xlsx.writeBuffer();
+      
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="overall_results.xlsx"`);
+      res.send(buffer);
+      
+    } else {
+      res.status(400).json({ message: 'Invalid format. Use csv or excel.' });
+    }
+    
+  } catch (error) {
+    console.error('Error exporting overall results:', error);
+    res.status(500).json({ message: 'Internal server error while exporting results' });
+  }
+};
+
+// Send email to individual participant
+export const sendEmailToParticipant = async (req, res) => {
+  const { participantId } = req.params;
+  const testId = req.params.id;
+  const { includeReport = true, format = 'pdf' } = req.body;
+  const adminId = req.user.id;
+  
+  try {
+    // Verify test ownership
+    const testCheck = await pool.query('SELECT title FROM tests WHERE id = $1 AND created_by = $2', [testId, adminId]);
+    if (testCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Test not found or access denied' });
+    }
+
+    // Get participant details
+    const participantQuery = `
+      SELECT u.name, u.email, ts.id as session_id, ts.session_status
+      FROM users u
+      JOIN test_sessions ts ON u.id = ts.user_id
+      WHERE ts.test_id = $1 AND u.id = $2
+    `;
+    
+    const participantResult = await pool.query(participantQuery, [testId, participantId]);
+    if (participantResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Participant not found' });
+    }
+
+    const participant = participantResult.rows[0];
+    
+    // Check if participant has completed the test
+    if (participant.session_status !== 'completed') {
+      return res.status(400).json({ error: 'Participant has not completed the test' });
+    }
+
+    let reportBuffer = null;
+    if (includeReport) {
+      // Generate report based on format
+      if (format === 'pdf') {
+        reportBuffer = await generateParticipantPDFReport(testId, participantId);
+      } else if (format === 'excel') {
+        reportBuffer = await generateParticipantExcelReport(testId, participantId);
+      }
+    }
+
+    // Send email using nodemailer or your preferred email service
+    const emailContent = {
+      to: participant.email,
+      subject: `Test Results - ${testCheck.rows[0].title}`,
+      html: `
+        <h2>Test Results</h2>
+        <p>Dear ${participant.name},</p>
+        <p>Your test results for "${testCheck.rows[0].title}" are ready.</p>
+        ${includeReport ? '<p>Please find your detailed report attached.</p>' : ''}
+        <p>Thank you for participating.</p>
+      `,
+      attachments: reportBuffer ? [{
+        filename: `test_results_${participantId}.${format === 'excel' ? 'xlsx' : format}`,
+        content: reportBuffer
+      }] : []
+    };
+
+    await sendEmail(emailContent);
+    
+    res.json({ 
+      message: 'Email sent successfully',
+      participant: participant.name,
+      email: participant.email
+    });
+  } catch (error) {
+    console.error('Error sending email to participant:', error);
+    res.status(500).json({ error: 'Failed to send email' });
+  }
+};
+
+export const sendEmailToAllParticipants = async (req, res) => {
+  const testId = req.params.id;
+  const { includeReport = true, format = 'pdf' } = req.body;
+  const adminId = req.user.id;
+  
+  try {
+    // Verify test ownership
+    const testCheck = await pool.query('SELECT title FROM tests WHERE id = $1 AND created_by = $2', [testId, adminId]);
+    if (testCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Test not found or access denied' });
+    }
+
+    // Get all participants who completed the test
+    const participantsQuery = `
+      SELECT u.id, u.name, u.email, ts.id as session_id
+      FROM users u
+      JOIN test_sessions ts ON u.id = ts.user_id
+      WHERE ts.test_id = $1 AND ts.session_status = 'completed'
+    `;
+    
+    const participantsResult = await pool.query(participantsQuery, [testId]);
+    
+    if (participantsResult.rows.length === 0) {
+      return res.status(404).json({ error: 'No completed participants found' });
+    }
+
+    let sentCount = 0;
+    const failedEmails = [];
+
+    for (const participant of participantsResult.rows) {
+      try {
+        let reportBuffer = null;
+        if (includeReport) {
+          if (format === 'pdf') {
+            reportBuffer = await generateParticipantPDFReport(testId, participant.id);
+          } else if (format === 'excel') {
+            reportBuffer = await generateParticipantExcelReport(testId, participant.id);
+          }
+        }
+
+        const emailContent = {
+          to: participant.email,
+          subject: `Test Results - ${testCheck.rows[0].title}`,
+          html: `
+            <h2>Test Results</h2>
+            <p>Dear ${participant.name},</p>
+            <p>Your test results for "${testCheck.rows[0].title}" are ready.</p>
+            ${includeReport ? '<p>Please find your detailed report attached.</p>' : ''}
+            <p>Thank you for participating.</p>
+          `,
+          attachments: reportBuffer ? [{
+            filename: `test_results_${participant.id}.${format === 'excel' ? 'xlsx' : format}`,
+            content: reportBuffer
+          }] : []
+        };
+
+        await sendEmail(emailContent);
+        sentCount++;
+      } catch (emailError) {
+        console.error(`Failed to send email to ${participant.email}:`, emailError);
+        failedEmails.push(participant.email);
+      }
+    }
+    
+    res.json({ 
+      message: `Emails sent to ${sentCount} participants`,
+      sentCount,
+      totalParticipants: participantsResult.rows.length,
+      failedEmails
+    });
+  } catch (error) {
+    console.error('Error sending emails to all participants:', error);
+    res.status(500).json({ error: 'Failed to send emails' });
+  }
+};
+
+// Helper function to generate PDF report
+const generateParticipantPDFReport = async (testId, participantId) => {
+  const doc = new PDFDocument();
+  const chunks = [];
+
+  doc.on('data', chunk => chunks.push(chunk));
+  doc.on('end', () => {});
+
+  // Get participant results
+  const participantResults = await getIndividualResults(testId, participantId);
+  
+  // Add content to PDF
+  doc.fontSize(20).text('Test Results Report', 100, 100);
+  doc.fontSize(14).text(`Participant: ${participantResults.participant.name}`, 100, 140);
+  doc.text(`Email: ${participantResults.participant.email}`, 100, 160);
+  doc.text(`Test: ${participantResults.test.title}`, 100, 180);
+  doc.text(`Completed: ${new Date(participantResults.session.completed_at).toLocaleDateString()}`, 100, 200);
+  
+  // Add overall performance
+  doc.fontSize(16).text('Overall Performance', 100, 240);
+  doc.fontSize(12).text(`Total Score: ${participantResults.totalScore}%`, 100, 260);
+  doc.text(`Questions Answered: ${participantResults.questionsAnswered}`, 100, 280);
+  
+  // Add category results
+  let yPosition = 320;
+  doc.fontSize(16).text('Category Performance', 100, yPosition);
+  yPosition += 20;
+  
+  participantResults.categoryResults.forEach(category => {
+    doc.fontSize(12).text(`${category.categoryName}: ${category.averagePercentage}%`, 100, yPosition);
+    yPosition += 20;
+  });
+  
+  doc.end();
+  
+  return new Promise((resolve) => {
+    doc.on('end', () => {
+      resolve(Buffer.concat(chunks));
+    });
+  });
+};
+
+// Helper function to generate Excel report
+const generateParticipantExcelReport = async (testId, participantId) => {
+  const ExcelJS = require('exceljs');
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Test Results');
+  
+  // Get participant results
+  const participantResults = await getIndividualResults(testId, participantId);
+  
+  // Add headers and data
+  worksheet.addRow(['Test Results Report']);
+  worksheet.addRow(['Participant', participantResults.participant.name]);
+  worksheet.addRow(['Email', participantResults.participant.email]);
+  worksheet.addRow(['Test', participantResults.test.title]);
+  worksheet.addRow(['Completed', new Date(participantResults.session.completed_at).toLocaleDateString()]);
+  worksheet.addRow([]);
+  
+  // Add category results
+  worksheet.addRow(['Category Performance']);
+  worksheet.addRow(['Category', 'Percentage', 'Questions', 'Marks Obtained']);
+  
+  participantResults.categoryResults.forEach(category => {
+    worksheet.addRow([
+      category.categoryName,
+      category.averagePercentage,
+      category.totalQuestions,
+      category.totalMarksObtained
+    ]);
+  });
+  
+  // Add subcategory results
+  worksheet.addRow([]);
+  worksheet.addRow(['Subcategory Performance']);
+  worksheet.addRow(['Subcategory', 'Category', 'Percentage', 'Questions', 'Marks']);
+  
+  participantResults.subcategoryResults.forEach(subcategory => {
+    worksheet.addRow([
+      subcategory.subcategoryName,
+      subcategory.categoryName,
+      subcategory.percentageScore,
+      subcategory.totalQuestions,
+      subcategory.totalMarksObtained
+    ]);
+  });
+  
+  return await workbook.xlsx.writeBuffer();
+};
+
+// Helper function to get participant results (reused from earlier)
+const getIndividualResults = async (testId, participantId) => {
+  // Get participant and test info
+  const participantQuery = `
+    SELECT u.name, u.email, t.title, ts.completed_at, ts.questions_answered
+    FROM users u
+    JOIN test_sessions ts ON u.id = ts.user_id
+    JOIN tests t ON ts.test_id = t.id
+    WHERE ts.test_id = $1 AND u.id = $2
+  `;
+  
+  const participantResult = await pool.query(participantQuery, [testId, participantId]);
+  if (participantResult.rows.length === 0) {
+    throw new Error('Participant not found');
+  }
+  
+  const participant = participantResult.rows[0];
+  
+  // Get category results
+  const categoryQuery = `
+    SELECT 
+      tc.name as category_name,
+      cr.total_questions,
+      cr.total_marks_obtained,
+      cr.max_possible_marks,
+      cr.average_percentage
+    FROM category_results cr
+    JOIN test_categories tc ON cr.category_id = tc.id
+    JOIN test_sessions ts ON cr.session_id = ts.id
+    WHERE ts.test_id = $1 AND ts.user_id = $2
+    ORDER BY tc.display_order
+  `;
+  
+  const categoryResults = await pool.query(categoryQuery, [testId, participantId]);
+  
+  // Get subcategory results
+  const subcategoryQuery = `
+    SELECT 
+      tsc.name as subcategory_name,
+      tc.name as category_name,
+      sr.total_questions,
+      sr.total_marks_obtained,
+      sr.max_possible_marks,
+      sr.percentage_score
+    FROM subcategory_results sr
+    JOIN test_subcategories tsc ON sr.subcategory_id = tsc.id
+    JOIN test_categories tc ON sr.category_id = tc.id
+    JOIN test_sessions ts ON sr.session_id = ts.id
+    WHERE ts.test_id = $1 AND ts.user_id = $2
+    ORDER BY tc.display_order, tsc.display_order
+  `;
+  
+  const subcategoryResults = await pool.query(subcategoryQuery, [testId, participantId]);
+  
+  return {
+    participant: {
+      name: participant.name,
+      email: participant.email
+    },
+    test: {
+      title: participant.title
+    },
+    session: {
+      completed_at: participant.completed_at,
+      questions_answered: participant.questions_answered
+    },
+    categoryResults: categoryResults.rows.map(row => ({
+      categoryName: row.category_name,
+      totalQuestions: row.total_questions,
+      totalMarksObtained: row.total_marks_obtained,
+      maxPossibleMarks: row.max_possible_marks,
+      averagePercentage: row.average_percentage
+    })),
+    subcategoryResults: subcategoryResults.rows.map(row => ({
+      subcategoryName: row.subcategory_name,
+      categoryName: row.category_name,
+      totalQuestions: row.total_questions,
+      totalMarksObtained: row.total_marks_obtained,
+      maxPossibleMarks: row.max_possible_marks,
+      percentageScore: row.percentage_score
+    }))
+  };
+};
+
+// Helper function to send email (implement based on your email service)
+const sendEmail = async (emailContent) => {
+  
+  const mailOptions = {
+    from: process.env.EMAIL,
+    to: emailContent.to,
+    subject: emailContent.subject,
+    html: emailContent.html,
+    attachments: emailContent.attachments || []
+  };
+  
+  return await transporter.sendMail(mailOptions);
 };

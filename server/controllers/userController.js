@@ -1251,6 +1251,13 @@ export const submitAnswer = async (req, res) => {
           updated_at = CURRENT_TIMESTAMP
         WHERE id = $1
       `, [session.id]);
+
+      // Log completion activity
+      await pool.query(`
+        INSERT INTO test_activity_logs (
+          test_id, user_id, session_id, activity_type, activity_data
+        ) VALUES ($1, $2, $3, 'test_completed', $4)
+      `, [testId, userId, session.id, JSON.stringify({ completed_at: new Date() })]);
     } else {
       // Update current question order
       await pool.query(`

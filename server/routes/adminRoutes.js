@@ -17,6 +17,11 @@ import {
   deleteQuestion
 } from '../controllers/adminController.js';
 
+import { getTestResults,getTestParticipantsForResults,getParticipantResults,getOverallTestResults,
+  exportParticipantPDF,exportParticipantExcel,exportParticipantCSV ,exportOverallResults ,sendEmailToParticipant,
+  sendEmailToAllParticipants
+ } from '../controllers/adminController.js';
+
 const router = express.Router();
 
 router.post('/login', loginAdmin);
@@ -68,5 +73,18 @@ router.post('/tests-d/:id/generate-code',authMiddleware, isAdmin, generateTestCo
 router.put('/tests-d/:id/activate',authMiddleware, isAdmin, activateTest);             // PUT activate test
 router.put('/tests-d/:id/end',authMiddleware, isAdmin, endTest);                       // PUT end test               // PUT archive test
 
+
+//Test results routes
+
+router.get('/test-results/:id', authMiddleware, isAdmin, getTestResults); // GET test results
+router.get('/test-results/:id/participants', authMiddleware, isAdmin, getTestParticipantsForResults); // GET test participants for results
+router.get('/test-results/:id/participant/:participantId', authMiddleware, isAdmin, getParticipantResults); // GET participant results
+router.get('/test-results/:id/overall', authMiddleware, isAdmin, getOverallTestResults); // GET overall test results
+router.get('/test-results/:id/participant/:participantId/export/pdf', authMiddleware, isAdmin, exportParticipantPDF); // GET export participant PDF
+router.get('/test-results/:id/participant/:participantId/export/excel', authMiddleware, isAdmin, exportParticipantExcel); // GET export participant Excel
+router.get('/test-results/:id/participant/:participantId/export/csv', authMiddleware, isAdmin, exportParticipantCSV); // GET export participant CSV
+router.get('/test-results/:id/overall/export/:format', authMiddleware, isAdmin, exportOverallResults); // GET export overall results PDF
+router.post('/test-results/:id/participant/:participantId/send-email', authMiddleware, isAdmin, sendEmailToParticipant); // POST send email to participant
+router.post('/test-results/:id/send-all-emails', authMiddleware, isAdmin, sendEmailToAllParticipants); // POST send email to all participants
 
 export default router;
