@@ -394,29 +394,39 @@ const ParticipantDetailModal = () => {
             );
           })}
 
-          {/* Overall Category Performance - Pie Chart */}
+          {/* Overall Category Performance - Now using Bar Chart instead of Pie Chart */}
           <div className="chart-section">
             <h3 className="chart-title">Overall Category Performance</h3>
             <div className="chart-container">
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={categoryChartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percentage }) => `${name}: ${percentage}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="percentage"
+                <BarChart data={categoryChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="name" 
+                    angle={-45} 
+                    textAnchor="end" 
+                    height={100}
+                    interval={0}
+                  />
+                  <YAxis 
+                    label={{ value: 'Percentage (%)', angle: -90, position: 'insideLeft' }}
+                  />
+                  <Tooltip 
+                    formatter={(value, name) => [`${value}%`, name]}
+                    labelFormatter={(label) => `Category: ${label}`}
+                  />
+                  <Legend />
+                  <Bar 
+                    dataKey="percentage" 
+                    fill="#3B82F6" 
+                    name="Percentage %" 
+                    radius={[4, 4, 0, 0]}
                   >
                     {categoryChartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </div>

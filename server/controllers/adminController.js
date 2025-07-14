@@ -2638,72 +2638,320 @@ export const getOverallTestResults = async (req, res) => {
   }
 };
 
-// Generate PDF report for participant
-const generateParticipantPDF = async (participantData) => {
-  const doc = new PDFDocument();
-  const chunks = [];
+// Enhanced color palette for better visibility
+// Enhanced color palette for better visibility
+const COLORS = [
+  '#3B82F6', // Blue
+  '#10B981', // Green
+  '#F59E0B', // Yellow
+  '#EF4444', // Red
+  '#8B5CF6', // Purple
+  '#F97316', // Orange
+  '#06B6D4', // Cyan
+  '#84CC16', // Lime
+  '#EC4899', // Pink
+  '#6B7280'  // Gray
+];
+
+// Helper function to draw a professional bar chart
+const drawBarChart = (doc, chartData, x, y, width, height, title) => {
+  // Chart title with better styling
+  doc.fontSize(14).font('Helvetica-Bold')
+     .fillColor('#1F2937')
+     .text(title, x, y, { width, align: 'center' });
   
-  doc.on('data', (chunk) => chunks.push(chunk));
-  
-  // Header
-  doc.fontSize(20).text('Test Results Report', { align: 'center' });
-  doc.moveDown();
-  
-  // Participant Info
-  doc.fontSize(14).text(`Name: ${participantData.participant.name}`);
-  doc.text(`Email: ${participantData.participant.email}`);
-  doc.text(`Overall Score: ${participantData.overallPercentage}%`);
-  doc.moveDown();
-  
-  // Category Results
-  doc.fontSize(16).text('Category Performance:', { underline: true });
-  doc.moveDown();
-  
-  participantData.categoryResults.forEach(category => {
-    doc.fontSize(12)
-       .text(`${category.categoryName}: ${category.averagePercentage}%`)
-       .text(`  Questions: ${category.totalQuestions}`)
-       .text(`  Marks: ${category.totalMarksObtained}/${category.maxPossibleMarks}`)
-       .moveDown(0.5);
-  });
-  
-  doc.moveDown();
-  
-  // Subcategory Results
-  doc.fontSize(16).text('Subcategory Performance:', { underline: true });
-  doc.moveDown();
-  
-  participantData.subcategoryResults.forEach(subcategory => {
-    doc.fontSize(12)
-       .text(`${subcategory.subcategoryName}: ${subcategory.percentageScore}%`)
-       .text(`  Category: ${subcategory.categoryName}`)
-       .text(`  Questions: ${subcategory.totalQuestions}`)
-       .moveDown(0.5);
-  });
-  
-  doc.end();
-  
-  return new Promise((resolve) => {
-    doc.on('end', () => {
-      resolve(Buffer.concat(chunks));
+  y += 30;
+
+  // Chart dimensions with better proportions
+  const chartX = x + 80; // Increased left margin for Y-axis label
+  const chartY = y + 20;
+  const chartWidth = width - 140; // Adjusted width
+  const chartHeight = height - 120; // Increased bottom margin for labels
+
+  // Draw chart background with subtle border
+  doc.rect(chartX, chartY, chartWidth, chartHeight)
+     .fillAndStroke('#FAFAFA', '#E5E7EB');
+
+  // Draw horizontal grid lines and Y-axis labels
+  const gridLines = 5;
+  for (let i = 0; i <= gridLines; i++) {
+    const gridY = chartY + (chartHeight / gridLines) * i;
+    const percentage = 100 - (i * 20);
+    
+    // Grid line
+    doc.moveTo(chartX, gridY)
+       .lineTo(chartX + chartWidth, gridY)
+       .stroke('#E5E7EB');
+    
+    // Y-axis label with better positioning
+    doc.fontSize(9).font('Helvetica')
+       .fillColor('#6B7280')
+       .text(`${percentage}%`, x + 25, gridY - 3, { width: 50, align: 'right' });
+  }
+
+  // Draw bars with better spacing and styling
+  if (chartData && chartData.length > 0) {
+    const barWidth = Math.min(80, (chartWidth * 0.7) / chartData.length);
+    const totalBarsWidth = barWidth * chartData.length;
+    const spacing = (chartWidth - totalBarsWidth) / (chartData.length + 1);
+
+    chartData.forEach((item, index) => {
+      const percentage = parseFloat(item.percentageScore || item.averagePercentage);
+      const barHeight = (percentage / 100) * chartHeight;
+      const barX = chartX + spacing + (index * (barWidth + spacing));
+      const barY = chartY + chartHeight - barHeight;
+
+      // Draw bar with gradient effect
+      doc.rect(barX, barY, barWidth, barHeight)
+         .fill(COLORS[index % COLORS.length]);
+
+      // Add subtle border
+      doc.rect(barX, barY, barWidth, barHeight)
+         .stroke('#FFFFFF');
+
+      // Draw percentage on top of bar with better styling
+      doc.fontSize(9).font('Helvetica-Bold')
+         .fillColor('#1F2937')
+         .text(`${percentage.toFixed(1)}%`, 
+               barX, barY - 15, { width: barWidth, align: 'center' });
     });
+
+    // Draw category labels below chart with better formatting and word wrapping
+    chartData.forEach((item, index) => {
+      const barX = chartX + spacing + (index * (barWidth + spacing));
+      const labelText = (item.subcategoryName || item.categoryName);
+      
+      // Improved label handling - split long text into multiple lines
+      const maxCharsPerLine = 15;
+      const words = labelText.split(' ');
+      let lines = [];
+      let currentLine = '';
+      
+      words.forEach(word => {
+        if ((currentLine + word).length <= maxCharsPerLine) {
+          currentLine += (currentLine ? ' ' : '') + word;
+        } else {
+          if (currentLine) {
+            lines.push(currentLine);
+            currentLine = word;
+          } else {
+            // Single word is too long, truncate it
+            lines.push(word.substring(0, maxCharsPerLine - 3) + '...');
+            currentLine = '';
+          }
+        }
+      });
+      
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+      
+      // Limit to 3 lines maximum
+      if (lines.length > 3) {
+        lines = lines.slice(0, 2);
+        lines.push('...');
+      }
+
+      // Draw each line
+      lines.forEach((line, lineIndex) => {
+        doc.fontSize(8).font('Helvetica')
+           .fillColor('#4B5563')
+           .text(line, barX - 10, chartY + chartHeight + 10 + (lineIndex * 12), 
+                 { width: barWidth + 20, align: 'center' });
+      });
+    });
+  }
+
+  // Add chart border
+  doc.rect(chartX, chartY, chartWidth, chartHeight)
+     .stroke('#D1D5DB');
+};
+
+// Enhanced table drawing function
+const drawTable = (doc, data, x, y, title) => {
+  // Table title
+  doc.fontSize(14).font('Helvetica-Bold')
+     .fillColor('#1F2937')
+     .text(title, x, y, { width: 500, align: 'center' });
+  
+  y += 30;
+
+  const colWidths = [180, 80, 100, 100]; // Increased category column width
+  const rowHeight = 25; // Slightly increased row height
+  const tableWidth = colWidths.reduce((sum, width) => sum + width, 0);
+
+  // Center the table
+  const tableX = x + (500 - tableWidth) / 2;
+
+  // Table headers with background
+  const headerY = y;
+  doc.rect(tableX, headerY, tableWidth, rowHeight)
+     .fill('#F3F4F6');
+
+  doc.fontSize(10).font('Helvetica-Bold')
+     .fillColor('#1F2937')
+     .text('Category', tableX + 8, headerY + 8)
+     .text('Questions', tableX + colWidths[0] + 8, headerY + 8)
+     .text('Marks', tableX + colWidths[0] + colWidths[1] + 8, headerY + 8)
+     .text('Percentage', tableX + colWidths[0] + colWidths[1] + colWidths[2] + 8, headerY + 8);
+
+  // Table border
+  doc.rect(tableX, headerY, tableWidth, rowHeight)
+     .stroke('#D1D5DB');
+
+  // Table data rows
+  let currentY = headerY + rowHeight;
+  doc.fontSize(9).font('Helvetica');
+
+  data.forEach((item, index) => {
+    // Alternate row colors
+    if (index % 2 === 0) {
+      doc.rect(tableX, currentY, tableWidth, rowHeight)
+         .fill('#FAFAFA');
+    }
+
+    // Better category name handling - word wrap instead of truncation
+    const categoryName = item.categoryName;
+    const maxWidth = colWidths[0] - 16;
+    
+    // Use PDFKit's text wrapping by setting width
+    doc.fillColor('#374151')
+       .text(categoryName, tableX + 8, currentY + 8, { 
+         width: maxWidth, 
+         ellipsis: true // This will add ... if text is too long
+       })
+       .text(item.totalQuestions.toString(), tableX + colWidths[0] + 8, currentY + 8, 
+             { width: colWidths[1] - 16, align: 'center' })
+       .text(`${item.totalMarksObtained}/${item.maxPossibleMarks}`, 
+             tableX + colWidths[0] + colWidths[1] + 8, currentY + 8,
+             { width: colWidths[2] - 16, align: 'center' })
+       .text(`${item.averagePercentage}%`, 
+             tableX + colWidths[0] + colWidths[1] + colWidths[2] + 8, currentY + 8,
+             { width: colWidths[3] - 16, align: 'center' });
+
+    // Row border
+    doc.rect(tableX, currentY, tableWidth, rowHeight)
+       .stroke('#E5E7EB');
+
+    currentY += rowHeight;
+  });
+
+  // Add outer border
+  doc.rect(tableX, headerY, tableWidth, (data.length + 1) * rowHeight)
+     .stroke('#D1D5DB');
+};
+
+// Generate enhanced PDF report
+const generateParticipantPDF = async (participantData) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({ size: 'A4', margin: 50 });
+      const buffers = [];
+
+      doc.on('data', buffers.push.bind(buffers));
+      doc.on('end', () => {
+        const pdfBuffer = Buffer.concat(buffers);
+        resolve(pdfBuffer);
+      });
+
+      // Header with better styling
+      doc.fontSize(20).font('Helvetica-Bold')
+         .fillColor('#1F2937')
+         .text('Test Results Report', { align: 'center' });
+      
+      doc.moveDown(0.3);
+      
+      // Subtitle line
+      doc.moveTo(100, doc.y)
+         .lineTo(500, doc.y)
+         .stroke('#3B82F6');
+      
+      doc.moveDown(1.5);
+
+      // Participant Information Card
+      const cardY = doc.y;
+      doc.rect(50, cardY, 500, 70)
+         .fill('#F8FAFC')
+         .stroke('#E2E8F0');
+
+      doc.fontSize(16).font('Helvetica-Bold')
+         .fillColor('#1E40AF')
+         .text('Participant Information', 70, cardY + 12);
+
+      doc.fontSize(11).font('Helvetica')
+         .fillColor('#374151')
+         .text(`Name: ${participantData.participant.name}`, 70, cardY + 35)
+         .text(`Email: ${participantData.participant.email}`, 70, cardY + 50);
+
+      // Overall Score Badge
+      doc.fontSize(12).font('Helvetica-Bold')
+         .fillColor('#059669')
+         .text(`Overall Score: ${participantData.overallPercentage}%`, 380, cardY + 35);
+
+      doc.y = cardY + 90;
+
+      // Category Performance Charts
+      participantData.categoryResults.forEach((category, categoryIndex) => {
+        const categorySubcategories = participantData.subcategoryResults.filter(
+          sub => sub.categoryName === category.categoryName
+        );
+
+        if (categorySubcategories.length > 0) {
+          // Check if we need a new page
+          if (doc.y > 400) { // Adjusted for better spacing
+            doc.addPage();
+          }
+
+          const chartTitle = `${category.categoryName} - Subcategory Performance`;
+          drawBarChart(doc, categorySubcategories, 50, doc.y, 500, 300, chartTitle); // Increased height
+          doc.y += 350; // Increased spacing
+        }
+      });
+
+      // Overall Category Performance - Now using Bar Chart instead of Pie Chart
+      if (participantData.categoryResults.length > 0) {
+        if (doc.y > 300) {
+          doc.addPage();
+        }
+
+        drawBarChart(doc, participantData.categoryResults, 50, doc.y, 500, 300, 'Overall Category Performance');
+        doc.y += 350;
+      }
+
+      // Performance Summary Table
+      if (doc.y > 350) {
+        doc.addPage();
+      }
+
+      drawTable(doc, participantData.categoryResults, 50, doc.y, 'Performance Summary');
+
+      // Footer
+      doc.fontSize(8).font('Helvetica')
+         .fillColor('#6B7280')
+         .text(`Generated on ${new Date().toLocaleDateString()}`, 50, 750, { align: 'center', width: 500 });
+
+      doc.end();
+
+    } catch (error) {
+      reject(error);
+    }
   });
 };
 
 // Export participant results as PDF
 export const exportParticipantPDF = async (req, res) => {
-  const {  participantId } = req.params;
+  const { participantId } = req.params;
   const testId = req.params.id;
   const adminId = req.user.id;
   
   try {
-    // Get participant results (reuse the logic from getParticipantResults)
+    // Get participant results
     const testCheck = await pool.query('SELECT id FROM tests WHERE id = $1 AND created_by = $2', [testId, adminId]);
     if (testCheck.rows.length === 0) {
       return res.status(404).json({ message: 'Test not found' });
     }
     
-    // Get participant data (simplified version of getParticipantResults)
+    // Get participant data
     const sessionQuery = `
       SELECT ts.*, u.name, u.email, u.phone
       FROM test_sessions ts

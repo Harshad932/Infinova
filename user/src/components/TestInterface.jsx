@@ -23,6 +23,7 @@ const TestInterface = () => {
   const [isTestCompleted, setIsTestCompleted] = useState(false);
   const [tabSwitchWarning, setTabSwitchWarning] = useState(false);
   const [options, setOptions] = useState([]);
+  const [isLoadingQuestion, setIsLoadingQuestion] = useState(false);
 
   // Fixed options based on database structure
   const fixedOptions = [
@@ -57,20 +58,20 @@ const TestInterface = () => {
 
   // Question timer effect
   useEffect(() => {
-    if (timeRemaining > 0 && !isTestCompleted) {
-      questionTimer.current = setTimeout(() => {
-        setTimeRemaining(timeRemaining - 1);
-      }, 1000);
-    } else if (timeRemaining === 0 && currentQuestion && !isTestCompleted) {
-      handleTimeUp();
-    }
+  if (timeRemaining > 0 && !isTestCompleted && !isSubmitting) {
+    questionTimer.current = setTimeout(() => {
+      setTimeRemaining(timeRemaining - 1);
+    }, 1000);
+  } else if (timeRemaining === 0 && currentQuestion && !isTestCompleted && !isSubmitting) {
+    handleTimeUp();
+  }
 
-    return () => {
-      if (questionTimer.current) {
-        clearTimeout(questionTimer.current);
-      }
-    };
-  }, [timeRemaining, currentQuestion, isTestCompleted]);
+  return () => {
+    if (questionTimer.current) {
+      clearTimeout(questionTimer.current);
+    }
+  };
+}, [timeRemaining, currentQuestion, isTestCompleted, isSubmitting]);
 
   // Setup heartbeat and tab switch monitoring
     useEffect(() => {
@@ -122,51 +123,54 @@ useEffect(() => {
 
   // Fetch current question
   const fetchCurrentQuestion = async () => {
-  if (!userId || !testId) {
-    console.error('Missing userId or testId');
-    return;
-  }
-
-  console.log('Fetching question for index:', currentQuestionIndex);
-  console.log("User ID:", userId);
-  
-  try {
-    const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/user/test/question`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${sessionToken}`
-      },
-      body: JSON.stringify({
-        testId: testId,
-        userId: userId,
-        questionIndex: currentQuestionIndex
-      })
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      setCurrentQuestion(data.question);
-      setTimeRemaining(data.timePerQuestion || 15);
-      setSelectedOption('');
-      
-      // Update current question index if different
-      if (data.currentQuestionIndex !== currentQuestionIndex) {
-        setCurrentQuestionIndex(data.currentQuestionIndex);
-      }
-    } else {
-      if (data.message === 'Test completed') {
-        handleTestCompletion();
-      } else {
-        setError(data.message || 'Failed to fetch question');
-      }
+    if (!userId || !testId || isLoadingQuestion) {
+      console.error('Missing userId or testId, or already loading');
+      return;
     }
-  } catch (error) {
-    console.error('Fetch question error:', error);
-    setError('Network error. Please try again.');
-  }
-};
+
+    setIsLoadingQuestion(true);
+    console.log('Fetching question for index:', currentQuestionIndex);
+    console.log("User ID:", userId);
+    
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/user/test/question`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionToken}`
+        },
+        body: JSON.stringify({
+          testId: testId,
+          userId: userId,
+          questionIndex: currentQuestionIndex
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setCurrentQuestion(data.question);
+        setTimeRemaining(data.timePerQuestion || 15);
+        setSelectedOption('');
+        
+        // Update current question index if different
+        if (data.currentQuestionIndex !== currentQuestionIndex) {
+          setCurrentQuestionIndex(data.currentQuestionIndex);
+        }
+      } else {
+        if (data.message === 'Test completed') {
+          handleTestCompletion();
+        } else {
+          setError(data.message || 'Failed to fetch question');
+        }
+      }
+    } catch (error) {
+      console.error('Fetch question error:', error);
+      setError('Network error. Please try again.');
+    } finally {
+      setIsLoadingQuestion(false);
+    }
+  };
 
   // Handle option selection
   const handleOptionSelect = (optionLabel) => {
@@ -180,8 +184,16 @@ useEffect(() => {
       return;
     }
 
+    if (isSubmitting || isLoadingQuestion) {
+      return; // Prevent double submission
+    }
+
     setIsSubmitting(true);
     setError('');
+
+    if (questionTimer.current) {
+    clearTimeout(questionTimer.current);
+  }
 
     try {
       const selectedOptionData = options.find(opt => opt.label === selectedOption);
@@ -206,7 +218,7 @@ useEffect(() => {
       const data = await response.json();
 
       if (response.ok) {
-  // Check if test is completed
+        // Check if test is completed
         if (data.isCompleted) {
           setIsTestCompleted(true);
           // Clear session data
@@ -218,11 +230,10 @@ useEffect(() => {
           navigate('/thank-you');
           return; 
         } else {
-          // Move to next question
+          // Move to next question - fetchCurrentQuestion will be called by useEffect
           setCurrentQuestionIndex(prev => prev + 1);
-          await fetchCurrentQuestion();
         }
-      } else {
+} else {
         setError(data.message || 'Failed to submit answer');
       }
     } catch (error) {
@@ -274,8 +285,8 @@ useEffect(() => {
           navigate('/thank-you');
           return;
         } else {
+          // Move to next question - fetchCurrentQuestion will be called by useEffect
           setCurrentQuestionIndex(prev => prev + 1);
-          await fetchCurrentQuestion();
         }
       }
     } catch (error) {

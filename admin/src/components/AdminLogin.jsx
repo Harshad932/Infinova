@@ -30,7 +30,7 @@ const AdminLogin = () => {
       if (response.ok) {
         localStorage.setItem('adminToken', data.token);
         localStorage.setItem('adminData', JSON.stringify(data.admin));
-        navigate('/admin/dashboard');
+        navigate('/admin/manage-tests');
       } else {
         setError(data.message || 'Login failed. Please check your credentials.');
       }

@@ -5,7 +5,6 @@ import '../assets/styles/ManageTests.css';
 const ManageTests = () => {
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTest, setSelectedTest] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -230,6 +229,12 @@ const ManageTests = () => {
     navigate(`/admin/test-results/${testId}`);
   };
 
+   const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminData');
+    navigate('/admin/login');
+  };
+
   if (loading && tests.length === 0) {
     return (
       <div className="loading-container">
@@ -248,10 +253,10 @@ const ManageTests = () => {
         <div className="header-content">
           <div className="header-left">
             <button 
-              onClick={() => navigate('/admin/dashboard')}
+              onClick={handleLogout}
               className="back-button"
             >
-              ← Back to Dashboard
+              Logout
             </button>
             <h1 className="page-title">Manage Tests</h1>
           </div>
