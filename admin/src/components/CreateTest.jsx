@@ -33,7 +33,6 @@ const CreateTest = () => {
     questionText: '',
     categoryId: '',
     subcategoryId: '',
-    // Fixed options - no longer editable
     options: [
       { optionText: 'Strongly Agree', marks: 5 },
       { optionText: 'Agree', marks: 4 },
@@ -189,27 +188,27 @@ const CreateTest = () => {
   };
 
   const addOrUpdateQuestion = () => {
-  if (!validateQuestion()) return;
+    if (!validateQuestion()) return;
 
-  const questionToAdd = {
-    ...currentQuestion,
-    id: editingQuestionIndex >= 0 ? questions[editingQuestionIndex].id : Date.now(),
+    const questionToAdd = {
+      ...currentQuestion,
+      id: editingQuestionIndex >= 0 ? questions[editingQuestionIndex].id : Date.now(),
+    };
+
+    let newQuestions;
+    if (editingQuestionIndex >= 0) {
+      newQuestions = questions.map((q, i) => 
+        i === editingQuestionIndex ? questionToAdd : q
+      );
+      setQuestions(newQuestions);
+    } else {
+      newQuestions = [...questions, questionToAdd];
+      setQuestions(newQuestions);
+    }
+
+    updateTotalQuestions(newQuestions);
+    resetQuestionForm();
   };
-
-  let newQuestions;
-  if (editingQuestionIndex >= 0) {
-    newQuestions = questions.map((q, i) => 
-      i === editingQuestionIndex ? questionToAdd : q
-    );
-    setQuestions(newQuestions);
-  } else {
-    newQuestions = [...questions, questionToAdd];
-    setQuestions(newQuestions);
-  }
-
-  updateTotalQuestions(newQuestions);
-  resetQuestionForm();
-};
 
   const editQuestion = (index) => {
     setCurrentQuestion(questions[index]);
@@ -243,11 +242,11 @@ const CreateTest = () => {
   };
 
   const updateTotalQuestions = (newQuestionsArray = questions) => {
-  setTestData(prev => ({
-    ...prev,
-    totalQuestions: newQuestionsArray.length
-  }));
-};
+    setTestData(prev => ({
+      ...prev,
+      totalQuestions: newQuestionsArray.length
+    }));
+  };
 
   const handleSaveTest = async (isDraft = true) => {
     setLoading(true);
@@ -275,7 +274,7 @@ const CreateTest = () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       alert(isDraft ? 'Test saved as draft!' : 'Test published successfully!');
-      navigate('/admin/dashboard');
+      navigate('/admin/manage-tests');
       
     } catch (error) {
       console.error('Error saving test:', error);
@@ -304,28 +303,28 @@ const CreateTest = () => {
   };
 
   return (
-    <div className="create-test-container">
+    <div className="CreateTest-container">
       {/* Header */}
-      <header className="header">
-        <div className="header-content">
+      <header className="CreateTest-header">
+        <div className="CreateTest-header-content">
           <button 
-            onClick={() => navigate('/admin/dashboard')}
-            className="back-button"
+            onClick={() => navigate('/admin/ManageTests')}
+            className="CreateTest-back-button"
           >
             ← Back to Dashboard
           </button>
-          <h1 className="header-title">Create New Test</h1>
-          <div className="header-actions">
+          <h1 className="CreateTest-header-title">Create New Test</h1>
+          <div className="CreateTest-header-actions">
             <button 
               onClick={() => handleSaveTest(true)}
-              className="save-draft-button"
+              className="CreateTest-save-draft-button"
               disabled={loading}
             >
               Save Draft
             </button>
             <button 
               onClick={() => handleSaveTest(false)}
-              className="publish-button"
+              className="CreateTest-publish-button"
               disabled={loading || questions.length === 0}
             >
               Publish Test
@@ -335,27 +334,27 @@ const CreateTest = () => {
       </header>
 
       {/* Navigation Tabs */}
-      <nav className="tabs-nav">
+      <nav className="CreateTest-tabs-nav">
         <button 
-          className={`tab-button ${activeTab === 'basic' ? 'active' : ''}`}
+          className={`CreateTest-tab-button ${activeTab === 'basic' ? 'CreateTest-active' : ''}`}
           onClick={() => setActiveTab('basic')}
         >
           Basic Info
         </button>
         <button 
-          className={`tab-button ${activeTab === 'categories' ? 'active' : ''}`}
+          className={`CreateTest-tab-button ${activeTab === 'categories' ? 'CreateTest-active' : ''}`}
           onClick={() => setActiveTab('categories')}
         >
           Categories ({categories.length})
         </button>
         <button 
-          className={`tab-button ${activeTab === 'subcategories' ? 'active' : ''}`}
+          className={`CreateTest-tab-button ${activeTab === 'subcategories' ? 'CreateTest-active' : ''}`}
           onClick={() => setActiveTab('subcategories')}
         >
           Subcategories ({subcategories.length})
         </button>
         <button 
-          className={`tab-button ${activeTab === 'questions' ? 'active' : ''}`}
+          className={`CreateTest-tab-button ${activeTab === 'questions' ? 'CreateTest-active' : ''}`}
           onClick={() => setActiveTab('questions')}
         >
           Questions ({questions.length})
@@ -363,11 +362,11 @@ const CreateTest = () => {
       </nav>
 
       {/* Main Content */}
-      <main className="main-content">
+      <main className="CreateTest-main-content">
         {activeTab === 'basic' && (
-          <div className="basic-info-section">
-            <div className="form-grid">
-              <div className="form-group full-width">
+          <div className="CreateTest-basic-info-section">
+            <div className="CreateTest-form-grid">
+              <div className="CreateTest-form-group CreateTest-full-width">
                 <label htmlFor="title">Test Title *</label>
                 <input
                   type="text"
@@ -378,7 +377,7 @@ const CreateTest = () => {
                 />
               </div>
 
-              <div className="form-group full-width">
+              <div className="CreateTest-form-group CreateTest-full-width">
                 <label htmlFor="description">Test Description</label>
                 <textarea
                   id="description"
@@ -389,7 +388,7 @@ const CreateTest = () => {
                 />
               </div>
 
-              <div className="form-group full-width">
+              <div className="CreateTest-form-group CreateTest-full-width">
                 <label htmlFor="instructions">Instructions</label>
                 <textarea
                   id="instructions"
@@ -400,7 +399,7 @@ const CreateTest = () => {
                 />
               </div>
 
-              <div className="form-group full-width">
+              <div className="CreateTest-form-group CreateTest-full-width">
                 <label htmlFor="rules">Rules</label>
                 <textarea
                   id="rules"
@@ -411,7 +410,7 @@ const CreateTest = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="CreateTest-form-group">
                 <label htmlFor="timePerQuestion">Time per Question (seconds)</label>
                 <select
                   id="timePerQuestion"
@@ -427,9 +426,9 @@ const CreateTest = () => {
                 </select>
               </div>
 
-              <div className="form-group">
+              <div className="CreateTest-form-group">
                 <label>Total Questions</label>
-                <div className="readonly-field">
+                <div className="CreateTest-readonly-field">
                   {testData.totalQuestions} questions added
                 </div>
               </div>
@@ -438,12 +437,12 @@ const CreateTest = () => {
         )}
 
         {activeTab === 'categories' && (
-          <div className="categories-section">
-            <div className="section-header">
+          <div className="CreateTest-categories-section">
+            <div className="CreateTest-section-header">
               <h2>Manage Categories</h2>
               <button 
                 onClick={() => setShowCategoryForm(true)}
-                className="add-button"
+                className="CreateTest-add-button"
               >
                 + Add Category
               </button>
@@ -451,15 +450,15 @@ const CreateTest = () => {
 
             {/* Category Form Modal */}
             {showCategoryForm && (
-              <div className="form-modal">
-                <div className="form-content">
-                  <div className="form-header">
+              <div className="CreateTest-form-modal">
+                <div className="CreateTest-form-content">
+                  <div className="CreateTest-form-header">
                     <h3>{editingCategoryIndex >= 0 ? 'Edit Category' : 'Add New Category'}</h3>
-                    <button onClick={resetCategoryForm} className="close-button">×</button>
+                    <button onClick={resetCategoryForm} className="CreateTest-close-button">×</button>
                   </div>
                   
-                  <div className="form-body">
-                    <div className="form-group">
+                  <div className="CreateTest-form-body">
+                    <div className="CreateTest-form-group">
                       <label htmlFor="categoryName">Category Name *</label>
                       <input
                         type="text"
@@ -467,12 +466,12 @@ const CreateTest = () => {
                         value={newCategory.name}
                         onChange={(e) => setNewCategory(prev => ({ ...prev, name: e.target.value }))}
                         placeholder="Enter category name..."
-                        className={errors.categoryName ? 'error' : ''}
+                        className={errors.categoryName ? 'CreateTest-error' : ''}
                       />
-                      {errors.categoryName && <span className="error-text">{errors.categoryName}</span>}
+                      {errors.categoryName && <span className="CreateTest-error-text">{errors.categoryName}</span>}
                     </div>
 
-                    <div className="form-group">
+                    <div className="CreateTest-form-group">
                       <label htmlFor="categoryDescription">Description</label>
                       <textarea
                         id="categoryDescription"
@@ -484,9 +483,9 @@ const CreateTest = () => {
                     </div>
                   </div>
 
-                  <div className="form-footer">
-                    <button onClick={resetCategoryForm} className="cancel-button">Cancel</button>
-                    <button onClick={addOrUpdateCategory} className="save-button">
+                  <div className="CreateTest-form-footer">
+                    <button onClick={resetCategoryForm} className="CreateTest-cancel-button">Cancel</button>
+                    <button onClick={addOrUpdateCategory} className="CreateTest-save-button">
                       {editingCategoryIndex >= 0 ? 'Update Category' : 'Add Category'}
                     </button>
                   </div>
@@ -495,29 +494,29 @@ const CreateTest = () => {
             )}
 
             {/* Categories List */}
-            <div className="items-list">
+            <div className="CreateTest-items-list">
               {categories.length === 0 ? (
-                <div className="empty-state">
+                <div className="CreateTest-empty-state">
                   <p>No categories added yet. Click "Add Category" to get started.</p>
                 </div>
               ) : (
-                <div className="items-grid">
+                <div className="CreateTest-items-grid">
                   {categories.map((category, index) => (
-                  <div key={category.id} className="item-card">
-                    <div className="item-header">
+                  <div key={category.id} className="CreateTest-item-card">
+                    <div className="CreateTest-item-header">
                       <h4>{category.name}</h4>
-                      <div className="item-actions">
-                        <button onClick={() => editCategory(index)} className="edit-button">✏️</button>
-                        <button onClick={() => deleteCategory(index)} className="delete-button">🗑️</button>
+                      <div className="CreateTest-item-actions">
+                        <button onClick={() => editCategory(index)} className="CreateTest-edit-button">✏️</button>
+                        <button onClick={() => deleteCategory(index)} className="CreateTest-delete-button">🗑️</button>
                       </div>
                     </div>
-                    <div className="item-content">
+                    <div className="CreateTest-item-content">
                       <p>{category.description}</p>
-                      <div className="item-stats">
-                        <span className="stat">
+                      <div className="CreateTest-item-stats">
+                        <span className="CreateTest-stat">
                           Subcategories: {subcategories.filter(sub => sub.categoryId === category.id).length}
                         </span>
-                        <span className="stat">
+                        <span className="CreateTest-stat">
                           Questions: {questions.filter(q => q.categoryId === category.id).length}
                         </span>
                       </div>
@@ -531,12 +530,12 @@ const CreateTest = () => {
         )}
 
         {activeTab === 'subcategories' && (
-          <div className="subcategories-section">
-            <div className="section-header">
+          <div className="CreateTest-subcategories-section">
+            <div className="CreateTest-section-header">
               <h2>Manage Subcategories</h2>
               <button 
                 onClick={() => setShowSubcategoryForm(true)}
-                className="add-button"
+                className="CreateTest-add-button"
                 disabled={categories.length === 0}
               >
                 + Add Subcategory
@@ -544,28 +543,28 @@ const CreateTest = () => {
             </div>
 
             {categories.length === 0 && (
-              <div className="warning-message">
+              <div className="CreateTest-warning-message">
                 <p>Please add at least one category before adding subcategories.</p>
               </div>
             )}
 
             {/* Subcategory Form Modal */}
             {showSubcategoryForm && (
-              <div className="form-modal">
-                <div className="form-content">
-                  <div className="form-header">
+              <div className="CreateTest-form-modal">
+                <div className="CreateTest-form-content">
+                  <div className="CreateTest-form-header">
                     <h3>{editingSubcategoryIndex >= 0 ? 'Edit Subcategory' : 'Add New Subcategory'}</h3>
-                    <button onClick={resetSubcategoryForm} className="close-button">×</button>
+                    <button onClick={resetSubcategoryForm} className="CreateTest-close-button">×</button>
                   </div>
                   
-                  <div className="form-body">
-                    <div className="form-group">
+                  <div className="CreateTest-form-body">
+                    <div className="CreateTest-form-group">
                       <label htmlFor="subcategoryCategory">Category *</label>
                       <select
                         id="subcategoryCategory"
                         value={newSubcategory.categoryId}
                         onChange={(e) => setNewSubcategory(prev => ({ ...prev, categoryId: e.target.value }))}
-                        className={errors.subcategoryCategoryId ? 'error' : ''}
+                        className={errors.subcategoryCategoryId ? 'CreateTest-error' : ''}
                       >
                         <option value="">Select a category...</option>
                         {categories.map(category => (
@@ -574,10 +573,10 @@ const CreateTest = () => {
                           </option>
                         ))}
                       </select>
-                      {errors.subcategoryCategoryId && <span className="error-text">{errors.subcategoryCategoryId}</span>}
+                      {errors.subcategoryCategoryId && <span className="CreateTest-error-text">{errors.subcategoryCategoryId}</span>}
                     </div>
 
-                    <div className="form-group">
+                    <div className="CreateTest-form-group">
                       <label htmlFor="subcategoryName">Subcategory Name *</label>
                       <input
                         type="text"
@@ -585,12 +584,12 @@ const CreateTest = () => {
                         value={newSubcategory.name}
                         onChange={(e) => setNewSubcategory(prev => ({ ...prev, name: e.target.value }))}
                         placeholder="Enter subcategory name..."
-                        className={errors.subcategoryName ? 'error' : ''}
+                        className={errors.subcategoryName ? 'CreateTest-error' : ''}
                       />
-                      {errors.subcategoryName && <span className="error-text">{errors.subcategoryName}</span>}
+                      {errors.subcategoryName && <span className="CreateTest-error-text">{errors.subcategoryName}</span>}
                     </div>
 
-                    <div className="form-group">
+                    <div className="CreateTest-form-group">
                       <label htmlFor="subcategoryDescription">Description</label>
                       <textarea
                         id="subcategoryDescription"
@@ -602,9 +601,9 @@ const CreateTest = () => {
                     </div>
                   </div>
 
-                  <div className="form-footer">
-                    <button onClick={resetSubcategoryForm} className="cancel-button">Cancel</button>
-                    <button onClick={addOrUpdateSubcategory} className="save-button">
+                  <div className="CreateTest-form-footer">
+                    <button onClick={resetSubcategoryForm} className="CreateTest-cancel-button">Cancel</button>
+                    <button onClick={addOrUpdateSubcategory} className="CreateTest-save-button">
                       {editingSubcategoryIndex >= 0 ? 'Update Subcategory' : 'Add Subcategory'}
                     </button>
                   </div>
@@ -613,29 +612,29 @@ const CreateTest = () => {
             )}
 
             {/* Subcategories List */}
-            <div className="items-list">
+            <div className="CreateTest-items-list">
               {subcategories.length === 0 ? (
-                <div className="empty-state">
+                <div className="CreateTest-empty-state">
                   <p>No subcategories added yet. Click "Add Subcategory" to get started.</p>
                 </div>
               ) : (
-                <div className="items-grid">
+                <div className="CreateTest-items-grid">
                   {subcategories.map((subcategory, index) => (
-                    <div key={subcategory.id} className="item-card">
-                      <div className="item-header">
+                    <div key={subcategory.id} className="CreateTest-item-card">
+                      <div className="CreateTest-item-header">
                         <h4>{subcategory.name}</h4>
-                        <div className="item-actions">
-                          <button onClick={() => editSubcategory(index)} className="edit-button">✏️</button>
-                          <button onClick={() => deleteSubcategory(index)} className="delete-button">🗑️</button>
+                        <div className="CreateTest-item-actions">
+                          <button onClick={() => editSubcategory(index)} className="CreateTest-edit-button">✏️</button>
+                          <button onClick={() => deleteSubcategory(index)} className="CreateTest-delete-button">🗑️</button>
                         </div>
                       </div>
-                      <div className="item-content">
+                      <div className="CreateTest-item-content">
                         <p>{subcategory.description}</p>
-                        <div className="item-stats">
-                          <span className="stat">
+                        <div className="CreateTest-item-stats">
+                          <span className="CreateTest-stat">
                             Category: {categories.find(cat => cat.id === subcategory.categoryId)?.name || 'Unknown Category'}
                           </span>
-                          <span className="stat">
+                          <span className="CreateTest-stat">
                             Questions: {questions.filter(q => q.subcategoryId === subcategory.id).length}
                           </span>
                         </div>
@@ -649,12 +648,12 @@ const CreateTest = () => {
         )}
 
         {activeTab === 'questions' && (
-          <div className="questions-section">
-            <div className="section-header">
+          <div className="CreateTest-questions-section">
+            <div className="CreateTest-section-header">
               <h2>Manage Questions</h2>
               <button 
                 onClick={() => setShowQuestionForm(true)}
-                className="add-button"
+                className="CreateTest-add-button"
                 disabled={subcategories.length === 0}
               >
                 + Add Question
@@ -662,22 +661,22 @@ const CreateTest = () => {
             </div>
 
             {subcategories.length === 0 && (
-              <div className="warning-message">
+              <div className="CreateTest-warning-message">
                 <p>Please add at least one subcategory before adding questions.</p>
               </div>
             )}
 
             {/* Question Form Modal */}
             {showQuestionForm && (
-              <div className="question-form-modal">
-                <div className="question-form">
-                  <div className="form-header">
+              <div className="CreateTest-question-form-modal">
+                <div className="CreateTest-question-form">
+                  <div className="CreateTest-form-header">
                     <h3>{editingQuestionIndex >= 0 ? 'Edit Question' : 'Add New Question'}</h3>
-                    <button onClick={resetQuestionForm} className="close-button">×</button>
+                    <button onClick={resetQuestionForm} className="CreateTest-close-button">×</button>
                   </div>
 
-                  <div className="form-body">
-                    <div className="form-group">
+                  <div className="CreateTest-form-body">
+                    <div className="CreateTest-form-group">
                       <label htmlFor="questionCategory">Category *</label>
                       <select
                         id="questionCategory"
@@ -686,7 +685,7 @@ const CreateTest = () => {
                           handleQuestionChange('categoryId', e.target.value);
                           handleQuestionChange('subcategoryId', ''); // Reset subcategory when category changes
                         }}
-                        className={errors.categoryId ? 'error' : ''}
+                        className={errors.categoryId ? 'CreateTest-error' : ''}
                       >
                         <option value="">Select a category...</option>
                         {categories.map(category => (
@@ -695,16 +694,16 @@ const CreateTest = () => {
                           </option>
                         ))}
                       </select>
-                      {errors.categoryId && <span className="error-text">{errors.categoryId}</span>}
+                      {errors.categoryId && <span className="CreateTest-error-text">{errors.categoryId}</span>}
                     </div>
 
-                    <div className="form-group">
+                    <div className="CreateTest-form-group">
                       <label htmlFor="questionSubcategory">Subcategory *</label>
                       <select
                         id="questionSubcategory"
                         value={currentQuestion.subcategoryId}
                         onChange={(e) => handleQuestionChange('subcategoryId', e.target.value)}
-                        className={errors.subcategoryId ? 'error' : ''}
+                        className={errors.subcategoryId ? 'CreateTest-error' : ''}
                         disabled={!currentQuestion.categoryId}
                       >
                         <option value="">Select a subcategory...</option>
@@ -714,10 +713,10 @@ const CreateTest = () => {
                           </option>
                         ))}
                       </select>
-                      {errors.subcategoryId && <span className="error-text">{errors.subcategoryId}</span>}
+                      {errors.subcategoryId && <span className="CreateTest-error-text">{errors.subcategoryId}</span>}
                     </div>
 
-                    <div className="form-group">
+                    <div className="CreateTest-form-group">
                       <label htmlFor="questionText">Question Text *</label>
                       <textarea
                         id="questionText"
@@ -725,29 +724,29 @@ const CreateTest = () => {
                         value={currentQuestion.questionText}
                         onChange={(e) => handleQuestionChange('questionText', e.target.value)}
                         placeholder="Enter your question..."
-                        className={errors.questionText ? 'error' : ''}
+                        className={errors.questionText ? 'CreateTest-error' : ''}
                       />
-                      {errors.questionText && <span className="error-text">{errors.questionText}</span>}
+                      {errors.questionText && <span className="CreateTest-error-text">{errors.questionText}</span>}
                     </div>
 
-                    <div className="fixed-options-section">
+                    <div className="CreateTest-fixed-options-section">
                       <label>Fixed Answer Options</label>
-                      <div className="fixed-options-note">
+                      <div className="CreateTest-fixed-options-note">
                         <p>All questions use the same standardized 5-point scale:</p>
                       </div>
                       {currentQuestion.options.map((option, index) => (
-                        <div key={index} className="fixed-option-display">
-                          <span className="option-label">{String.fromCharCode(65 + index)}.</span>
-                          <span className="option-text">{option.optionText}</span>
-                          <span className="option-marks">({option.marks} marks)</span>
+                        <div key={index} className="CreateTest-fixed-option-display">
+                          <span className="CreateTest-option-label">{String.fromCharCode(65 + index)}.</span>
+                          <span className="CreateTest-option-text">{option.optionText}</span>
+                          <span className="CreateTest-option-marks">({option.marks} marks)</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="form-footer">
-                    <button onClick={resetQuestionForm} className="cancel-button">Cancel</button>
-                    <button onClick={addOrUpdateQuestion} className="save-question-button">
+                  <div className="CreateTest-form-footer">
+                    <button onClick={resetQuestionForm} className="CreateTest-cancel-button">Cancel</button>
+                    <button onClick={addOrUpdateQuestion} className="CreateTest-save-question-button">
                       {editingQuestionIndex >= 0 ? 'Update Question' : 'Add Question'}
                     </button>
                   </div>
@@ -756,41 +755,41 @@ const CreateTest = () => {
             )}
 
             {/* Questions List */}
-            <div className="questions-list">
+            <div className="CreateTest-questions-list">
               {questions.length === 0 ? (
-                <div className="empty-state">
+                <div className="CreateTest-empty-state">
                   <p>No questions added yet. Click "Add Question" to get started.</p>
                 </div>
               ) : (
-                <div className="questions-grid">
+                <div className="CreateTest-questions-grid">
                   {questions.map((question, index) => (
-                    <div key={question.id} className="question-card">
-                      <div className="question-header">
-                        <span className="question-number">Q{index + 1}</span>
-                        <div className="question-badges">
-                          <span className="category-badge">
+                    <div key={question.id} className="CreateTest-question-card">
+                      <div className="CreateTest-question-header">
+                        <span className="CreateTest-question-number">Q{index + 1}</span>
+                        <div className="CreateTest-question-badges">
+                          <span className="CreateTest-category-badge">
                             {categories.find(cat => cat.id === question.categoryId)?.name || 'Unknown Category'}
                           </span>
-                          <span className="subcategory-badge">
+                          <span className="CreateTest-subcategory-badge">
                             {subcategories.find(sub => sub.id === question.subcategoryId)?.name || 'Unknown Subcategory'}
                           </span>
                         </div>
-                        <div className="question-actions">
-                          <button onClick={() => editQuestion(index)} className="edit-button">✏️</button>
-                          <button onClick={() => deleteQuestion(index)} className="delete-button">🗑️</button>
+                        <div className="CreateTest-question-actions">
+                          <button onClick={() => editQuestion(index)} className="CreateTest-edit-button">✏️</button>
+                          <button onClick={() => deleteQuestion(index)} className="CreateTest-delete-button">🗑️</button>
                         </div>
                       </div>
                       
-                      <div className="question-content">
-                        <p className="question-text">{question.questionText}</p>
+                      <div className="CreateTest-question-content">
+                        <p className="CreateTest-question-text">{question.questionText}</p>
                         
-                        <div className="options-preview">
-                          <div className="options-note">Fixed 5-point scale options</div>
+                        <div className="CreateTest-options-preview">
+                          <div className="CreateTest-options-note">Fixed 5-point scale options</div>
                           {question.options.map((option, optIndex) => (
-                            <div key={optIndex} className="option-preview">
-                              <span className="option-letter">{String.fromCharCode(65 + optIndex)}.</span>
-                              <span className="option-text">{option.optionText}</span>
-                              <span className="option-marks">({option.marks} marks)</span>
+                            <div key={optIndex} className="CreateTest-option-preview">
+                              <span className="CreateTest-option-letter">{String.fromCharCode(65 + optIndex)}.</span>
+                              <span className="CreateTest-option-text">{option.optionText}</span>
+                              <span className="CreateTest-option-marks">({option.marks} marks)</span>
                             </div>
                           ))}
                         </div>
@@ -806,9 +805,9 @@ const CreateTest = () => {
 
       {/* Loading Overlay */}
       {loading && (
-        <div className="loading-overlay">
-          <div className="loading-spinner">
-            <div className="spinner"></div>
+        <div className="CreateTest-loading-overlay">
+          <div className="CreateTest-loading-spinner">
+            <div className="CreateTest-spinner"></div>
             <p>Saving test...</p>
           </div>
         </div>
