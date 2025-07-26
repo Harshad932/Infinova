@@ -446,7 +446,6 @@ body {
   align-items: center;
   font-size: 0.875rem;
 }
-
 .ManageTests-info-label {
   color: var(--neutral-gray-600);
   font-weight: var(--font-weight-medium);
