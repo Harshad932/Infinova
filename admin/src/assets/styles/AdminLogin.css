@@ -1,148 +1,312 @@
 /* AdminLogin.css */
-.login-container {
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.AdminLogin-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0199D5 0%, #217BCE 100%);
+  background: linear-gradient(135deg, #217BCE 0%, #0199D5 50%, #16EFF7 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Inter', sans-serif;
+  position: relative;
+  overflow: hidden;
 }
 
-.login-wrapper {
+.AdminLogin-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(22, 239, 247, 0.1) 0%, transparent 70%);
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(-20px, -20px) rotate(2deg); }
+}
+
+.AdminLogin-wrapper {
   width: 100%;
-  max-width: 400px;
+  max-width: 440px;
+  position: relative;
+  z-index: 1;
 }
 
-.login-card {
+.AdminLogin-card {
   background: #FFFFFF;
-  border-radius: 12px;
+  border-radius: 20px;
+  box-shadow: 
+    0 20px 40px rgba(33, 123, 206, 0.15),
+    0 10px 20px rgba(1, 153, 213, 0.1),
+    0 4px 8px rgba(0, 0, 0, 0.05);
   padding: 40px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(22, 239, 247, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.login-header {
+.AdminLogin-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 25px 50px rgba(33, 123, 206, 0.2),
+    0 15px 25px rgba(1, 153, 213, 0.15),
+    0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.AdminLogin-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 32px;
 }
 
-.title {
+.AdminLogin-title {
   font-size: 28px;
-  font-weight: bold;
+  font-weight: 700;
   color: #217BCE;
-  margin: 0 0 8px 0;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
 }
 
-.subtitle {
-  font-size: 14px;
-  color: #666;
-  margin: 0;
-}
-
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.label {
-  font-size: 14px;
-  font-weight: 500;
-  color: #333;
-}
-
-.form-input {
-  padding: 12px 16px;
-  border: 2px solid #e1e5e9;
-  border-radius: 8px;
+.AdminLogin-subtitle {
   font-size: 16px;
-  transition: all 0.2s ease;
+  color: #6B7280;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.AdminLogin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.AdminLogin-form-group {
+  position: relative;
+}
+
+.AdminLogin-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+  letter-spacing: 0.025em;
+}
+
+.AdminLogin-form-input {
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 16px;
+  border: 2px solid #E5E7EB;
+  border-radius: 12px;
+  background-color: #FFFFFF;
+  color: #111827;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   outline: none;
 }
 
-.form-input:focus {
+.AdminLogin-form-input:focus {
   border-color: #16EFF7;
-  box-shadow: 0 0 0 3px rgba(22, 239, 247, 0.1);
+  box-shadow: 
+    0 0 0 3px rgba(22, 239, 247, 0.1),
+    0 4px 12px rgba(22, 239, 247, 0.15);
+  transform: translateY(-1px);
 }
 
-.login-button {
-  padding: 14px 20px;
-  background: linear-gradient(45deg, #16EFF7, #0199D5);
-  color: #FFFFFF;
-  border: none;
-  border-radius: 8px;
+.AdminLogin-form-input:hover:not(:focus) {
+  border-color: #0199D5;
+  box-shadow: 0 2px 8px rgba(1, 153, 213, 0.1);
+}
+
+.AdminLogin-form-input::placeholder {
+  color: #9CA3AF;
+  font-weight: 400;
+}
+
+.AdminLogin-button {
+  width: 100%;
+  padding: 18px 24px;
   font-size: 16px;
   font-weight: 600;
+  color: #FFFFFF;
+  background: linear-gradient(135deg, #217BCE 0%, #0199D5 100%);
+  border: none;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  margin-top: 10px;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.025em;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  margin-top: 8px;
 }
 
-.login-button:hover:not(.disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(22, 239, 247, 0.3);
+.AdminLogin-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
 }
 
-.login-button.disabled {
+.AdminLogin-button:hover::before {
+  left: 100%;
+}
+
+.AdminLogin-button:hover:not(.AdminLogin-disabled) {
+  background: linear-gradient(135deg, #1E6AB8 0%, #0188C2 100%);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 24px rgba(33, 123, 206, 0.3),
+    0 6px 12px rgba(1, 153, 213, 0.2);
+}
+
+.AdminLogin-button:active:not(.AdminLogin-disabled) {
+  transform: translateY(0);
+  box-shadow: 
+    0 6px 12px rgba(33, 123, 206, 0.2),
+    0 3px 6px rgba(1, 153, 213, 0.15);
+}
+
+.AdminLogin-disabled {
   opacity: 0.7;
   cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
-.loading-spinner {
+.AdminLogin-error-message {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top: 2px solid #FFFFFF;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.error-message {
-  padding: 12px 16px;
-  background: #fee;
-  border: 1px solid #fcc;
-  border-radius: 8px;
-  color: #c33;
+  gap: 12px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%);
+  border: 1px solid #FECACA;
+  border-radius: 12px;
+  color: #DC2626;
   font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  animation: slideIn 0.3s ease-out;
 }
 
-.error-icon {
-  font-size: 16px;
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.AdminLogin-error-icon {
+  font-size: 18px;
+  flex-shrink: 0;
 }
 
 /* Responsive Design */
 @media (max-width: 480px) {
-  .login-container {
-    padding: 10px;
+  .AdminLogin-container {
+    padding: 16px;
   }
   
-  .login-card {
-    padding: 30px 20px;
+  .AdminLogin-card {
+    padding: 28px 24px;
+    border-radius: 16px;
   }
   
-  .title {
+  .AdminLogin-title {
     font-size: 24px;
+  }
+  
+  .AdminLogin-subtitle {
+    font-size: 14px;
+  }
+  
+  .AdminLogin-form {
+    gap: 20px;
+  }
+  
+  .AdminLogin-form-input {
+    padding: 14px 16px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  .AdminLogin-button {
+    padding: 16px 20px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 360px) {
+  .AdminLogin-card {
+    padding: 24px 20px;
+  }
+  
+  .AdminLogin-title {
+    font-size: 22px;
+  }
+  
+  .AdminLogin-form-input {
+    padding: 12px 14px;
+  }
+  
+  .AdminLogin-button {
+    padding: 14px 18px;
+  }
+}
+
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  .AdminLogin-container {
+    padding: 40px;
+  }
+  
+  .AdminLogin-wrapper {
+    max-width: 480px;
+  }
+  
+  .AdminLogin-card {
+    padding: 48px;
+  }
+}
+
+/* High DPI screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .AdminLogin-card {
+    border: 0.5px solid rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* Focus visibility for accessibility */
+.AdminLogin-button:focus-visible {
+  outline: 2px solid #16EFF7;
+  outline-offset: 2px;
+}
+
+.AdminLogin-form-input:focus-visible {
+  outline: 2px solid #16EFF7;
+  outline-offset: 2px;
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  .AdminLogin-container {
+    background: linear-gradient(135deg, #1E3A8A 0%, #1E40AF 50%, #0F172A 100%);
   }
 }

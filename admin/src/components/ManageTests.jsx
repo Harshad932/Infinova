@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../assets/styles/ManageTests.css';
 
@@ -12,6 +12,7 @@ const ManageTests = () => {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({});
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const navigate = useNavigate();
 
   // API base URL - adjust according to your backend setup
@@ -31,8 +32,8 @@ const ManageTests = () => {
     };
   };
 
-  // Fetch tests from backend
-  const fetchTests = async (page = 1, search = '', status = 'all') => {
+  // Fetch tests from backend - wrapped in useCallback to prevent unnecessary re-renders
+  const fetchTests = useCallback(async (page = 1, search = '', status = 'all') => {
     try {
       setLoading(true);
       setError(null);
@@ -92,34 +93,29 @@ const ManageTests = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [API_BASE_URL]);
 
-  // Initial fetch
+// Debounce search term with delayed fetch
+useEffect(() => {
+  const handler = setTimeout(() => {
+    setDebouncedSearchTerm(searchTerm);
+    setCurrentPage(1); // Reset page after search debounce
+  }, 500);
+
+  return () => clearTimeout(handler);
+}, [searchTerm]);
+
+
+  // Reset to page 1 when search or filter changes, but don't trigger fetch here
+
   useEffect(() => {
-    fetchTests(currentPage, searchTerm, filterStatus);
-  }, [currentPage, searchTerm, filterStatus]);
-
-  // Debounced search
+    fetchTests(currentPage, debouncedSearchTerm, filterStatus);
+  }, [currentPage, debouncedSearchTerm, filterStatus, fetchTests]);
+  
+  // Main effect that handles API calls
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (currentPage === 1) {
-        fetchTests(1, searchTerm, filterStatus);
-      } else {
-        setCurrentPage(1);
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  // Filter status change
-  useEffect(() => {
-    if (currentPage === 1) {
-      fetchTests(1, searchTerm, filterStatus);
-    } else {
-      setCurrentPage(1);
-    }
-  }, [filterStatus]);
+    fetchTests(currentPage, debouncedSearchTerm, filterStatus);
+  }, [currentPage, debouncedSearchTerm, filterStatus, fetchTests]);
 
   // Handle card click - navigate to test detail page if published
   const handleTestCardClick = (test) => {
@@ -172,8 +168,8 @@ const ManageTests = () => {
         throw new Error(errorData.message || 'Action failed');
       }
 
-      // Refresh the tests list
-      fetchTests(currentPage, searchTerm, filterStatus);
+      // Refresh the tests list with current filters
+      fetchTests(currentPage, debouncedSearchTerm, filterStatus);
       
     } catch (error) {
       console.error('Error executing action:', error);
@@ -186,11 +182,11 @@ const ManageTests = () => {
 
   const getStatusBadge = (status) => {
     switch(status) {
-      case 'draft': return 'status-draft';
-      case 'published': return 'status-published';
-      case 'active': return 'status-active';
-      case 'completed': return 'status-completed';
-      default: return 'status-draft';
+      case 'draft': return 'ManageTests-status-draft';
+      case 'published': return 'ManageTests-status-published';
+      case 'active': return 'ManageTests-status-active';
+      case 'completed': return 'ManageTests-status-completed';
+      default: return 'ManageTests-status-draft';
     }
   };
 
@@ -235,11 +231,12 @@ const ManageTests = () => {
     navigate('/admin/login');
   };
 
+  // Show loading only on initial load
   if (loading && tests.length === 0) {
     return (
-      <div className="loading-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
+      <div className="ManageTests-loading-container">
+        <div className="ManageTests-loading-spinner">
+          <div className="ManageTests-spinner"></div>
           <p>Loading Tests...</p>
         </div>
       </div>
@@ -247,22 +244,22 @@ const ManageTests = () => {
   }
 
   return (
-    <div className="manage-tests-container">
+    <div className="ManageTests-container">
       {/* Header */}
-      <header className="page-header">
-        <div className="header-content">
-          <div className="header-left">
+      <header className="ManageTests-page-header">
+        <div className="ManageTests-header-content">
+          <div className="ManageTests-header-left">
             <button 
               onClick={handleLogout}
-              className="back-button"
+              className="ManageTests-back-button"
             >
               Logout
             </button>
-            <h1 className="page-title">Manage Tests</h1>
+            <h1 className="ManageTests-page-title">Manage Tests</h1>
           </div>
           <button 
             onClick={() => navigate('/admin/create-test')}
-            className="create-test-btn"
+            className="ManageTests-create-test-btn"
           >
             + Create New Test
           </button>
@@ -271,29 +268,29 @@ const ManageTests = () => {
 
       {/* Error Message */}
       {error && (
-        <div className="error-message">
+        <div className="ManageTests-error-message">
           <p>{error}</p>
           <button onClick={() => setError(null)}>×</button>
         </div>
       )}
 
       {/* Filters */}
-      <div className="filters-section">
-        <div className="search-bar">
+      <div className="ManageTests-filters-section">
+        <div className="ManageTests-search-bar">
           <input
             type="text"
             placeholder="Search tests by title or description..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
+            className="ManageTests-search-input"
           />
         </div>
         
-        <div className="filter-dropdown">
+        <div className="ManageTests-filter-dropdown">
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="filter-select"
+            className="ManageTests-filter-select"
           >
             <option value="all">All Status</option>
             <option value="draft">Draft</option>
@@ -305,10 +302,10 @@ const ManageTests = () => {
       </div>
 
       {/* Tests Grid */}
-      <div className="tests-grid">
-        {tests.length === 0 ? (
-          <div className="no-tests">
-            <div className="no-tests-icon">📝</div>
+      <div className="ManageTests-tests-grid">
+        {tests.length === 0 && !loading ? (
+          <div className="ManageTests-no-tests">
+            <div className="ManageTests-no-tests-icon">📝</div>
             <h3>No tests found</h3>
             <p>Create your first test or adjust your search filters</p>
           </div>
@@ -316,69 +313,69 @@ const ManageTests = () => {
           tests.map(test => (
             <div 
               key={test.id} 
-              className={`test-card ${(test.status === 'published' || test.status === 'active') ? 'clickable' : ''}`}
+              className={`ManageTests-test-card ${(test.status === 'published' || test.status === 'active') ? 'ManageTests-clickable' : ''}`}
               onClick={() => handleTestCardClick(test)}
               style={{ 
                 cursor: (test.status === 'published' || test.status === 'active') ? 'pointer' : 'default' 
               }}
             >
-              <div className="test-card-header">
-                <div className="test-title-section">
-                  <h3 className="test-title">{test.title}</h3>
-                  <span className={`status-badge ${getStatusBadge(test.status)}`}>
+              <div className="ManageTests-test-card-header">
+                <div className="ManageTests-test-title-section">
+                  <h3 className="ManageTests-test-title">{test.title}</h3>
+                  <span className={`ManageTests-status-badge ${getStatusBadge(test.status)}`}>
                     {getStatusText(test.status)}
                   </span>
                 </div>
                 {/* Show test code only if it exists */}
                 {test.testCode && (
-                  <div className="test-code">
-                    Code: <span className="code-text">{test.testCode}</span>
+                  <div className="ManageTests-test-code">
+                    Code: <span className="ManageTests-code-text">{test.testCode}</span>
                   </div>
                 )}
               </div>
 
-              <div className="test-card-body">
-                <p className="test-description">{test.description || 'No description available'}</p>
+              <div className="ManageTests-test-card-body">
+                <p className="ManageTests-test-description">{test.description || 'No description available'}</p>
                 
-                <div className="test-info">
-                  <div className="info-item">
-                    <span className="info-label">Questions:</span>
-                    <span className="info-value">{test.totalQuestions || 0}</span>
+                <div className="ManageTests-test-info">
+                  <div className="ManageTests-info-item">
+                    <span className="ManageTests-info-label">Questions:</span>
+                    <span className="ManageTests-info-value">{test.totalQuestions || 0}</span>
                   </div>
-                  <div className="info-item">
-                    <span className="info-label">Categories:</span>
-                    <span className="info-value">{test.totalCategories || 0}</span>
+                  <div className="ManageTests-info-item">
+                    <span className="ManageTests-info-label">Categories:</span>
+                    <span className="ManageTests-info-value">{test.totalCategories || 0}</span>
                   </div>
-                  <div className="info-item">
-                    <span className="info-label">Subcategories:</span>
-                    <span className="info-value">{test.totalSubcategories || 0}</span>
+                  <div className="ManageTests-info-item">
+                    <span className="ManageTests-info-label">Subcategories:</span>
+                    <span className="ManageTests-info-value">{test.totalSubcategories || 0}</span>
                   </div>
-                  <div className="info-item">
-                    <span className="info-label">Time per Q:</span>
-                    <span className="info-value">{test.timePerQuestion || 0}s</span>
+                  <div className="ManageTests-info-item">
+                    <span className="ManageTests-info-label">Time per Q:</span>
+                    <span className="ManageTests-info-value">{test.timePerQuestion || 0}s</span>
                   </div>
-                  <div className="info-item">
-                    <span className="info-label">Participants:</span>
-                    <span className="info-value">{test.participants || 0}</span>
+                  <div className="ManageTests-info-item">
+                    <span className="ManageTests-info-label">Participants:</span>
+                    <span className="ManageTests-info-value">{test.participants || 0}</span>
                   </div>
-                  <div className="info-item">
-                    <span className="info-label">Completed:</span>
-                    <span className="info-value">{test.completedParticipants || 0}</span>
+                  <div className="ManageTests-info-item">
+                    <span className="ManageTests-info-label">Completed:</span>
+                    <span className="ManageTests-info-value">{test.completedParticipants || 0}</span>
                   </div>
                 </div>
 
                 {/* Show category and subcategory breakdown if available */}
                 {test.categoryBreakdown && test.categoryBreakdown.length > 0 && (
-                  <div className="category-breakdown">
-                    <span className="breakdown-label">Structure:</span>
-                    <div className="breakdown-list">
+                  <div className="ManageTests-category-breakdown">
+                    <span className="ManageTests-breakdown-label">Structure:</span>
+                    <div className="ManageTests-breakdown-list">
                       {test.categoryBreakdown.slice(0, 2).map((category, index) => (
-                        <span key={index} className="category-tag">
+                        <span key={index} className="ManageTests-category-tag">
                           {category.name} ({category.subcategories} subcats)
                         </span>
                       ))}
                       {test.categoryBreakdown.length > 2 && (
-                        <span className="category-tag more">
+                        <span className="ManageTests-category-tag ManageTests-more">
                           +{test.categoryBreakdown.length - 2} more
                         </span>
                       )}
@@ -386,25 +383,25 @@ const ManageTests = () => {
                   </div>
                 )}
 
-                <div className="test-meta">
-                  <span className="created-date">Created: {formatDate(test.createdAt)}</span>
+                <div className="ManageTests-test-meta">
+                  <span className="ManageTests-created-date">Created: {formatDate(test.createdAt)}</span>
                 </div>
 
                 {/* Show click instruction for published/active tests */}
                 {(test.status === 'published' || test.status === 'active') && (
-                  <div className="click-instruction">
+                  <div className="ManageTests-click-instruction">
                     <small>💡 Click card to view test details and manage participants</small>
                   </div>
                 )}
               </div>
 
-              <div className="test-card-actions">
-                <div className="action-row">
+              <div className="ManageTests-test-card-actions">
+                <div className="ManageTests-action-row">
                   {/* Edit Button - Available for all statuses except completed */}
                   {test.status !== 'completed' && (
                     <button 
                       onClick={(e) => handleEditClick(test.id, e)}
-                      className="action-btn edit-btn"
+                      className="ManageTests-action-btn ManageTests-edit-btn"
                     >
                       Edit
                     </button>
@@ -414,7 +411,7 @@ const ManageTests = () => {
                   {test.status === 'draft' && (
                     <button 
                       onClick={(e) => handleConfirmAction('publish', test.id, e)}
-                      className="action-btn publish-btn"
+                      className="ManageTests-action-btn ManageTests-publish-btn"
                     >
                       Publish
                     </button>
@@ -424,7 +421,7 @@ const ManageTests = () => {
                   {test.status === 'published' && (
                     <button 
                       onClick={(e) => handleConfirmAction('unpublish', test.id, e)}
-                      className="action-btn unpublish-btn"
+                      className="ManageTests-action-btn ManageTests-unpublish-btn"
                     >
                       Unpublish
                     </button>
@@ -434,7 +431,7 @@ const ManageTests = () => {
                   {(test.status === 'completed' || (test.status === 'active' && test.completedParticipants > 0)) && (
                     <button 
                       onClick={(e) => handleResultsClick(test.id, e)}
-                      className="action-btn results-btn"      
+                      className="ManageTests-action-btn ManageTests-results-btn"      
                     >
                       Results
                     </button>
@@ -444,7 +441,7 @@ const ManageTests = () => {
                   {(test.status === 'draft' || test.status === 'completed') && (
                     <button 
                       onClick={(e) => handleConfirmAction('delete', test.id, e)}
-                      className="action-btn delete-btn"
+                      className="ManageTests-action-btn ManageTests-delete-btn"
                     >
                       Delete
                     </button>
@@ -458,23 +455,23 @@ const ManageTests = () => {
 
       {/* Pagination */}
       {pagination.totalPages > 1 && (
-        <div className="pagination">
+        <div className="ManageTests-pagination">
           <button 
             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
             disabled={!pagination.hasPrev}
-            className="pagination-btn"
+            className="ManageTests-pagination-btn"
           >
             Previous
           </button>
           
-          <span className="pagination-info">
+          <span className="ManageTests-pagination-info">
             Page {pagination.currentPage} of {pagination.totalPages}
           </span>
           
           <button 
             onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
             disabled={!pagination.hasNext}
-            className="pagination-btn"
+            className="ManageTests-pagination-btn"
           >
             Next
           </button>
@@ -483,33 +480,33 @@ const ManageTests = () => {
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div className="modal-overlay">
-          <div className="modal confirm-modal">
-            <div className="modal-header">
+        <div className="ManageTests-modal-overlay">
+          <div className="ManageTests-modal ManageTests-confirm-modal">
+            <div className="ManageTests-modal-header">
               <h3>Confirm Action</h3>
             </div>
-            <div className="modal-body">
+            <div className="ManageTests-modal-body">
               <p>Are you sure you want to {confirmAction?.action.replace(/([A-Z])/g, ' $1').toLowerCase()} this test?</p>
               {confirmAction?.action === 'delete' && (
-                <p className="warning-text">This action cannot be undone.</p>
+                <p className="ManageTests-warning-text">This action cannot be undone.</p>
               )}
               {confirmAction?.action === 'publish' && (
-                <p className="info-text">Once published, the test will be available for activation and user registration.</p>
+                <p className="ManageTests-info-text">Once published, the test will be available for activation and user registration.</p>
               )}
               {confirmAction?.action === 'unpublish' && (
-                <p className="warning-text">This will make the test unavailable and deactivate it if currently active.</p>
+                <p className="ManageTests-warning-text">This will make the test unavailable and deactivate it if currently active.</p>
               )}
             </div>
-            <div className="modal-actions">
+            <div className="ManageTests-modal-actions">
               <button 
                 onClick={() => setShowConfirmModal(false)}
-                className="modal-btn secondary"
+                className="ManageTests-modal-btn ManageTests-secondary"
               >
                 Cancel
               </button>
               <button 
                 onClick={executeAction}
-                className="modal-btn primary"
+                className="ManageTests-modal-btn ManageTests-primary"
               >
                 Confirm
               </button>
