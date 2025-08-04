@@ -42,16 +42,48 @@ const TestInfo = () => {
     navigate(`/login-verification/${testId}`);
   };
 
-  if (loading) {
-    return (
-      <div className="test-info-container">
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p className="loading-text">Loading test information...</p>
+ if (loading) {
+  return (
+    <div className="homepage-container">
+      <div className="loading-container">
+        <div className="lightbulb-container">
+          <div className="glow-ring"></div>
+          <div className="glow-ring"></div>
+          <div className="glow-ring"></div>
+          
+          <div className="lightbulb">
+            <div className="bulb-body">
+              <div className="filament">
+                <div className="filament-line"></div>
+                <div className="filament-line"></div>
+                <div className="filament-line"></div>
+              </div>
+            </div>
+            <div className="bulb-base"></div>
+          </div>
+
+          <div className="sparkles">
+            <div className="sparkle"></div>
+            <div className="sparkle"></div>
+            <div className="sparkle"></div>
+            <div className="sparkle"></div>
+            <div className="sparkle"></div>
+            <div className="sparkle"></div>
+          </div>
+        </div>
+
+        <div className="loading-content">
+          <p className="loading-text">Loading available tests<span className="typing-dots">...</span></p>
+          <p className="loading-subtitle">Please wait while we fetch the latest information</p>
+          
+          <div className="progress-container">
+            <div className="progress-bar"></div>
+          </div>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   if (error) {
     return (
