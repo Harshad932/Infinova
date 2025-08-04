@@ -1,51 +1,96 @@
-/* ThankYou.css */
+/* ThankYou.css - Blue Gradient Success Theme */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+/* Main Container with Blue Gradient Background */
 .thank-you-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0199D5 0%, #217BCE 100%);
+  background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
   padding: 20px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Poppins', 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  position: relative;
+  overflow: hidden;
 }
 
+/* Subtle background pattern for visual depth */
+.thank-you-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 0%, transparent 30%),
+    radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.05) 0%, transparent 30%);
+  animation: float 20s ease-in-out infinite;
+  z-index: 1;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0px, 0px) rotate(0deg);
+  }
+  33% {
+    transform: translate(30px, -30px) rotate(120deg);
+  }
+  66% {
+    transform: translate(-20px, 20px) rotate(240deg);
+  }
+}
+
+/* White Success Card */
 .thank-you-card {
-  background: #FFFFFF;
+  background: #ffffff;
   border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  padding: 40px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 50px 40px;
   text-align: center;
   max-width: 600px;
   width: 100%;
   position: relative;
   overflow: hidden;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+/* Top accent border with blue gradient */
 .thank-you-card::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #0199D5, #16EFF7, #217BCE);
+  height: 5px;
+  background: linear-gradient(90deg, #00c6ff, #0072ff, #00bcd4);
+  border-radius: 20px 20px 0 0;
 }
 
+/* Success Icon Container */
 .success-icon {
-  margin-bottom: 30px;
+  margin-bottom: 35px;
   display: flex;
   justify-content: center;
+  position: relative;
 }
 
+/* Enhanced Checkmark with Blue Theme and Green Tick */
 .checkmark {
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   display: block;
   stroke-width: 3;
-  stroke: #0199D5;
+  stroke: #00bcd4;
   stroke-miterlimit: 10;
+  background: #f0f9ff;
+  border: 3px solid #e0f7fa;
   animation: fill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+  box-shadow: 0 8px 25px rgba(0, 188, 212, 0.2);
+  position: relative;
 }
 
 .checkmark-circle {
@@ -53,7 +98,7 @@
   stroke-dashoffset: 166;
   stroke-width: 3;
   stroke-miterlimit: 10;
-  stroke: #0199D5;
+  stroke: #00bcd4;
   fill: none;
   animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
 }
@@ -62,11 +107,15 @@
   transform-origin: 50% 50%;
   stroke-dasharray: 48;
   stroke-dashoffset: 48;
-  stroke-width: 3;
-  stroke: #0199D5;
-  animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+  stroke-width: 4;
+  stroke: #34a853; /* Green color for the checkmark */
+  animation: 
+    stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards,
+    checkGlow 0.5s ease-in-out 1.2s forwards,
+    checkPulse 2s ease-in-out 1.5s infinite;
 }
 
+/* Enhanced Checkmark Animations */
 @keyframes stroke {
   100% {
     stroke-dashoffset: 0;
@@ -84,31 +133,141 @@
 
 @keyframes fill {
   100% {
-    box-shadow: inset 0px 0px 0px 30px #0199D5;
+    box-shadow: 
+      inset 0px 0px 0px 50px #00bcd4,
+      0 8px 25px rgba(0, 188, 212, 0.4);
   }
 }
 
+/* Green Checkmark Glow Animation */
+@keyframes checkGlow {
+  0% {
+    filter: drop-shadow(0 0 0px #34a853);
+  }
+  100% {
+    filter: drop-shadow(0 0 8px #34a853);
+  }
+}
+
+/* Green Checkmark Pulse Animation */
+@keyframes checkPulse {
+  0%, 100% {
+    stroke-width: 4;
+    opacity: 1;
+  }
+  50% {
+    stroke-width: 5;
+    opacity: 0.8;
+  }
+}
+
+/* Additional Enhancement: Success Sparkle Effect */
+.checkmark::after {
+  content: '✨';
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  font-size: 20px;
+  opacity: 0;
+  animation: sparkle 0.6s ease-in-out 1.4s forwards;
+}
+
+@keyframes sparkle {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2) rotate(180deg);
+  }
+  100% {
+    opacity: 0.7;
+    transform: scale(1) rotate(360deg);
+  }
+}
+
+/* Success Ring Animation */
+.checkmark::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  border: 2px solid #34a853;
+  border-radius: 50%;
+  opacity: 0;
+  animation: successRing 0.8s ease-out 1.1s forwards;
+}
+
+@keyframes successRing {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 480px) {
+  .checkmark {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .checkmark::after {
+    font-size: 16px;
+    top: -8px;
+    right: -8px;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .checkmark {
+    width: 85px;
+    height: 85px;
+  }
+  
+  .checkmark::after {
+    font-size: 18px;
+    top: -9px;
+    right: -9px;
+  }
+}
+
+/* Typography - Professional and Clean */
 .thank-you-title {
   font-size: 2.5rem;
-  color: #0199D5;
+  color: #111111; /* Bold black for title */
   margin-bottom: 20px;
   font-weight: 700;
   animation: fadeInUp 0.6s ease-out 0.2s both;
+  letter-spacing: -0.02em;
 }
 
 .thank-you-message {
   font-size: 1.2rem;
-  color: #333;
-  margin-bottom: 30px;
+  color: #666666; /* Medium gray for description */
+  margin-bottom: 35px;
   line-height: 1.6;
   animation: fadeInUp 0.6s ease-out 0.4s both;
+  font-weight: 400;
 }
 
+/* Completion Details with Color Psychology */
 .completion-details {
   display: flex;
   justify-content: center;
-  gap: 30px;
-  margin-bottom: 30px;
+  gap: 20px;
+  margin-bottom: 35px;
   flex-wrap: wrap;
   animation: fadeInUp 0.6s ease-out 0.6s both;
 }
@@ -116,33 +275,55 @@
 .detail-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  background: rgba(1, 153, 213, 0.1);
+  gap: 10px;
+  padding: 15px 20px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f7fa 100%);
   border-radius: 25px;
-  border: 2px solid rgba(1, 153, 213, 0.2);
+  border: 2px solid #e0f7fa;
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.detail-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 188, 212, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.detail-item:hover::before {
+  left: 100%;
 }
 
 .detail-item:hover {
-  background: rgba(1, 153, 213, 0.15);
-  border-color: rgba(1, 153, 213, 0.4);
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+  border-color: #00bcd4;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 188, 212, 0.2);
 }
 
+/* Icons with Color Psychology */
 .detail-icon {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  color: #34a853; /* Green for success status */
 }
 
+/* Text with Blue Theme */
 .detail-text {
   font-weight: 600;
-  color: #0199D5;
-  font-size: 0.9rem;
+  color: #1a73e8; /* Blue for status time/text */
+  font-size: 0.95rem;
 }
 
+/* Appreciation Text */
 .appreciation-text {
   font-size: 1rem;
-  color: #666;
+  color: #666666; /* Medium gray */
   line-height: 1.7;
   margin-bottom: 40px;
   max-width: 500px;
@@ -151,16 +332,17 @@
   animation: fadeInUp 0.6s ease-out 0.8s both;
 }
 
+/* Action Buttons */
 .action-buttons {
-  margin-bottom: 30px;
+  margin-bottom: 35px;
   animation: fadeInUp 0.6s ease-out 1s both;
 }
 
 .back-home-btn {
-  background: linear-gradient(135deg, #0199D5 0%, #217BCE 100%);
+  background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
   color: white;
   border: none;
-  padding: 15px 30px;
+  padding: 18px 36px;
   border-radius: 50px;
   font-size: 1.1rem;
   font-weight: 600;
@@ -168,37 +350,58 @@
   transition: all 0.3s ease;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  box-shadow: 0 4px 15px rgba(1, 153, 213, 0.3);
+  gap: 12px;
+  box-shadow: 0 4px 20px rgba(0, 114, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+}
+
+.back-home-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.back-home-btn:hover::before {
+  left: 100%;
 }
 
 .back-home-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(1, 153, 213, 0.4);
-  background: linear-gradient(135deg, #217BCE 0%, #0199D5 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0, 114, 255, 0.4);
+  background: linear-gradient(135deg, #0072ff 0%, #00c6ff 100%);
 }
 
 .back-home-btn:active {
-  transform: translateY(0);
+  transform: translateY(-1px);
 }
 
 .btn-icon {
   font-size: 1.2rem;
 }
 
+/* Footer Note */
 .footer-note {
-  border-top: 1px solid #eee;
-  padding-top: 20px;
+  border-top: 1px solid #e0f7fa;
+  padding-top: 25px;
   animation: fadeInUp 0.6s ease-out 1.2s both;
 }
 
 .footer-note p {
   font-size: 0.9rem;
-  color: #888;
+  color: #888888; /* Light gray for footer */
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.6;
+  font-weight: 400;
 }
 
+/* Fade In Up Animation */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -210,19 +413,91 @@
   }
 }
 
-/* Mobile Responsiveness */
-@media (max-width: 768px) {
+/* Mobile Responsiveness - ≤480px */
+@media (max-width: 480px) {
+  .thank-you-container {
+    padding: 10px;
+  }
+
+  .thank-you-card {
+    padding: 30px 20px;
+    width: 90%; /* Card takes ~90% width on mobile */
+    border-radius: 15px;
+  }
+  
+  .checkmark {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .thank-you-title {
+    font-size: 1.8rem;
+  }
+
+  .thank-you-message {
+    font-size: 1rem;
+  }
+  
+  .completion-details {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+  
+  .detail-item {
+    padding: 12px 16px;
+    width: 100%;
+    max-width: 250px;
+    justify-content: center;
+  }
+  
+  .detail-text {
+    font-size: 0.85rem;
+  }
+
+  .detail-icon {
+    font-size: 1.1rem;
+  }
+
+  .appreciation-text {
+    font-size: 0.9rem;
+    margin-bottom: 30px;
+  }
+
+  .back-home-btn {
+    font-size: 1rem;
+    padding: 14px 28px;
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .btn-icon {
+    font-size: 1.1rem;
+  }
+
+  .footer-note {
+    padding-top: 20px;
+  }
+
+  .footer-note p {
+    font-size: 0.85rem;
+  }
+}
+
+/* Tablet Responsiveness - 481px–768px */
+@media (min-width: 481px) and (max-width: 768px) {
   .thank-you-container {
     padding: 15px;
   }
   
   .thank-you-card {
-    padding: 30px 20px;
-    margin: 10px;
+    padding: 40px 30px;
+    max-width: 500px; /* Card centered with max-width ~500px */
+    border-radius: 18px;
   }
   
   .thank-you-title {
-    font-size: 2rem;
+    font-size: 2.2rem;
   }
   
   .thank-you-message {
@@ -230,15 +505,12 @@
   }
   
   .completion-details {
-    flex-direction: column;
     gap: 15px;
-    align-items: center;
   }
   
   .detail-item {
-    width: 100%;
-    max-width: 250px;
-    justify-content: center;
+    padding: 14px 18px;
+    max-width: 200px;
   }
   
   .appreciation-text {
@@ -246,34 +518,80 @@
   }
   
   .back-home-btn {
-    width: 100%;
+    padding: 16px 32px;
     max-width: 300px;
+  }
+
+  .checkmark {
+    width: 85px;
+    height: 85px;
   }
 }
 
-@media (max-width: 480px) {
+/* Desktop Responsiveness - ≥769px */
+@media (min-width: 769px) {
+  .thank-you-container {
+    padding: 20px;
+    /* Card vertically and horizontally centered using Flexbox */
+  }
+  
   .thank-you-card {
-    padding: 25px 15px;
+    padding: 50px 40px;
+    max-width: 600px;
   }
-  
-  .checkmark {
-    width: 60px;
-    height: 60px;
-  }
-  
-  .thank-you-title {
-    font-size: 1.8rem;
-  }
-  
+
   .completion-details {
-    gap: 10px;
+    gap: 25px;
+  }
+
+  .detail-item {
+    padding: 15px 20px;
+  }
+
+  .checkmark {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .thank-you-card {
+    border: 3px solid #0072ff;
+  }
+  
+  .back-home-btn {
+    background: #0072ff;
+    color: #ffffff;
   }
   
   .detail-item {
-    padding: 10px 15px;
+    border: 2px solid #00bcd4;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  .thank-you-container {
+    background: white;
+    padding: 0;
   }
   
-  .detail-text {
-    font-size: 0.8rem;
+  .thank-you-card {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+  
+  .back-home-btn {
+    display: none;
   }
 }

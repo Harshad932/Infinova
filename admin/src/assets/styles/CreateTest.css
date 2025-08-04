@@ -262,18 +262,20 @@ body {
   line-height: 1.6;
 }
 
-/* Tabs Container */
 .tabs-container {
   display: flex;
+  justify-content: center; /* Center tabs inside */
   background-color: var(--bg-secondary);
   border-radius: var(--radius-2xl);
   padding: var(--spacing-xs);
-  margin-bottom: var(--spacing-2xl);
+  margin: 0 auto var(--spacing-2xl); /* This centers the container */
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border-color);
   overflow-x: auto;
   gap: var(--spacing-xs);
+  width: fit-content; /* Optional: shrink-wrap the content */
 }
+
 
 .tab-button {
   flex: 1;
@@ -653,7 +655,7 @@ body {
 }
 
 /* Category/Type specific colors */
-.category-title {
+.item-title category-title {
   color: var(--accent-blue);
   font-weight: var(--font-weight-bold);
 }
@@ -1220,7 +1222,7 @@ textarea:focus {
   .category-title,
   .subcategory-title,
   .question-title {
-    color: #000 !important;
+    color: #ffffff !important;
   }
 }
 
