@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import '../assets/styles/TestInterface.css';
+import styles from '../assets/styles/TestInterface.module.css';
 
 const TestInterface = () => {
   const { testId } = useParams();
@@ -35,26 +35,56 @@ const TestInterface = () => {
   ];
 
   // Initialize test session
-  useEffect(() => {
-    const token = localStorage.getItem('testSessionToken');
-    const storedUserId = localStorage.getItem('userId');
-    const storedTestId = localStorage.getItem('testId');
+  // Add to the useEffect that runs when component mounts
+useEffect(() => {
+  const token = localStorage.getItem('testSessionToken');
+  const storedUserId = localStorage.getItem('userId');
+  const storedTestId = localStorage.getItem('testId');
 
-    if (!token || !storedUserId || storedTestId !== testId) {
-      navigate('/login');
-      return;
+  if (!token || !storedUserId || storedTestId !== testId) {
+    navigate('/login');
+    return;
+  }
+
+  setSessionToken(token);
+  setUserId(storedUserId);
+  setOptions(fixedOptions);
+  
+  initializeTest();
+
+  // Add beforeunload event listener for browser close/refresh/navigate away
+  const handleBeforeUnload = (e) => {
+    if (!isTestCompleted) {
+      e.preventDefault();
+      e.returnValue = 'If you leave now, your test will be automatically submitted. Are you sure you want to leave?';
+      return e.returnValue;
     }
+  };
 
-    setSessionToken(token);
-    setUserId(storedUserId);
-    setOptions(fixedOptions);
-    
-    initializeTest();  
+  // Add event listener for navigation within the app
+  const handlePopState = (e) => {
+    if (!isTestCompleted) {
+      const confirmLeave = window.confirm('If you leave now, your test will be automatically submitted. Are you sure you want to leave?');
+      if (!confirmLeave) {
+        window.history.pushState(null, '', window.location.pathname);
+      } else {
+        handleAbandonTest();
+      }
+    }
+  };
 
-    return () => {
-      cleanup();
-    };
-  }, [testId, navigate]);
+  window.addEventListener('beforeunload', handleBeforeUnload);
+  window.addEventListener('popstate', handlePopState);
+
+  // Prevent back button
+  window.history.pushState(null, '', window.location.pathname);
+
+  return () => {
+    cleanup();
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.removeEventListener('popstate', handlePopState);
+  };
+}, [testId, navigate, isTestCompleted]);
 
   // Question timer effect
   useEffect(() => {
@@ -85,6 +115,32 @@ useEffect(() => {
     setupHeartbeat();
   }
 }, [userId, testId, sessionToken]);
+
+// Add this function in your TestInterface component
+const handleAbandonTest = async () => {
+  if (isTestCompleted) return;
+  
+  try {
+    await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/user/test/abandon`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${sessionToken}`
+      },
+      body: JSON.stringify({
+        testId: testId,
+        userId: userId
+      })
+    });
+  } catch (error) {
+    console.error('Error abandoning test:', error);
+  } finally {
+    // Clear session data
+    localStorage.removeItem('testSessionToken');
+    localStorage.removeItem('testId');
+    localStorage.removeItem('userId');
+  }
+};
 
 
   // Initialize test and fetch first question
@@ -129,8 +185,6 @@ useEffect(() => {
     }
 
     setIsLoadingQuestion(true);
-    console.log('Fetching question for index:', currentQuestionIndex);
-    console.log("User ID:", userId);
     
     try {
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/user/test/question`, {
@@ -335,7 +389,6 @@ useEffect(() => {
       if (isTestCompleted) return;
 
       try {
-        console.log('Sending heartbeat for test:', testId, 'user:', userId);
         await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/user/test/heartbeat`, {
           method: 'POST',
           headers: {
@@ -375,9 +428,9 @@ useEffect(() => {
 
   if (loading) {
     return (
-      <div className="test-interface-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
+      <div className={styles["test-interface-container"]}>
+        <div className={styles["loading-spinner"]}>
+          <div className={styles["spinner"]}></div>
           <p>Loading test...</p>
         </div>
       </div>
@@ -386,12 +439,12 @@ useEffect(() => {
 
   if (error && !currentQuestion) {
     return (
-      <div className="test-interface-container">
-        <div className="error-container">
-          <div className="error-icon">⚠️</div>
+      <div className={styles["test-interface-container"]}>
+        <div className={styles["error-container"]}>
+          <div className={styles["error-icon"]}>⚠️</div>
           <h2>Error</h2>
           <p>{error}</p>
-          <button onClick={() => navigate('/login')} className="error-button">
+          <button onClick={() => navigate('/login')} className={styles["error-button"]}>
             Go Back
           </button>
         </div>
@@ -400,13 +453,13 @@ useEffect(() => {
   }
 
   return (
-    <div className="test-interface-container">
+    <div className={styles["test-interface-container"]}>
       {/* Tab Switch Warning */}
       {tabSwitchWarning && (
-        <div className="tab-switch-warning">
-          <div className="warning-content">
-            <div className="warning-icon">⚠️</div>
-            <div className="warning-text">
+        <div className={styles["tab-switch-warning"]}>
+          <div className={styles["warning-content"]}>
+            <div className={styles["warning-icon"]}>⚠️</div>
+            <div className={styles["warning-text"]}>
               <strong>Warning:</strong> Please stay focused on the test. Tab switching is being monitored.
             </div>
           </div>
@@ -414,22 +467,19 @@ useEffect(() => {
       )}
 
       {/* Header Section */}
-      <div className="test-header">
-        <div className="header-left">
-          <h1 className="test-title">{testData?.title || 'Test'}</h1>
-          <div className="test-info">
-            <span className="test-id">Test ID: {testId}</span>
-          </div>
+      <div className={styles["test-header"]}>
+        <div className={styles["header-left"]}>
+          <h1 className={styles["test-title"]}>{testData?.title || 'Test'}</h1>
         </div>
         
-        <div className="header-right">
-          <div className="progress-info">
-            <span className="question-counter">
+        <div className={styles["header-right"]}>
+          <div className={styles["progress-info"]}>
+            <span className={styles["question-counter"]}>
               Question {currentQuestionIndex + 1} of {totalQuestions}
             </span>
-            <div className="progress-bar">
+            <div className={styles["progress-bar"]}>
               <div 
-                className="progress-fill"
+                className={styles["progress-fill"]}
                 style={{ width: `${progressPercentage}%` }}
               ></div>
             </div>
@@ -439,26 +489,18 @@ useEffect(() => {
 
       {/* Question Section */}
       {currentQuestion && (
-        <div className="question-section">
-          {/* Category and Subcategory Info */}
-          <div className="question-context">
-            <div className="breadcrumb">
-              <span className="category">{currentQuestion.categoryName}</span>
-              <span className="separator">›</span>
-              <span className="subcategory">{currentQuestion.subcategoryName}</span>
-            </div>
-          </div>
+        <div className={styles["question-section"]}>
 
           {/* Timer */}
-          <div className="timer-section">
-            <div className={`timer-circle ${timeRemaining <= 5 ? 'warning' : ''}`}>
-              <div className="timer-display">
-                <span className="timer-seconds">{timeRemaining}</span>
-                <span className="timer-label">sec</span>
+          <div className={styles["timer-section"]}>
+            <div className={`${styles["timer-circle"]} ${timeRemaining <= 5 ? styles["warning"] : ''}`}>
+              <div className={styles["timer-display"]}>
+                <span className={styles["timer-seconds"]}>{timeRemaining}</span>
+                <span className={styles["timer-label"]}>sec</span>
               </div>
-              <svg className="timer-svg" viewBox="0 0 100 100">
+              <svg className={styles["timer-svg"]} viewBox="0 0 100 100">
                 <circle
-                  className="timer-track"
+                  className={styles["timer-track"]}
                   cx="50"
                   cy="50"
                   r="45"
@@ -467,7 +509,7 @@ useEffect(() => {
                   strokeWidth="8"
                 />
                 <circle
-                  className="timer-progress"
+                  className={styles["timer-progress"]}
                   cx="50"
                   cy="50"
                   r="45"
@@ -483,25 +525,25 @@ useEffect(() => {
           </div>
 
           {/* Question Content */}
-          <div className="question-content">
-            <div className="question-number">
+          <div className={styles["question-content"]}>
+            <div className={styles["question-number"]}>
               Q{currentQuestionIndex + 1}.
             </div>
-            <div className="question-text">
+            <div className={styles["question-text"]}>
               {currentQuestion.questionText}
             </div>
           </div>
 
           {/* Options Section */}
-          <div className="options-section">
-            <div className="options-grid">
+          <div className={styles["options-section"]}>
+            <div className={styles["options-grid"]}>
               {options.map((option) => (
                 <div
                   key={option.id}
-                  className={`option-item ${selectedOption === option.label ? 'selected' : ''}`}
+                  className={`${styles["option-item"]} ${selectedOption === option.label ? styles["selected"] : ''}`}
                   onClick={() => handleOptionSelect(option.label)}
                 >
-                  <div className="option-radio">
+                  <div className={styles["option-radio"]}>
                     <input
                       type="radio"
                       id={`option-${option.label}`}
@@ -510,9 +552,9 @@ useEffect(() => {
                       checked={selectedOption === option.label}
                       onChange={() => handleOptionSelect(option.label)}
                     />
-                    <label htmlFor={`option-${option.label}`} className="option-label">
-                      <span className="option-letter">{option.label}</span>
-                      <span className="option-text">{option.text}</span>
+                    <label htmlFor={`option-${option.label}`} className={styles["option-label"]}>
+                      <span className={styles["option-letter"]}>{option.label}</span>
+                      <span className={styles["option-text"]}>{option.text}</span>
                     </label>
                   </div>
                 </div>
@@ -522,24 +564,24 @@ useEffect(() => {
 
           {/* Error Message */}
           {error && (
-            <div className="error-message">
-              <div className="error-icon">⚠️</div>
+            <div className={styles["error-message"]}>
+              <div className={styles["error-icon"]}>⚠️</div>
               <span>{error}</span>
             </div>
           )}
 
           {/* Navigation Section */}
-          <div className="navigation-section">
-            <div className="nav-info">
-              <span className="selection-info">
+          <div className={styles["navigation-section"]}>
+            <div className={styles["nav-info"]}>
+              <span className={styles["selection-info"]}>
                 {selectedOption ? `Selected: ${selectedOption}` : 'No option selected'}
               </span>
             </div>
             
-            <div className="nav-actions">
+            <div className={styles["nav-actions"]}>
               {currentQuestionIndex + 1 === totalQuestions ? (
                 <button 
-                  className="submit-test-button"
+                  className={styles["submit-test-button"]}
                   onClick={handleSubmitAnswer}
                   disabled={isSubmitting}
                 >
@@ -547,7 +589,7 @@ useEffect(() => {
                 </button>
               ) : (
                 <button 
-                  className="next-question-button"
+                  className={styles["next-question-button"]}
                   onClick={handleSubmitAnswer}
                   disabled={isSubmitting}
                 >
@@ -560,8 +602,8 @@ useEffect(() => {
       )}
 
       {/* Footer */}
-      <div className="test-footer">
-        <div className="footer-info">
+      <div className={styles["test-footer"]}>
+        <div className={styles["footer-info"]}>
           <span>© 2025 Infinova Test Platform</span>
         </div>
       </div>

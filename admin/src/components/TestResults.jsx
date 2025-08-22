@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import '../assets/styles/TestResults.css';
+import styles from '../assets/styles/TestResults.module.css';
 import { Eye, Search, Download, Mail, FileText, BarChart3, Users, Send,Filter,ArrowLeft,X} from 'lucide-react';
 import {BarChart,Bar,XAxis,YAxis,CartesianGrid,Tooltip,Legend,ResponsiveContainer,PieChart,Pie,Cell,LineChart,Line} from 'recharts';
 
@@ -298,10 +298,10 @@ const TestResults = () => {
 
   if (loading && !testData) {
     return (
-      <div className="loading-container">
-        <div className="loading-content">
-          <div className="spinner"></div>
-          <p className="loading-text">Loading test results...</p>
+      <div className={styles["loading-container"]}>
+        <div className={styles["loading-content"]}>
+          <div className={styles["spinner"]}></div>
+          <p className={styles["loading-text"]}>Loading test results...</p>
         </div>
       </div>
     );
@@ -309,8 +309,8 @@ const TestResults = () => {
 
   if (error) {
     return (
-      <div className="error-container">
-        <div className="error-alert">
+      <div className={styles["error-container"]}>
+        <div className={styles["error-alert"]}>
           Error: {error}
         </div>
       </div>
@@ -331,37 +331,37 @@ const ParticipantDetailModal = () => {
   }));
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <div className="modal-padding">
-          <div className="modal-header">
-            <h2 className="modal-title">
+    <div className={styles["modal-overlay"]}>
+      <div className={styles["modal-content"]}>
+        <div className={styles["modal-padding"]}>
+          <div className={styles["modal-header"]}>
+            <h2 className={styles["modal-title"]}>
               {participantResults.participant.name} - Results
             </h2>
             <button
               onClick={closeParticipantDetail}
-              className="modal-close"
+              className={styles["modal-close"]}
             >
               <X size={24} />
             </button>
           </div>
 
           {/* Participant Info */}
-          <div className="participant-info">
-            <div className="participant-info-grid">
-              <div className="info-item">
-                <p className="info-label">Email</p>
-                <p className="info-value">{participantResults.participant.email}</p>
+          <div className={styles["participant-info"]}>
+            <div className={styles["participant-info-grid"]}>
+              <div className={styles["info-item"]}>
+                <p className={styles["info-label"]}>Email</p>
+                <p className={styles["info-value"]}>{participantResults.participant.email}</p>
               </div>
-              <div className="info-item">
-                <p className="info-label">Overall Score</p>
-                <p className="info-value score">
+              <div className={styles["info-item"]}>
+                <p className={styles["info-label"]}>Overall Score</p>
+                <p className={`${styles["info-value"]} ${styles["score"]}`}>
                   {participantResults.overallPercentage}%
                 </p>
               </div>
-              <div className="info-item">
-                <p className="info-label">Status</p>
-                <p className="info-value">{participantResults.session.status}</p>
+              <div className={styles["info-item"]}>
+                <p className={styles["info-label"]}>Status</p>
+                <p className={styles["info-value"]}>{participantResults.session.status}</p>
               </div>
             </div>
           </div>
@@ -373,9 +373,9 @@ const ParticipantDetailModal = () => {
             );
             
             return (
-              <div key={index} className="chart-section">
-                <h3 className="chart-title">{category.categoryName}</h3>
-                <div className="chart-container">
+              <div key={index} className={styles["chart-section"]}>
+                <h3 className={styles["chart-title"]}>{category.categoryName}</h3>
+                <div className={styles["chart-container"]}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={categorySubcategories.map(sub => ({
                       name: sub.subcategoryName,
@@ -395,9 +395,9 @@ const ParticipantDetailModal = () => {
           })}
 
           {/* Overall Category Performance - Now using Bar Chart instead of Pie Chart */}
-          <div className="chart-section">
-            <h3 className="chart-title">Overall Category Performance</h3>
-            <div className="chart-container">
+          <div className={styles["chart-section"]}>
+            <h3 className={styles["chart-title"]}>Overall Category Performance</h3>
+            <div className={styles["chart-container"]}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={categoryChartData}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -432,24 +432,24 @@ const ParticipantDetailModal = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="action-buttons">
+          <div className={styles["action-buttons"]}>
             <button
               onClick={() => handleExportParticipant(selectedParticipant, 'pdf')}
-              className="btn btn-red"
+              className={`${styles["btn"]} ${styles["btn-red"]}`}
             >
               <FileText size={16} />
               Export PDF
             </button>
             <button
               onClick={() => handleExportParticipant(selectedParticipant, 'excel')}
-              className="btn btn-green"
+              className={`${styles["btn"]} ${styles["btn-green"]}`}
             >
               <Download size={16} />
               Export Excel
             </button>
             <button
               onClick={() => handleExportParticipant(selectedParticipant, 'csv')}
-              className="btn btn-blue"
+              className={`${styles["btn"]} ${styles["btn-blue"]}`}
             >
               <Download size={16} />
               Export CSV
@@ -457,7 +457,7 @@ const ParticipantDetailModal = () => {
             <button
               onClick={() => handleSendEmailToParticipant(selectedParticipant)}
               disabled={emailSending}
-              className="btn btn-purple"
+              className={`${styles["btn"]} ${styles["btn-purple"]}`}
             >
               <Mail size={16} />
               {emailSending ? 'Sending...' : 'Send Email'}
@@ -485,53 +485,53 @@ const ParticipantDetailModal = () => {
     }));
 
     return (
-      <div className="modal-overlay">
-        <div className="modal-content">
-          <div className="modal-padding">
-            <div className="modal-header">
-              <h2 className="modal-title">
+      <div className={styles["modal-overlay"]}>
+        <div className={styles["modal-content"]}>
+          <div className={styles["modal-padding"]}>
+            <div className={styles["modal-header"]}>
+              <h2 className={styles["modal-title"]}>
                 Overall Test Results - {overallResults.testTitle}
               </h2>
               <button
                 onClick={closeOverallResults}
-                className="modal-close"
+                className={styles["modal-close"]}
               >
                 <X size={24} />
               </button>
             </div>
 
             {/* Statistics */}
-            <div className="stats-grid">
-              <div className="stat-card blue">
-                <p className="stat-label blue">Total Participants</p>
-                <p className="stat-value blue">
+            <div className={styles["stats-grid"]}>
+              <div className={`${styles["stat-card"]} ${styles["blue"]}`}>
+                <p className={`${styles["stat-label"]} ${styles["blue"]}`}>Total Participants</p>
+                <p className={`${styles["stat-value"]} ${styles["blue"]}`}>
                   {overallResults.statistics.totalParticipants}
                 </p>
               </div>
-              <div className="stat-card green">
-                <p className="stat-label green">Completed</p>
-                <p className="stat-value green">
+              <div className={`${styles["stat-card"]} ${styles["green"]}`}>
+                <p className={`${styles["stat-label"]} ${styles["green"]}`}>Completed</p>
+                <p className={`${styles["stat-value"]} ${styles["green"]}`}>
                   {overallResults.statistics.completedParticipants}
                 </p>
               </div>
-              <div className="stat-card purple">
-                <p className="stat-label purple">Avg Questions</p>
-                <p className="stat-value purple">
+              <div className={`${styles["stat-card"]} ${styles["purple"]}`}>
+                <p className={`${styles["stat-label"]} ${styles["purple"]}`}>Avg Questions</p>
+                <p className={`${styles["stat-value"]} ${styles["purple"]}`}>
                   {overallResults.statistics.averageQuestionsAnswered.toFixed(1)}
                 </p>
               </div>
-              <div className="stat-card orange">
-                <p className="stat-label orange">Overall Average</p>
-                <p className="stat-value orange">
+              <div className={`${styles["stat-card"]} ${styles["orange"]}`}>
+                <p className={`${styles["stat-label"]} ${styles["orange"]}`}>Overall Average</p>
+                <p className={`${styles["stat-value"]} ${styles["orange"]}`}>
                   {overallResults.statistics.overallAveragePercentage.toFixed(1)}%
                 </p>
               </div>
             </div>
 
             {/* Category Averages Chart */}
-            <div className="chart-section">
-              <h3 className="chart-title">Category Average Performance</h3>
-              <div className="chart-container">
+            <div className={styles["chart-section"]}>
+              <h3 className={styles["chart-title"]}>Category Average Performance</h3>
+              <div className={styles["chart-container"]}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={categoryAverageData}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -546,9 +546,9 @@ const ParticipantDetailModal = () => {
             </div>
 
             {/* Performance Distribution Chart */}
-            <div className="chart-section">
-              <h3 className="chart-title">Performance Distribution</h3>
-              <div className="chart-container">
+            <div className={styles["chart-section"]}>
+              <h3 className={styles["chart-title"]}>Performance Distribution</h3>
+              <div className={styles["chart-container"]}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -572,17 +572,17 @@ const ParticipantDetailModal = () => {
             </div>
 
             {/* Export Buttons */}
-            <div className="action-buttons">
+            <div className={styles["action-buttons"]}>
               <button
                 onClick={() => handleExportOverall('csv')}
-                className="btn btn-blue"
+                className={`${styles["btn"]} ${styles["btn-blue"]}`}
               >
                 <Download size={16} />
                 Export CSV
               </button>
               <button
                 onClick={() => handleExportOverall('excel')}
-                className="btn btn-green"
+                className={`${styles["btn"]} ${styles["btn-green"]}`}
               >
                 <Download size={16} />
                 Export Excel
@@ -595,31 +595,31 @@ const ParticipantDetailModal = () => {
   };
 
   return (
-    <div className="test-results-container">
+    <div className={styles["test-results-container"]}>
       {/* Header */}
-      <div className="header">
-        <div className="header-content">
-          <div className="header-inner">
-            <div className="header-left">
+      <div className={styles["header"]}>
+        <div className={styles["header-content"]}>
+          <div className={styles["header-inner"]}>
+            <div className={styles["header-left"]}>
               <button
-                onClick={() => navigate('/admin/dashboard')}
-                className="back-button"
+                onClick={() => navigate('/admin/manage-tests')}
+                className={styles["back-button"]}
               >
                 <ArrowLeft size={20} />
               </button>
               <div>
-                <h1 className="header-title">Test Results</h1>
+                <h1 className={styles["header-title"]}>Test Results</h1>
                 {testData && (
-                  <p className="header-subtitle">
+                  <p className={styles["header-subtitle"]}>
                     {testData.title} - {testData.completed_participants} participants completed
                   </p>
                 )}
               </div>
             </div>
-            <div className="header-actions">
+            <div className={styles["header-actions"]}>
               <button
                 onClick={fetchOverallResults}
-                className="btn btn-primary"
+                className={`${styles["btn"]} ${styles["btn-primary"]}`}
               >
                 <BarChart3 size={16} />
                 Overall Results
@@ -627,7 +627,7 @@ const ParticipantDetailModal = () => {
               <button
                 onClick={handleSendEmailToAllParticipants}
                 disabled={emailAllSending}
-                className="btn btn-purple"
+                className={`${styles["btn"]} ${styles["btn-purple"]}`}
               >
                 <Send size={16} />
                 {emailAllSending ? 'Sending...' : 'Email All'}
@@ -638,23 +638,23 @@ const ParticipantDetailModal = () => {
       </div>
 
       {/* Content */}
-      <div className="main-content">
+      <div className={styles["main-content"]}>
         {/* Search and Filters */}
-        <div className="search-section">
-          <div className="search-container">
-            <div className="search-input-container">
-              <Search className="search-icon" size={20} />
+        <div className={styles["search-section"]}>
+          <div className={styles["search-container"]}>
+            <div className={styles["search-input-container"]}>
+              <Search className={styles["search-icon"]} size={20} />
               <input
                 type="text"
                 placeholder="Search participants..."
                 value={searchTerm}
                 onChange={handleSearch}
-                className="search-input"
+                className={styles["search-input"]}
               />
             </div>
-            <div className="filter-info">
-              <Filter size={20} className="filter-icon" />
-              <span className="filter-text">
+            <div className={styles["filter-info"]}>
+              <Filter size={20} className={styles["filter-icon"]} />
+              <span className={styles["filter-text"]}>
                 {participants.length} participants found
               </span>
             </div>
@@ -662,14 +662,14 @@ const ParticipantDetailModal = () => {
         </div>
 
         {/* Participants List */}
-        <div className="participants-section">
-          <div className="participants-header">
-            <h2 className="participants-title">Participants</h2>
+        <div className={styles["participants-section"]}>
+          <div className={styles["participants-header"]}>
+            <h2 className={styles["participants-title"]}>Participants</h2>
           </div>
           
-          <div className="table-container">
-            <table className="participants-table">
-              <thead className="table-header">
+          <div className={styles["table-container"]}>
+            <table className={styles["participants-table"]}>
+              <thead className={styles["table-header"]}>
                 <tr>
                   <th>Name</th>
                   <th>Email</th>
@@ -679,43 +679,43 @@ const ParticipantDetailModal = () => {
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody className="table-body">
+              <tbody className={styles["table-body"]}>
                 {participants.map((participant) => (
-                  <tr key={participant.id} className="table-row">
-                    <td className="table-cell">
-                      <div className="participant-name">
+                  <tr key={participant.id} className={styles["table-row"]}>
+                    <td className={styles["table-cell"]}>
+                      <div className={styles["participant-name"]}>
                         {participant.name}
                       </div>
                     </td>
-                    <td className="table-cell">
-                      <div className="participant-email">{participant.email}</div>
+                    <td className={styles["table-cell"]}>
+                      <div className={styles["participant-email"]}>{participant.email}</div>
                     </td>
-                    <td className="table-cell">
-                      <span className={`status-badge ${
+                    <td className={styles["table-cell"]}>
+                      <span className={`${styles["status-badge"]} ${
                         participant.session_status === 'completed' 
-                          ? 'status-completed' 
-                          : 'status-incomplete'
+                          ? styles["status-completed"]
+                          : styles["status-incomplete"]
                       }`}>
                         {participant.session_status}
                       </span>
                     </td>
-                    <td className="table-cell">
-                      <div className="score-text">
+                    <td className={styles["table-cell"]}>
+                      <div className={styles["score-text"]}>
                         {participant.overall_percentage ? 
                           `${parseFloat(participant.overall_percentage).toFixed(1)}%` : 
                           'N/A'
                         }
                       </div>
                     </td>
-                    <td className="table-cell">
-                      <div className="questions-text">
+                    <td className={styles["table-cell"]}>
+                      <div className={styles["questions-text"]}>
                         {participant.questions_answered}/{participant.total_questions}
                       </div>
                     </td>
-                    <td className="table-cell">
+                    <td className={styles["table-cell"]}>
                       <button
                         onClick={() => fetchParticipantResults(participant.id)}
-                        className="view-results-btn"
+                        className={styles["view-results-btn"]}
                       >
                         <Eye size={16} />
                         View Results
@@ -729,18 +729,18 @@ const ParticipantDetailModal = () => {
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="pagination">
-              <div className="pagination-container">
-                <div className="pagination-info">
+            <div className={styles["pagination"]}>
+              <div className={styles["pagination-container"]}>
+                <div className={styles["pagination-info"]}>
                   Showing {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} to{' '}
                   {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} of{' '}
                   {pagination.totalItems} results
                 </div>
-                <div className="pagination-controls">
+                <div className={styles["pagination-controls"]}>
                   <button
                     onClick={() => handlePageChange(pagination.currentPage - 1)}
                     disabled={!pagination.hasPreviousPage}
-                    className="pagination-btn"
+                    className={styles["pagination-btn"]}
                   >
                     Previous
                   </button>
@@ -748,8 +748,8 @@ const ParticipantDetailModal = () => {
                     <button
                       key={page}
                       onClick={() => handlePageChange(page)}
-                      className={`pagination-btn ${
-                        page === pagination.currentPage ? 'active' : ''
+                      className={`${styles["pagination-btn"]} ${
+                        page === pagination.currentPage ? styles["active"] : ''
                       }`}
                     >
                       {page}
@@ -758,7 +758,7 @@ const ParticipantDetailModal = () => {
                   <button
                     onClick={() => handlePageChange(pagination.currentPage + 1)}
                     disabled={!pagination.hasNextPage}
-                    className="pagination-btn"
+                    className={styles["pagination-btn"]}
                   >
                     Next
                   </button>

@@ -10,7 +10,7 @@ import {
   startTest 
 } from '../controllers/userController.js';
 
-import { initializeTest,fetchCurrentQuestion,submitAnswer,completeTest,heartbeat } from '../controllers/userController.js';
+import { initializeTest,fetchCurrentQuestion,submitAnswer,completeTest,heartbeat,abandonTest } from '../controllers/userController.js';
 
 const router = express.Router();
 
@@ -33,5 +33,6 @@ router.post('/test/question', fetchCurrentQuestion);
 router.post('/test/submit-answer', submitAnswer);
 router.post('/test/complete', completeTest);
 router.post('/test/heartbeat', heartbeat);
+router.post('/test/abandon', abandonTest);
 
 export default router;

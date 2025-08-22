@@ -10,7 +10,7 @@ import {
   BookOpen,
   Users,
 } from "lucide-react";
-import "../assets/styles/CreateTest.css";
+import styles from "../assets/styles/CreateTest.module.css";
 
 const CreateTest = () => {
   const [formData, setFormData] = useState({
@@ -257,8 +257,6 @@ const CreateTest = () => {
         return response.json().then(result => {
           if (response.ok) {
             alert(result.message);
-            // Optionally redirect to test list or dashboard
-            // window.location.href = '/admin/dashboard';
           } else {
             // Handle different error status codes
             if (response.status === 401) {
@@ -292,30 +290,30 @@ const CreateTest = () => {
   const TabButton = ({ id, label, count, active, onClick }) => (
     <button
       onClick={onClick}
-      className={`tab-button ${active ? "tab-button-active" : ""}`}
+      className={`${styles["tab-button"]} ${active ? styles["tab-button-active"] : ""}`}
     >
       {label} {count !== "" ? `(${count})` : ""}
     </button>
   );
 
   return (
-    <div className="CreateTest-container">
+    <div className={styles["CreateTest-container"]}>
       {/* Header */}
-      <div className="header">
-        <div className="header-content">
-          <div className="header-left">
+      <div className={styles["header"]}>
+        <div className={styles["header-content"]}>
+          <div className={styles["header-left"]}>
             <button
-              className="back-button"
+              className={styles["back-button"]}
               onClick={() => window.history.back()}
             >
               <ArrowLeft size={20} />
               <span>Back to Dashboard</span>
             </button>
           </div>
-          <div className="header-right">
+          <div className={styles["header-right"]}>
             <button
               onClick={() => handleSave(true)}
-              className={`save-draft-button ${isFormValid ? "valid" : "invalid"}`}
+              className={`${styles["save-draft-button"]} ${isFormValid ? styles["valid"] : styles["invalid"]}`}
               disabled={isLoading}
             >
               <Save size={16} />
@@ -323,7 +321,7 @@ const CreateTest = () => {
             </button>
             <button
               onClick={() => handleSave(false)}
-              className="publish-button"
+              className={styles["publish-button"]}
               disabled={isLoading || !isFormValid}
             >
               <Upload size={16} />
@@ -333,18 +331,18 @@ const CreateTest = () => {
         </div>
       </div>
 
-      <div className="main-content">
+      <div className={styles["main-content"]}>
         {/* Title */}
-        <div className="title-section">
-          <h1 className="main-title">Create New Test</h1>
-          <p className="main-subtitle">
+        <div className={styles["title-section"]}>
+          <h1 className={styles["main-title"]}>Create New Test</h1>
+          <p className={styles["main-subtitle"]}>
             Build comprehensive assessments with categories, subcategories, and
             questions
           </p>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="tabs-container">
+        <div className={styles["tabs-container"]}>
           <TabButton
             id="basic"
             label="Basic Info"
@@ -376,26 +374,26 @@ const CreateTest = () => {
         </div>
 
         {/* Content Area */}
-        <div className="content-area">
+        <div className={styles["content-area"]}>
           {/* Basic Info Tab */}
           {activeTab === "basic" && (
-            <div className="tab-content basic-info-tab">
-              <div className="form-grid">
-                <div className="form-field">
-                  <label className="form-label">
-                    Test Title <span className="required">*</span>
+            <div className={`${styles["tab-content"]} ${styles["basic-info-tab"]}`}>
+              <div className={styles["form-grid"]}>
+                <div className={styles["form-field"]}>
+                  <label className={styles["form-label"]}>
+                    Test Title <span className={styles["required"]}>*</span>
                   </label>
                   <input
                     type="text"
                     placeholder="Enter test title..."
                     value={formData.title}
                     onChange={(e) => handleInputChange("title", e.target.value)}
-                    className="form-input"
+                    className={styles["form-input"]}
                   />
                 </div>
 
-                <div className="form-field">
-                  <label className="form-label">
+                <div className={styles["form-field"]}>
+                  <label className={styles["form-label"]}>
                     Time per Question (seconds)
                   </label>
                   <select
@@ -406,7 +404,7 @@ const CreateTest = () => {
                         parseInt(e.target.value)
                       )
                     }
-                    className="form-select"
+                    className={styles["form-select"]}
                   >
                     <option value={15}>15 seconds</option>
                     <option value={30}>30 seconds</option>
@@ -416,8 +414,8 @@ const CreateTest = () => {
                 </div>
               </div>
 
-              <div className="form-field">
-                <label className="form-label">Test Description</label>
+              <div className={styles["form-field"]}>
+                <label className={styles["form-label"]}>Test Description</label>
                 <textarea
                   placeholder="Enter test description..."
                   value={formData.description}
@@ -425,12 +423,12 @@ const CreateTest = () => {
                     handleInputChange("description", e.target.value)
                   }
                   rows={4}
-                  className="form-textarea"
+                  className={styles["form-textarea"]}
                 />
               </div>
 
-              <div className="form-field">
-                <label className="form-label">Instructions</label>
+              <div className={styles["form-field"]}>
+                <label className={styles["form-label"]}>Instructions</label>
                 <textarea
                   placeholder="Enter test instructions..."
                   value={formData.instructions}
@@ -438,27 +436,27 @@ const CreateTest = () => {
                     handleInputChange("instructions", e.target.value)
                   }
                   rows={4}
-                  className="form-textarea"
+                  className={styles["form-textarea"]}
                 />
               </div>
 
-              <div className="form-field">
-                <label className="form-label">Rules</label>
+              <div className={styles["form-field"]}>
+                <label className={styles["form-label"]}>Rules</label>
                 <textarea
                   placeholder="Enter test rules..."
                   value={formData.rules}
                   onChange={(e) => handleInputChange("rules", e.target.value)}
                   rows={4}
-                  className="form-textarea"
+                  className={styles["form-textarea"]}
                 />
               </div>
 
-              <div className="summary-card">
-                <div className="summary-header">
+              <div className={styles["summary-card"]}>
+                <div className={styles["summary-header"]}>
                   <FileText size={20} />
                   <span>Total Questions</span>
                 </div>
-                <p className="summary-count">
+                <p className={styles["summary-count"]}>
                   {questions.length} questions added
                 </p>
               </div>
@@ -467,20 +465,20 @@ const CreateTest = () => {
 
           {/* Categories Tab */}
           {activeTab === "categories" && (
-            <div className="tab-content">
-              <div className="section-header">
-                <h2 className="section-title">
+            <div className={styles["tab-content"]}>
+              <div className={styles["section-header"]}>
+                <h2 className={styles["section-title"]}>
                   <BookOpen size={24} />
                   <span>Categories</span>
                 </h2>
-                <button onClick={addCategory} className="add-button">
+                <button onClick={addCategory} className={styles["add-button"]}>
                   <Plus size={16} />
                   <span>Add Category</span>
                 </button>
               </div>
 
               {categories.length === 0 ? (
-                <div className="empty-state">
+                <div className={styles["empty-state"]}>
                   <BookOpen size={48} />
                   <p>
                     No categories added yet. Click "Add Category" to get
@@ -488,25 +486,25 @@ const CreateTest = () => {
                   </p>
                 </div>
               ) : (
-                <div className="items-list">
+                <div className={styles["items-list"]}>
                   {categories.map((category, index) => (
-                    <div key={category.id} className="item-card">
-                      <div className="item-header">
-                        <h3 className="item-title category-title">
+                    <div key={category.id} className={styles["item-card"]}>
+                      <div className={styles["item-header"]}>
+                        <h3 className={`${styles["item-title"]} ${styles["category-title"]}`}>
                           Category {index + 1}
                         </h3>
                         <button
                           onClick={() => removeCategory(category.id)}
-                          className="delete-button"
+                          className={styles["delete-button"]}
                         >
                           <Trash2 size={16} />
                         </button>
                       </div>
 
-                      <div className="item-form-grid">
-                        <div className="form-field">
-                          <label className="form-label">
-                            Category Name <span className="required">*</span>
+                      <div className={styles["item-form-grid"]}>
+                        <div className={styles["form-field"]}>
+                          <label className={styles["form-label"]}>
+                            Category Name <span className={styles["required"]}>*</span>
                           </label>
                           <input
                             type="text"
@@ -519,12 +517,12 @@ const CreateTest = () => {
                                 e.target.value
                               )
                             }
-                            className="form-input"
+                            className={styles["form-input"]}
                           />
                         </div>
 
-                        <div className="form-field">
-                          <label className="form-label">Description</label>
+                        <div className={styles["form-field"]}>
+                          <label className={styles["form-label"]}>Description</label>
                           <input
                             type="text"
                             placeholder="Enter description..."
@@ -536,7 +534,7 @@ const CreateTest = () => {
                                 e.target.value
                               )
                             }
-                            className="form-input"
+                            className={styles["form-input"]}
                           />
                         </div>
                       </div>
@@ -549,17 +547,17 @@ const CreateTest = () => {
 
           {/* Subcategories Tab */}
           {activeTab === "subcategories" && (
-            <div className="tab-content">
-              <div className="section-header">
-                <h2 className="section-title">
+            <div className={styles["tab-content"]}>
+              <div className={styles["section-header"]}>
+                <h2 className={styles["section-title"]}>
                   <Users size={24} />
                   <span>Subcategories</span>
                 </h2>
                 <button
                   onClick={addSubcategory}
                   disabled={categories.length === 0}
-                  className={`add-button ${
-                    categories.length === 0 ? "disabled" : ""
+                  className={`${styles["add-button"]} ${
+                    categories.length === 0 ? styles["disabled"] : ""
                   }`}
                 >
                   <Plus size={16} />
@@ -568,7 +566,7 @@ const CreateTest = () => {
               </div>
 
               {subcategories.length === 0 ? (
-                <div className="empty-state">
+                <div className={styles["empty-state"]}>
                   <Users size={48} />
                   <p>
                     No subcategories added yet.{" "}
@@ -579,25 +577,25 @@ const CreateTest = () => {
                   </p>
                 </div>
               ) : (
-                <div className="items-list">
+                <div className={styles["items-list"]}>
                   {subcategories.map((subcategory, index) => (
-                    <div key={subcategory.id} className="item-card">
-                      <div className="item-header">
-                        <h3 className="item-title subcategory-title">
+                    <div key={subcategory.id} className={styles["item-card"]}>
+                      <div className={styles["item-header"]}>
+                        <h3 className={`${styles["item-title"]} ${styles["subcategory-title"]}`}>
                           Subcategory {index + 1}
                         </h3>
                         <button
                           onClick={() => removeSubcategory(subcategory.id)}
-                          className="delete-button"
+                          className={styles["delete-button"]}
                         >
                           <Trash2 size={16} />
                         </button>
                       </div>
 
-                      <div className="item-form-grid three-cols">
-                        <div className="form-field">
-                          <label className="form-label">
-                            Subcategory Name <span className="required">*</span>
+                      <div className={`${styles["item-form-grid"]} ${styles["three-cols"]}`}>
+                        <div className={styles["form-field"]}>
+                          <label className={styles["form-label"]}>
+                            Subcategory Name <span className={styles["required"]}>*</span>
                           </label>
                           <input
                             type="text"
@@ -610,13 +608,13 @@ const CreateTest = () => {
                                 e.target.value
                               )
                             }
-                            className="form-input"
+                            className={styles["form-input"]}
                           />
                         </div>
 
-                        <div className="form-field">
-                          <label className="form-label">
-                            Parent Category <span className="required">*</span>
+                        <div className={styles["form-field"]}>
+                          <label className={styles["form-label"]}>
+                            Parent Category <span className={styles["required"]}>*</span>
                           </label>
                           <select
                             value={subcategory.categoryId}
@@ -627,7 +625,7 @@ const CreateTest = () => {
                                 parseInt(e.target.value)
                               )
                             }
-                            className="form-select"
+                            className={styles["form-select"]}
                           >
                             {categories.map((category) => (
                               <option key={category.id} value={category.id}>
@@ -640,8 +638,8 @@ const CreateTest = () => {
                           </select>
                         </div>
 
-                        <div className="form-field">
-                          <label className="form-label">Description</label>
+                        <div className={styles["form-field"]}>
+                          <label className={styles["form-label"]}>Description</label>
                           <input
                             type="text"
                             placeholder="Enter description..."
@@ -653,7 +651,7 @@ const CreateTest = () => {
                                 e.target.value
                               )
                             }
-                            className="form-input"
+                            className={styles["form-input"]}
                           />
                         </div>
                       </div>
@@ -666,9 +664,9 @@ const CreateTest = () => {
 
           {/* Questions Tab */}
           {activeTab === "questions" && (
-            <div className="tab-content">
-              <div className="section-header">
-                <h2 className="section-title">
+            <div className={styles["tab-content"]}>
+              <div className={styles["section-header"]}>
+                <h2 className={styles["section-title"]}>
                   <FileText size={24} />
                   <span>Questions</span>
                 </h2>
@@ -677,9 +675,9 @@ const CreateTest = () => {
                   disabled={
                     categories.length === 0 || subcategories.length === 0
                   }
-                  className={`add-button ${
+                  className={`${styles["add-button"]} ${
                     categories.length === 0 || subcategories.length === 0
-                      ? "disabled"
+                      ? styles["disabled"]
                       : ""
                   }`}
                 >
@@ -689,7 +687,7 @@ const CreateTest = () => {
               </div>
 
               {questions.length === 0 ? (
-                <div className="empty-state">
+                <div className={styles["empty-state"]}>
                   <FileText size={48} />
                   <p>
                     No questions added yet. Add categories and subcategories
@@ -697,25 +695,25 @@ const CreateTest = () => {
                   </p>
                 </div>
               ) : (
-                <div className="items-list">
+                <div className={styles["items-list"]}>
                   {questions.map((question, index) => (
-                    <div key={question.id} className="item-card question-card">
-                      <div className="item-header">
-                        <h3 className="item-title question-title">
+                    <div key={question.id} className={`${styles["item-card"]} ${styles["question-card"]}`}>
+                      <div className={styles["item-header"]}>
+                        <h3 className={`${styles["item-title"]} ${styles["question-title"]}`}>
                           Question {index + 1}
                         </h3>
                         <button
                           onClick={() => removeQuestion(question.id)}
-                          className="delete-button"
+                          className={styles["delete-button"]}
                         >
                           <Trash2 size={16} />
                         </button>
                       </div>
 
-                      <div className="question-form">
-                        <div className="form-field">
-                          <label className="form-label">
-                            Question Text <span className="required">*</span>
+                      <div className={styles["question-form"]}>
+                        <div className={styles["form-field"]}>
+                          <label className={styles["form-label"]}>
+                            Question Text <span className={styles["required"]}>*</span>
                           </label>
                           <textarea
                             placeholder="Enter your question..."
@@ -728,14 +726,14 @@ const CreateTest = () => {
                               )
                             }
                             rows={3}
-                            className="form-textarea"
+                            className={styles["form-textarea"]}
                           />
                         </div>
 
-                        <div className="question-selects">
-                          <div className="form-field">
-                            <label className="form-label">
-                              Category <span className="required">*</span>
+                        <div className={styles["question-selects"]}>
+                          <div className={styles["form-field"]}>
+                            <label className={styles["form-label"]}>
+                              Category <span className={styles["required"]}>*</span>
                             </label>
                             <select
                               value={question.categoryId}
@@ -746,7 +744,7 @@ const CreateTest = () => {
                                   parseInt(e.target.value)
                                 )
                               }
-                              className="form-select"
+                              className={styles["form-select"]}
                             >
                               {categories.map((category) => (
                                 <option key={category.id} value={category.id}>
@@ -759,9 +757,9 @@ const CreateTest = () => {
                             </select>
                           </div>
 
-                          <div className="form-field">
-                            <label className="form-label">
-                              Subcategory <span className="required">*</span>
+                          <div className={styles["form-field"]}>
+                            <label className={styles["form-label"]}>
+                              Subcategory <span className={styles["required"]}>*</span>
                             </label>
                             <select
                               value={question.subcategoryId}
@@ -772,7 +770,7 @@ const CreateTest = () => {
                                   parseInt(e.target.value)
                                 )
                               }
-                              className="form-select"
+                              className={styles["form-select"]}
                             >
                               <option value="">Select subcategory...</option>
                               {subcategories
@@ -795,17 +793,17 @@ const CreateTest = () => {
                           </div>
                         </div>
 
-                        <div className="form-field">
-                          <label className="form-label">
+                        <div className={styles["form-field"]}>
+                          <label className={styles["form-label"]}>
                             Response Options (Fixed Scale)
                           </label>
-                          <div className="options-grid">
+                          <div className={styles["options-grid"]}>
                             {question.options.map((option, optIndex) => (
-                              <div key={optIndex} className="option-card">
-                                <span className="option-text">
+                              <div key={optIndex} className={styles["option-card"]}>
+                                <span className={styles["option-text"]}>
                                   {option.optionText}
                                 </span>
-                                <span className="option-points">
+                                <span className={styles["option-points"]}>
                                   {option.marks}{" "}
                                   {option.marks === 1 ? "point" : "points"}
                                 </span>

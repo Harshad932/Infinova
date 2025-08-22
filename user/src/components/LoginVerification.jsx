@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import '../assets/styles/LoginVerification.css';
+import styles from '../assets/styles/LoginVerification.module.css';
 
 const LoginVerification = () => {
   const { testId } = useParams();
@@ -96,8 +96,11 @@ const handleRegistration = async (e) => {
     if (response.ok) {
       setUserId(data.userId);
       
-      // Check if user is already verified
-      if (data.isEmailVerified) {
+      // Check if user should proceed to test code directly
+      if (data.proceedToTestCode) {
+        setSuccess('User already verified! Proceeding to test code verification.');
+        setCurrentStep(3);
+      } else if (data.isEmailVerified) {
         setSuccess('User already verified! Proceeding to test code verification.');
         setCurrentStep(3);
       } else {
@@ -212,13 +215,9 @@ const handleTestCodeVerification = async (e) => {
 
     if (response.ok) {
       setSuccess('Test code verified successfully!');
-
-      console.log(testId, userId);
       
-      // Check if test is active and redirect directly to test
+
       if (data.success) {
-        // Start test immediately
-        console.log('Test is active, starting test directly...');
         await handleStartTestDirect();
       }
     } else {
@@ -265,7 +264,26 @@ const handleStartTestDirect = async () => {
   }
 };
 
-  
+  // Handle back button navigation
+  const handleBackNavigation = (targetStep) => {
+    setError('');
+    setSuccess('');
+    
+    if (targetStep === 1 && currentStep === 2) {
+      // Going back from OTP to registration - allow re-registration
+      setCurrentStep(targetStep);
+    } else if (targetStep === 2 && currentStep === 3) {
+      // Going back from test code to OTP - stay on test code if already verified
+      if (userId) {
+        // Check if OTP is still valid/verified - just go to test code step
+        setCurrentStep(3);
+      } else {
+        setCurrentStep(targetStep);
+      }
+    } else {
+      setCurrentStep(targetStep);
+    }
+  };
 
   // Format time for display
   const formatTime = (seconds) => {
@@ -275,108 +293,107 @@ const handleStartTestDirect = async () => {
   };
 
   return (
-    <div className="login-verification-container">
-      <div className="login-verification-wrapper">
+    <div className={styles["login-verification-container"]}>
+      <div className={styles["login-verification-wrapper"]}>
         
         {/* Header */}
-        <div className="login-header">
-          <div className="brand-section">
-            <h1 className="brand-title">Infinova</h1>
-            <p className="brand-subtitle">Test Platform</p>
+        <div className={styles["login-header"]}>
+          <div className={styles["brand-section"]}>
+            <h1 className={styles["brand-title"]}>Infinova</h1>
+            <p className={styles["brand-subtitle"]}>Test Platform</p>
           </div>
           {testData && (
-            <div className="test-info-mini">
-              <h3 className="test-title-mini">{testData.title}</h3>
-              <p className="test-code-mini">Test ID: {testId}</p>
+            <div className={styles["test-info-mini"]}>
+              <h3 className={styles["test-title-mini"]}>{testData.title}</h3>
             </div>
           )}
         </div>
 
         {/* Progress Steps */}
-        <div className="progress-steps">
-          <div className={`step ${currentStep >= 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}>
-            <div className="step-number">1</div>
-            <div className="step-label">Registration</div>
+        <div className={styles["progress-steps"]}>
+          <div className={`${styles["step"]} ${currentStep >= 1 ? styles["active"] : ''} ${currentStep > 1 ? styles["completed"] : ''}`}>
+            <div className={styles["step-number"]}>1</div>
+            <div className={styles["step-label"]}>Registration</div>
           </div>
-          <div className={`step ${currentStep >= 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}>
-            <div className="step-number">2</div>
-            <div className="step-label">OTP Verification</div>
+          <div className={`${styles["step"]} ${currentStep >= 2 ? styles["active"] : ''} ${currentStep > 2 ? styles["completed"] : ''}`}>
+            <div className={styles["step-number"]}>2</div>
+            <div className={styles["step-label"]}>OTP Verification</div>
           </div>
-          <div className={`step ${currentStep >= 3 ? 'active' : ''} ${currentStep > 3 ? 'completed' : ''}`}>
-            <div className="step-number">3</div>
-            <div className="step-label">Test Code</div>
+          <div className={`${styles["step"]} ${currentStep >= 3 ? styles["active"] : ''} ${currentStep > 3 ? styles["completed"] : ''}`}>
+            <div className={styles["step-number"]}>3</div>
+            <div className={styles["step-label"]}>Test Code</div>
           </div>
         </div>
 
         {/* Error/Success Messages */}
         {error && (
-          <div className="message-container error">
-            <div className="message-icon">⚠️</div>
-            <div className="message-text">{error}</div>
+          <div className={`${styles["message-container"]} ${styles["error"]}`}>
+            <div className={styles["message-icon"]}>⚠️</div>
+            <div className={styles["message-text"]}>{error}</div>
           </div>
         )}
         
         {success && (
-          <div className="message-container success">
-            <div className="message-icon">✅</div>
-            <div className="message-text">{success}</div>
+          <div className={`${styles["message-container"]} ${styles["success"]}`}>
+            <div className={styles["message-icon"]}>✅</div>
+            <div className={styles["message-text"]}>{success}</div>
           </div>
         )}
 
         {/* Step 1: User Registration */}
         {currentStep === 1 && (
-          <div className="step-content">
-            <div className="step-header">
-              <h2 className="step-title">User Registration</h2>
-              <p className="step-description">Please provide your details to register for the test</p>
+          <div className={styles["step-content"]}>
+            <div className={styles["step-header"]}>
+              <h2 className={styles["step-title"]}>User Registration</h2>
+              <p className={styles["step-description"]}>Please provide your details to register for the test</p>
             </div>
 
-            <form onSubmit={handleRegistration} className="registration-form">
-              <div className="form-group">
-                <label htmlFor="name" className="form-label">Full Name *</label>
+            <form onSubmit={handleRegistration} className={styles["registration-form"]}>
+              <div className={styles["form-group"]}>
+                <label htmlFor="name" className={styles["form-label"]}>Full Name *</label>
                 <input
                   type="text"
                   id="name"
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="form-input"
+                  className={styles["form-input"]}
                   placeholder="Enter your full name"
                   required
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="email" className="form-label">Email Address *</label>
+              <div className={styles["form-group"]}>
+                <label htmlFor="email" className={styles["form-label"]}>Email Address *</label>
                 <input
                   type="email"
                   id="email"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="form-input"
+                  className={styles["form-input"]}
                   placeholder="Enter your email address"
                   required
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="phone" className="form-label">Phone Number *</label>
+              <div className={styles["form-group"]}>
+                <label htmlFor="phone" className={styles["form-label"]}>Phone Number *</label>
                 <input
                   type="tel"
                   id="phone"
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  className="form-input"
-                  placeholder="Enter your phone number"
+                  className={styles["form-input"]}
+                  placeholder="Enter your 10-digit phone number"
                   required
                 />
               </div>
 
               <button 
                 type="submit" 
-                className="form-button primary"
+                className={`${styles["form-button"]} ${styles["primary"]}`}
                 disabled={loading}
               >
                 {loading ? 'Sending OTP...' : 'Send OTP'}
@@ -387,24 +404,24 @@ const handleStartTestDirect = async () => {
 
         {/* Step 2: OTP Verification */}
         {currentStep === 2 && (
-          <div className="step-content">
-            <div className="step-header">
-              <h2 className="step-title">OTP Verification</h2>
-              <p className="step-description">
+          <div className={styles["step-content"]}>
+            <div className={styles["step-header"]}>
+              <h2 className={styles["step-title"]}>OTP Verification</h2>
+              <p className={styles["step-description"]}>
                 We've sent a 6-digit OTP to <strong>{formData.email}</strong>
               </p>
             </div>
 
-            <form onSubmit={handleOtpVerification} className="otp-form">
-              <div className="form-group">
-                <label htmlFor="otp" className="form-label">Enter OTP *</label>
+            <form onSubmit={handleOtpVerification} className={styles["otp-form"]}>
+              <div className={styles["form-group"]}>
+                <label htmlFor="otp" className={styles["form-label"]}>Enter OTP *</label>
                 <input
                   type="text"
                   id="otp"
                   name="otp"
                   value={formData.otp}
                   onChange={handleInputChange}
-                  className="form-input otp-input"
+                  className={`${styles["form-input"]} ${styles["otp-input"]}`}
                   placeholder="Enter 6-digit OTP"
                   maxLength="6"
                   required
@@ -412,16 +429,16 @@ const handleStartTestDirect = async () => {
               </div>
 
               {otpTimer > 0 && (
-                <div className="timer-display">
-                  <span className="timer-icon">⏱️</span>
-                  <span className="timer-text">OTP expires in: {formatTime(otpTimer)}</span>
+                <div className={styles["timer-display"]}>
+                  <span className={styles["timer-icon"]}>⏱️</span>
+                  <span className={styles["timer-text"]}>OTP expires in: {formatTime(otpTimer)}</span>
                 </div>
               )}
 
-              <div className="form-actions">
+              <div className={styles["form-actions"]}>
                 <button 
                   type="submit" 
-                  className="form-button primary"
+                  className={`${styles["form-button"]} ${styles["primary"]}`}
                   disabled={loading}
                 >
                   {loading ? 'Verifying...' : 'Verify OTP'}
@@ -429,7 +446,7 @@ const handleStartTestDirect = async () => {
 
                 <button 
                   type="button" 
-                  className="form-button secondary"
+                  className={`${styles["form-button"]} ${styles["secondary"]}`}
                   onClick={handleResendOtp}
                   disabled={!canResendOtp || loading}
                 >
@@ -438,10 +455,10 @@ const handleStartTestDirect = async () => {
               </div>
             </form>
 
-            <div className="step-actions">
+            <div className={styles["step-actions"]}>
               <button 
-                className="back-button"
-                onClick={() => setCurrentStep(1)}
+                className={styles["back-button"]}
+                onClick={() => handleBackNavigation(1)}
               >
                 ← Back to Registration
               </button>
@@ -451,24 +468,24 @@ const handleStartTestDirect = async () => {
 
         {/* Step 3: Test Code Entry */}
         {currentStep === 3 && (
-          <div className="step-content">
-            <div className="step-header">
-              <h2 className="step-title">Test Code Verification</h2>
-              <p className="step-description">
+          <div className={styles["step-content"]}>
+            <div className={styles["step-header"]}>
+              <h2 className={styles["step-title"]}>Test Code Verification</h2>
+              <p className={styles["step-description"]}>
                 Please enter the test code provided by your administrator
               </p>
             </div>
 
-            <form onSubmit={handleTestCodeVerification} className="test-code-form">
-              <div className="form-group">
-                <label htmlFor="testCode" className="form-label">Test Code *</label>
+            <form onSubmit={handleTestCodeVerification} className={styles["test-code-form"]}>
+              <div className={styles["form-group"]}>
+                <label htmlFor="testCode" className={styles["form-label"]}>Test Code *</label>
                 <input
                   type="text"
                   id="testCode"
                   name="testCode"
                   value={formData.testCode}
                   onChange={handleInputChange}
-                  className="form-input test-code-input"
+                  className={`${styles["form-input"]} ${styles["test-code-input"]}`}
                   placeholder="Enter test code"
                   required
                 />
@@ -476,27 +493,18 @@ const handleStartTestDirect = async () => {
 
               <button 
                 type="submit" 
-                className="form-button primary"
+                className={`${styles["form-button"]} ${styles["primary"]}`}
                 disabled={loading}
               >
                 {loading ? 'Verifying...' : 'Verify Test Code'}
               </button>
             </form>
-
-            <div className="step-actions">
-              <button 
-                className="back-button"
-                onClick={() => setCurrentStep(2)}
-              >
-                ← Back to OTP Verification
-              </button>
-            </div>
           </div>
         )}
 
         {/* Footer */}
-        <div className="login-footer">
-          <p className="footer-text">
+        <div className={styles["login-footer"]}>
+          <p className={styles["footer-text"]}>
             © 2025 Infinova Test Platform. All rights reserved.
           </p>
         </div>

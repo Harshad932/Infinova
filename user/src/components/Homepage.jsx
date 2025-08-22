@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../assets/styles/Homepage.css';
+import styles from '../assets/styles/Homepage.module.css';
 
 const Homepage = () => {
   const [tests, setTests] = useState([]);
@@ -98,40 +98,40 @@ const Homepage = () => {
 
   if (loading) {
   return (
-    <div className="homepage-container">
-      <div className="loading-container">
-        <div className="lightbulb-container">
-          <div className="glow-ring"></div>
-          <div className="glow-ring"></div>
-          <div className="glow-ring"></div>
+    <div className={styles["homepage-container"]}>
+      <div className={styles["loading-container"]}>
+        <div className={styles["lightbulb-container"]}>
+          <div className={styles["glow-ring"]}></div>
+          <div className={styles["glow-ring"]}></div>
+          <div className={styles["glow-ring"]}></div>
           
-          <div className="lightbulb">
-            <div className="bulb-body">
-              <div className="filament">
-                <div className="filament-line"></div>
-                <div className="filament-line"></div>
-                <div className="filament-line"></div>
+          <div className={styles["lightbulb"]}>
+            <div className={styles["bulb-body"]}>
+              <div className={styles["filament"]}>
+                <div className={styles["filament-line"]}></div>
+                <div className={styles["filament-line"]}></div>
+                <div className={styles["filament-line"]}></div>
               </div>
             </div>
-            <div className="bulb-base"></div>
+            <div className={styles["bulb-base"]}></div>
           </div>
 
-          <div className="sparkles">
-            <div className="sparkle"></div>
-            <div className="sparkle"></div>
-            <div className="sparkle"></div>
-            <div className="sparkle"></div>
-            <div className="sparkle"></div>
-            <div className="sparkle"></div>
+          <div className={styles["sparkles"]}>
+            <div className={styles["sparkle"]}></div>
+            <div className={styles["sparkle"]}></div>
+            <div className={styles["sparkle"]}></div>
+            <div className={styles["sparkle"]}></div>
+            <div className={styles["sparkle"]}></div>
+            <div className={styles["sparkle"]}></div>
           </div>
         </div>
 
-        <div className="loading-content">
-          <p className="loading-text">Loading available tests<span className="typing-dots">...</span></p>
-          <p className="loading-subtitle">Please wait while we fetch the latest information</p>
+        <div className={styles["loading-content"]}>
+          <p className={styles["loading-text"]}>Loading available tests<span className={styles["typing-dots"]}>...</span></p>
+          <p className={styles["loading-subtitle"]}>Please wait while we fetch the latest information</p>
           
-          <div className="progress-container">
-            <div className="progress-bar"></div>
+          <div className={styles["progress-container"]}>
+            <div className={styles["progress-bar"]}></div>
           </div>
         </div>
       </div>
@@ -140,29 +140,29 @@ const Homepage = () => {
 }
 
   return (
-    <div className="homepage-container">
-      <div className="homepage-wrapper">
+    <div className={styles["homepage-container"]}>
+      <div className={styles["homepage-wrapper"]}>
         {/* Header Section */}
-        <div className="homepage-header">
-          <div className="header-content">
-            <h1 className="main-title">Welcome to Infinova Test Platform</h1>
-            <p className="main-subtitle">Discover and participate in comprehensive skill assessment tests</p>
+        <div className={styles["homepage-header"]}>
+          <div className={styles["header-content"]}>
+            <h1 className={styles["main-title"]}>Welcome to Infinova Test Platform</h1>
+            <p className={styles["main-subtitle"]}>Discover and participate in comprehensive skill assessment tests</p>
           </div>
-          <div className="header-decoration">
-            <div className="decoration-circle"></div>
-            <div className="decoration-circle"></div>
-            <div className="decoration-circle"></div>
+          <div className={styles["header-decoration"]}>
+            <div className={styles["decoration-circle"]}></div>
+            <div className={styles["decoration-circle"]}></div>
+            <div className={styles["decoration-circle"]}></div>
           </div>
         </div>
 
         {/* Tests Section */}
-        <div className="tests-section">
+        <div className={styles["tests-section"]}>
           {error && (
-            <div className="error-message">
-              <span className="error-icon">⚠️</span>
+            <div className={styles["error-message"]}>
+              <span className={styles["error-icon"]}>⚠️</span>
               {error}
               <button 
-                className="retry-button" 
+                className={styles["retry-button"]} 
                 onClick={fetchActiveTests}
               >
                 Retry
@@ -171,10 +171,10 @@ const Homepage = () => {
           )}
 
           {!error && tests.length === 0 && (
-            <div className="no-tests-container">
-              <div className="no-tests-icon">📋</div>
-              <h3 className="no-tests-title">No Active Tests Available</h3>
-              <p className="no-tests-message">
+            <div className={styles["no-tests-container"]}>
+              <div className={styles["no-tests-icon"]}>📋</div>
+              <h3 className={styles["no-tests-title"]}>No Active Tests Available</h3>
+              <p className={styles["no-tests-message"]}>
                 There are currently no published tests available. Please check back later.
               </p>
             </div>
@@ -182,85 +182,85 @@ const Homepage = () => {
 
           {!error && tests.length > 0 && (
             <>
-              <div className="section-header">
-                <h2 className="section-title">Available Tests</h2>
-                <p className="section-subtitle">
+              <div className={styles["section-header"]}>
+                <h2 className={styles["section-title"]}>Available Tests</h2>
+                <p className={styles["section-subtitle"]}>
                   Choose a test to view details and register
                 </p>
               </div>
 
-              <div className="tests-grid">
+              <div className={styles["tests-grid"]}>
                 {tests.map((test) => {
                   const status = getTestStatus(test);
                   return (
                     <div 
                       key={test.id} 
-                      className={`test-card ${getStatusColor(status)}`}
+                      className={`${styles["test-card"]} ${styles[getStatusColor(status)]}`}
                       onClick={() => handleTestClick(test.id)}
                     >
-                      <div className="test-card-header">
-                        <div className="test-status-badge">
-                          <span className={`status-indicator ${getStatusColor(status)}`}></span>
+                      <div className={styles["test-card-header"]}>
+                        <div className={styles["test-status-badge"]}>
+                          <span className={`${styles["status-indicator"]} ${styles[getStatusColor(status)]}`}></span>
                           {getStatusDisplay(status)}
                         </div>
-                        <div className="test-code">
+                        <div className={styles["test-code"]}>
                           Code: {test.test_code || 'TBD'}
                         </div>
                       </div>
 
-                      <div className="test-card-content">
-                        <h3 className="test-title">{test.title}</h3>
-                        <p className="test-description">
+                      <div className={styles["test-card-content"]}>
+                        <h3 className={styles["test-title"]}>{test.title}</h3>
+                        <p className={styles["test-description"]}>
                           {test.description || 'Comprehensive skill assessment test'}
                         </p>
 
-                        <div className="test-details">
-                          <div className="detail-item">
-                            <span className="detail-icon">📝</span>
-                            <span className="detail-text">
+                        <div className={styles["test-details"]}>
+                          <div className={styles["detail-item"]}>
+                            <span className={styles["detail-icon"]}>📝</span>
+                            <span className={styles["detail-text"]}>
                               {test.total_questions || 0} Questions
                             </span>
                           </div>
-                          <div className="detail-item">
-                            <span className="detail-icon">⏱️</span>
-                            <span className="detail-text">
+                          <div className={styles["detail-item"]}>
+                            <span className={styles["detail-icon"]}>⏱️</span>
+                            <span className={styles["detail-text"]}>
                               {test.time_per_question || 15}s per question
                             </span>
                           </div>
-                          <div className="detail-item">
-                            <span className="detail-icon">👥</span>
-                            <span className="detail-text">
+                          <div className={styles["detail-item"]}>
+                            <span className={styles["detail-icon"]}>👥</span>
+                            <span className={styles["detail-text"]}>
                               {test.total_registered || 0} Registered
                             </span>
                           </div>
                         </div>
 
                         {/* Test Structure Info */}
-                        <div className="test-structure">
-                          <div className="structure-item">
-                            <span className="structure-label">Assessment Type:</span>
-                            <span className="structure-value">5-Point Likert Scale</span>
+                        <div className={styles["test-structure"]}>
+                          <div className={styles["structure-item"]}>
+                            <span className={styles["structure-label"]}>Assessment Type:</span>
+                            <span className={styles["structure-value"]}>5-Point Likert Scale</span>
                           </div>
-                          <div className="structure-item">
-                            <span className="structure-label">Scoring:</span>
-                            <span className="structure-value">1-5 marks per question</span>
+                          <div className={styles["structure-item"]}>
+                            <span className={styles["structure-label"]}>Scoring:</span>
+                            <span className={styles["structure-value"]}>1-5 marks per question</span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="test-card-footer">
-                        <div className="test-meta">
-                          <span className="meta-text">
+                      <div className={styles["test-card-footer"]}>
+                        <div className={styles["test-meta"]}>
+                          <span className={styles["meta-text"]}>
                             Created: {formatDate(test.created_at)}
                           </span>
                           {test.is_registration_open && (
-                            <span className="registration-status">
+                            <span className={styles["registration-status"]}>
                               Registration Open
                             </span>
                           )}
                         </div>
-                        <div className="test-action">
-                          <span className="action-text">
+                        <div className={styles["test-action"]}>
+                          <span className={styles["action-text"]}>
                             {status === 'registration_open' ? 'Register Now →' : 'View Details →'}
                           </span>
                         </div>
@@ -274,13 +274,13 @@ const Homepage = () => {
         </div>
 
         {/* Information Section */}
-        <div className="info-section">
-          <div className="info-card">
-            <h3 className="info-title">About Our Assessment</h3>
-            <p className="info-description">
+        <div className={styles["info-section"]}>
+          <div className={styles["info-card"]}>
+            <h3 className={styles["info-title"]}>About Our Assessment</h3>
+            <p className={styles["info-description"]}>
               Our tests use a comprehensive 5-point Likert scale assessment system:
             </p>
-            <ul className="info-list">
+            <ul className={styles["info-list"]}>
               <li><strong>Strongly Agree (5 marks)</strong> - Complete agreement</li>
               <li><strong>Agree (4 marks)</strong> - Partial agreement</li>
               <li><strong>Neutral (3 marks)</strong> - No strong opinion</li>
@@ -291,9 +291,9 @@ const Homepage = () => {
         </div>
 
         {/* Footer Section */}
-        <div className="homepage-footer">
-          <div className="footer-content">
-            <p className="footer-text">
+        <div className={styles["homepage-footer"]}>
+          <div className={styles["footer-content"]}>
+            <p className={styles["footer-text"]}>
               © 2025 Infinova Test Platform. All rights reserved.
             </p>
           </div>

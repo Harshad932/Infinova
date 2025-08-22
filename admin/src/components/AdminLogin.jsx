@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../assets/styles/AdminLogin.css';
+import styles from '../assets/styles/AdminLogin.module.css';
 
 const AdminLogin = () => {
   const [formData, setFormData] = useState({ username: '', email: '', password: '' });
@@ -43,57 +43,57 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="AdminLogin-container">
-      <div className="AdminLogin-wrapper">
-        <div className="AdminLogin-card">
-          <div className="AdminLogin-header">
-            <h1 className="AdminLogin-title">Admin Login</h1>
-            <p className="AdminLogin-subtitle">Access your test management dashboard</p>
+    <div className={styles["AdminLogin-container"]}>
+      <div className={styles["AdminLogin-wrapper"]}>
+        <div className={styles["AdminLogin-card"]}>
+          <div className={styles["AdminLogin-header"]}>
+            <h1 className={styles["AdminLogin-title"]}>Admin Login</h1>
+            <p className={styles["AdminLogin-subtitle"]}>Access your test management dashboard</p>
           </div>
 
-          <form className="AdminLogin-form" onSubmit={handleSubmit}>
+          <form className={styles["AdminLogin-form"]} onSubmit={handleSubmit}>
             {error && (
-              <div className="AdminLogin-error-message">
-                <span className="AdminLogin-error-icon">⚠️</span>
+              <div className={styles["AdminLogin-error-message"]}>
+                <span className={styles["AdminLogin-error-icon"]}>⚠️</span>
                 {error}
               </div>
             )}
-            <div className="AdminLogin-form-group">
-              <label className="AdminLogin-label">Username</label>
+            <div className={styles["AdminLogin-form-group"]}>
+              <label className={styles["AdminLogin-label"]}>Username</label>
               <input
                 type="text"
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
                 required
-                className="AdminLogin-form-input"
+                className={styles["AdminLogin-form-input"]}
               />
             </div>
-            <div className="AdminLogin-form-group">
-              <label className="AdminLogin-label">Email</label>
+            <div className={styles["AdminLogin-form-group"]}>
+              <label className={styles["AdminLogin-label"]}>Email</label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="AdminLogin-form-input"
+                className={styles["AdminLogin-form-input"]}
               />
             </div>
-            <div className="AdminLogin-form-group">
-              <label className="AdminLogin-label">Password</label>
+            <div className={styles["AdminLogin-form-group"]}>
+              <label className={styles["AdminLogin-label"]}>Password</label>
               <input
                 type="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="AdminLogin-form-input"
+                className={styles["AdminLogin-form-input"]}
               />
             </div>
             <button
               type="submit"
-              className={`AdminLogin-button ${loading ? 'AdminLogin-disabled' : ''}`}
+              className={`${styles["AdminLogin-button"]} ${loading ? styles["AdminLogin-disabled"] : ''}`}
               disabled={loading}
             >
               {loading ? 'Logging in...' : 'Login'}

@@ -13,16 +13,18 @@ const PORT =process.env.PORT || 3001;
 
 const allowedOrigins = process.env.CORS_ORIGINS.split(',');
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // allow requests with no origin (like mobile apps or curl)
-    if (!origin || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    return callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true
-}));
+// app.use(cors({
+//   origin: function (origin, callback) {
+//     // allow requests with no origin (like mobile apps or curl)
+//     if (!origin || allowedOrigins.includes(origin)) {
+//       return callback(null, true);
+//     }
+//     return callback(new Error('Not allowed by CORS'));
+//   },
+//   credentials: true
+// }));
+
+app.use(cors());
 
 // Middleware to parse JSON bodies
 app.use(express.json());    

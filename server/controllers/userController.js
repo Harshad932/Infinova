@@ -295,21 +295,22 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Validate email format - more strict regex
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid email format'
+        message: 'Please enter a valid email address'
       });
     }
 
-    // Validate phone format (basic validation)
-    const phoneRegex = /^\d{10,15}$/;
-    if (!phoneRegex.test(phone.replace(/\D/g, ''))) {
+    // Validate phone format - Indian phone number format
+    const phoneRegex = /^(\+91[\-\s]?)?[0]?(91)?[6789]\d{9}$/;
+    const cleanPhone = phone.replace(/\D/g, '');
+    if (!phoneRegex.test(phone) || cleanPhone.length < 10 || cleanPhone.length > 12) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid phone number format'
+        message: 'Please enter a valid 10-digit phone number'
       });
     }
 
@@ -341,18 +342,98 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    // Check if user already exists with same email for this test
-    const existingRegistration = await client.query(
-      'SELECT u.id FROM users u JOIN test_registrations tr ON u.id = tr.user_id WHERE u.email = $1 AND tr.test_id = $2',
-      [email, testId]
-    );
+    // Check for duplicate email globally
+    const existingEmailUser = await client.query('SELECT id FROM users WHERE email = $1', [email]);
+    
+    // Check for duplicate phone globally
+    const existingPhoneUser = await client.query('SELECT id FROM users WHERE phone = $1', [phone]);
+
+    // Check existing registration status for this test
+    const existingRegistration = await client.query(`
+      SELECT 
+        u.id as user_id,
+        tr.registration_status,
+        CASE 
+          WHEN EXISTS (
+            SELECT 1 FROM user_otps uo 
+            WHERE uo.user_id = u.id AND uo.is_verified = true 
+            AND uo.expires_at > NOW() - INTERVAL '1 hour'
+          ) THEN true 
+          ELSE false 
+        END as is_email_verified,
+        CASE 
+          WHEN EXISTS (
+            SELECT 1 FROM test_sessions ts 
+            WHERE ts.user_id = u.id AND ts.test_id = tr.test_id 
+            AND ts.session_status IN ('completed', 'in_progress')
+          ) THEN true 
+          ELSE false 
+        END as has_test_session
+      FROM users u 
+      JOIN test_registrations tr ON u.id = tr.user_id 
+      WHERE u.email = $1 AND tr.test_id = $2
+    `, [email, testId]);
 
     if (existingRegistration.rows.length > 0) {
-      await client.query('ROLLBACK');
-      return res.status(409).json({
-        success: false,
-        message: 'User already registered for this test'
-      });
+      const regData = existingRegistration.rows[0];
+      
+      // If email verified but no test session, allow to proceed to test code step
+      if (regData.is_email_verified && !regData.has_test_session) {
+        await client.query('COMMIT');
+        return res.json({
+          success: true,
+          message: 'User already verified. Proceeding to test code verification.',
+          userId: regData.user_id,
+          isEmailVerified: true,
+          proceedToTestCode: true
+        });
+      }
+      
+      // If already completed or in progress, block registration
+      if (regData.has_test_session) {
+        await client.query('ROLLBACK');
+        return res.status(409).json({
+          success: false,
+          message: 'You have already started/completed this test'
+        });
+      }
+    }
+
+    // Check for duplicate email with different user for this test
+    if (existingEmailUser.rows.length > 0) {
+      const existingUserId = existingEmailUser.rows[0].id;
+      
+      // Check if this email is registered for this specific test
+      const emailTestRegistration = await client.query(
+        'SELECT id FROM test_registrations WHERE user_id = $1 AND test_id = $2',
+        [existingUserId, testId]
+      );
+      
+      if (emailTestRegistration.rows.length === 0) {
+        // Email exists but not registered for this test - check if phone matches
+        const existingUserDetails = await client.query('SELECT phone FROM users WHERE id = $1', [existingUserId]);
+        
+        if (existingUserDetails.rows[0].phone !== phone) {
+          await client.query('ROLLBACK');
+          return res.status(409).json({
+            success: false,
+            message: 'This email is already registered with a different phone number'
+          });
+        }
+      }
+    }
+
+    // Check for duplicate phone with different email
+    if (existingPhoneUser.rows.length > 0) {
+      const existingUserWithPhone = await client.query('SELECT email FROM users WHERE phone = $1', [phone]);
+      
+      if (existingUserWithPhone.rows[0].email !== email) {
+        await client.query('ROLLBACK');
+        return res.status(409).json({
+          success: false,
+          message: 'This phone number is already registered with a different email'
+        });
+      }
     }
 
     // Create or get user
@@ -421,7 +502,8 @@ export const registerUser = async (req, res) => {
       success: true,
       message: isEmailVerified ? 'User verified successfully' : 'Registration successful. OTP sent to your email.',
       userId: userId,
-      isEmailVerified: isEmailVerified
+      isEmailVerified: isEmailVerified,
+      proceedToTestCode: isEmailVerified
     });
 
   } catch (error) {
@@ -469,6 +551,12 @@ export const verifyOTP = async (req, res) => {
     const otpResult = await pool.query(otpQuery, [userId, email, otp]);
 
     if (otpResult.rows.length === 0) {
+      // Increment attempt count for failed attempts
+      await pool.query(
+        'UPDATE user_otps SET attempt_count = attempt_count + 1 WHERE user_id = $1 AND email = $2 AND expires_at > NOW()',
+        [userId, email]
+      );
+      
       return res.status(400).json({
         success: false,
         message: 'Invalid OTP'
@@ -787,8 +875,6 @@ export const startTest = async (req, res) => {
 
     const testData = testResult.rows[0];
 
-    // console.log('Test Data:', testData);
-
     // Check if test is ready to start
     if (!testData.is_test_started || !testData.is_test_live) {
       await client.query('ROLLBACK');
@@ -1046,8 +1132,6 @@ export const initializeTest = async (req, res) => {
 export const fetchCurrentQuestion = async (req, res) => {
   try {
     const { testId, userId, questionIndex } = req.body;
-
-    console.log('Fetching question for:', { testId, userId, questionIndex });
 
     // Validate inputs
     if (!testId || !userId || questionIndex === undefined || questionIndex === null) {
@@ -1308,8 +1392,6 @@ export const completeTest = async (req, res) => {
   try {
     const { testId, userId } = req.body;
 
-    console.log('Completing test for:', { testId, userId });
-
     // Validate inputs
     if (!testId || !userId) {
       return res.status(400).json({
@@ -1380,8 +1462,6 @@ export const heartbeat = async (req, res) => {
   try {
     const { testId, userId } = req.body;
 
-    console.log('Heartbeat received for:', { testId, userId });
-
     // Validate inputs
     if (!testId || !userId) {
       return res.status(400).json({
@@ -1419,5 +1499,99 @@ export const heartbeat = async (req, res) => {
       message: 'Internal server error while updating heartbeat',
       error: process.env.NODE_ENV === 'development' ? error.message : 'Server error'
     });
+  }
+};
+
+export const abandonTest = async (req, res) => {
+  const client = await pool.connect();
+  
+  try {
+    const { testId, userId } = req.body;
+
+    // Validate required fields
+    if (!testId || !userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Test ID and User ID are required'
+      });
+    }
+
+    await client.query('BEGIN');
+
+    // Get user's session
+    const sessionQuery = `
+      SELECT id, session_status, current_question_order, total_questions
+      FROM test_sessions
+      WHERE test_id = $1 AND user_id = $2
+    `;
+    const sessionResult = await client.query(sessionQuery, [testId, userId]);
+
+    if (sessionResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({
+        success: false,
+        message: 'Test session not found'
+      });
+    }
+
+    const session = sessionResult.rows[0];
+
+    if (session.session_status === 'completed') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        success: false,
+        message: 'Test already completed'
+      });
+    }
+
+    // Mark session as abandoned/completed
+    await client.query(`
+      UPDATE test_sessions SET
+        session_status = 'abandoned',
+        completed_at = CURRENT_TIMESTAMP,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1
+    `, [session.id]);
+
+    // Update current participants count (decrease)
+    await client.query(
+      'UPDATE test_controls SET current_participants = GREATEST(current_participants - 1, 0) WHERE test_id = $1',
+      [testId]
+    );
+
+    // Log abandonment activity
+    await client.query(
+      `INSERT INTO test_activity_logs (test_id, user_id, session_id, activity_type, activity_data, ip_address, user_agent) 
+       VALUES ($1, $2, $3, 'test_abandoned', $4, $5, $6)`,
+      [
+        testId, 
+        userId, 
+        session.id, 
+        JSON.stringify({ 
+          abandoned_at: new Date(),
+          questions_completed: session.current_question_order - 1
+        }),
+        req.ip || req.connection.remoteAddress || 'Unknown',
+        req.headers['user-agent'] || 'Unknown'
+      ]
+    );
+
+    await client.query('COMMIT');
+
+    res.json({
+      success: true,
+      message: 'Test abandoned successfully'
+    });
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Abandon test error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error during test abandonment',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Server error'
+    });
+  } finally {
+    client.release();
   }
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import '../assets/styles/TestDetails.css';
+import styles from '../assets/styles/TestDetails.module.css';
 
 const TestDetail = () => {
   const { id: testId } = useParams();
@@ -317,9 +317,9 @@ const TestDetail = () => {
 
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
+      <div className={styles["loading-container"]}>
+        <div className={styles["loading-spinner"]}>
+          <div className={styles["spinner"]}></div>
           <p>Loading Test Details...</p>
         </div>
       </div>
@@ -328,9 +328,9 @@ const TestDetail = () => {
 
   if (!test) {
     return (
-      <div className="error-container">
+      <div className={styles["error-container"]}>
         <h3>Test not found</h3>
-        <button onClick={() => navigate('/admin/manage-tests')} className="back-button">
+        <button onClick={() => navigate('/admin/manage-tests')} className={styles["back-button"]}>
           ← Back to Manage Tests
         </button>
       </div>
@@ -338,30 +338,30 @@ const TestDetail = () => {
   }
 
   return (
-    <div className="test-detail-container">
+    <div className={styles["test-detail-container"]}>
       {/* Header */}
-      <header className="test-detail-header">
-        <div className="header-content">
-          <div className="header-left">
+      <header className={styles["test-detail-header"]}>
+        <div className={styles["header-content"]}>
+          <div className={styles["header-left"]}>
             <button 
               onClick={() => navigate('/admin/manage-tests')}
-              className="back-button"
+              className={styles["back-button"]}
             >
               ← Back to Manage Tests
             </button>
-            <div className="test-title-section">
-              <h1 className="test-title">{test.title}</h1>
-              <span className={`status-badge ${getStatusBadge(test.status)}`}>
+            <div className={styles["test-title-section"]}>
+              <h1 className={styles["test-title"]}>{test.title}</h1>
+              <span className={`${styles["status-badge"]} ${styles[getStatusBadge(test.status)]}`}>
                 {getStatusText(test.status)}
               </span>
             </div>
           </div>
           
-          <div className="header-actions">
+          <div className={styles["header-actions"]}>
             {test.status === 'published' && (
               <button 
                 onClick={handleGenerateCode}
-                className="action-btn generate-code-btn"
+                className={`${styles["action-btn"]} ${styles["generate-code-btn"]}`}
               >
                 🔑 Generate Code
               </button>
@@ -369,7 +369,7 @@ const TestDetail = () => {
             
             <button 
               onClick={() => navigate(`/admin/edit-test/${testId}`)}
-              className="action-btn edit-btn"
+              className={`${styles["action-btn"]} ${styles["edit-btn"]}`}
             >
               ✏️ Edit Test
             </button>
@@ -377,7 +377,7 @@ const TestDetail = () => {
             {(test.status === 'published' || test.status === 'active') && (
               <button 
                 onClick={() => handleConfirmAction('unpublish')}
-                className="action-btn unpublish-btn"
+                className={`${styles["action-btn"]} ${styles["unpublish-btn"]}`}
               >
                 📤 Unpublish
               </button>
@@ -386,7 +386,7 @@ const TestDetail = () => {
             {test.status === 'active' && (
               <button 
                 onClick={() => handleConfirmAction('end_test')}
-                className="action-btn end-test-btn"
+                className={`${styles["action-btn"]} ${styles["end-test-btn"]}`}
               >
                 ⏹️ End Test
               </button>
@@ -397,7 +397,7 @@ const TestDetail = () => {
 
       {/* Error Message */}
       {error && (
-        <div className="error-message">
+        <div className={styles["error-message"]}>
           <p>{error}</p>
           <button onClick={() => setError(null)}>×</button>
         </div>
@@ -405,40 +405,40 @@ const TestDetail = () => {
 
       {/* Test Code Display */}
       {test.testCode && (
-        <div className="test-code-display">
-          <div className="code-info">
-            <span className="code-label">Test Code:</span>
-            <span className="code-value">{test.testCode}</span>
+        <div className={styles["test-code-display"]}>
+          <div className={styles["code-info"]}>
+            <span className={styles["code-label"]}>Test Code:</span>
+            <span className={styles["code-value"]}>{test.testCode}</span>
             <button 
               onClick={() => copyCodeToClipboard()}
-              className="copy-code-btn"
+              className={styles["copy-code-btn"]}
               title="Copy to clipboard"
             >
               📋
             </button>
           </div>
-          <div className="code-instruction">
+          <div className={styles["code-instruction"]}>
             Share this code with participants to allow them to join the test
           </div>
         </div>
       )}
 
       {/* Navigation Tabs */}
-      <div className="detail-tabs">
+      <div className={styles["detail-tabs"]}>
         <button 
-          className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
+          className={`${styles["tab-button"]} ${activeTab === 'overview' ? styles["active"] : ''}`}
           onClick={() => setActiveTab('overview')}
         >
           📊 Overview
         </button>
         <button 
-          className={`tab-button ${activeTab === 'questions' ? 'active' : ''}`}
+          className={`${styles["tab-button"]} ${activeTab === 'questions' ? styles["active"] : ''}`}
           onClick={() => setActiveTab('questions')}
         >
           ❓ Questions ({questions.length})
         </button>
         <button 
-          className={`tab-button ${activeTab === 'participants' ? 'active' : ''}`}
+          className={`${styles["tab-button"]} ${activeTab === 'participants' ? styles["active"] : ''}`}
           onClick={() => setActiveTab('participants')}
         >
           👥 Participants ({participants.length})
@@ -446,79 +446,79 @@ const TestDetail = () => {
       </div>
 
       {/* Tab Content */}
-      <div className="tab-content">
+      <div className={styles["tab-content"]}>
         {/* Overview Tab */}
         {activeTab === 'overview' && (
-          <div className="overview-section">
-            <div className="overview-grid">
-              <div className="info-card">
+          <div className={styles["overview-section"]}>
+            <div className={styles["overview-grid"]}>
+              <div className={styles["info-card"]}>
                 <h3>Test Information</h3>
-                <div className="info-item">
-                  <span className="label">Description:</span>
-                  <span className="value">{test.description || 'No description provided'}</span>
+                <div className={styles["info-item"]}>
+                  <span className={styles["label"]}>Description:</span>
+                  <span className={styles["value"]}>{test.description || 'No description provided'}</span>
                 </div>
-                <div className="info-item">
-                  <span className="label">Instructions:</span>
-                  <span className="value">{test.instructions || 'No instructions provided'}</span>
+                <div className={styles["info-item"]}>
+                  <span className={styles["label"]}>Instructions:</span>
+                  <span className={styles["value"]}>{test.instructions || 'No instructions provided'}</span>
                 </div>
-                <div className="info-item">
-                  <span className="label">Rules:</span>
-                  <span className="value">{test.rules || 'No rules specified'}</span>
+                <div className={styles["info-item"]}>
+                  <span className={styles["label"]}>Rules:</span>
+                  <span className={styles["value"]}>{test.rules || 'No rules specified'}</span>
                 </div>
-                <div className="info-item">
-                  <span className="label">Created:</span>
-                  <span className="value">{formatDate(test.createdAt)}</span>
+                <div className={styles["info-item"]}>
+                  <span className={styles["label"]}>Created:</span>
+                  <span className={styles["value"]}>{formatDate(test.createdAt)}</span>
                 </div>
-                <div className="info-item">
-                  <span className="label">Last Updated:</span>
-                  <span className="value">{formatDate(test.updatedAt)}</span>
+                <div className={styles["info-item"]}>
+                  <span className={styles["label"]}>Last Updated:</span>
+                  <span className={styles["value"]}>{formatDate(test.updatedAt)}</span>
                 </div>
               </div>
 
-              <div className="stats-card">
+              <div className={styles["stats-card"]}>
                 <h3>Test Statistics</h3>
-                <div className="stats-grid">
-                  <div className="stat-item">
-                    <span className="stat-number">{test.totalQuestions || questions.length || 0}</span>
-                    <span className="stat-label">Total Questions</span>
+                <div className={styles["stats-grid"]}>
+                  <div className={styles["stat-item"]}>
+                    <span className={styles["stat-number"]}>{test.totalQuestions || questions.length || 0}</span>
+                    <span className={styles["stat-label"]}>Total Questions</span>
                   </div>
-                  <div className="stat-item">
-                    <span className="stat-number">{test.total_categories || 0}</span>
-                    <span className="stat-label">Categories</span>
+                  <div className={styles["stat-item"]}>
+                    <span className={styles["stat-number"]}>{test.total_categories || 0}</span>
+                    <span className={styles["stat-label"]}>Categories</span>
                   </div>
-                  <div className="stat-item">
-                    <span className="stat-number">{test.total_subcategories || 0}</span>
-                    <span className="stat-label">Subcategories</span>
+                  <div className={styles["stat-item"]}>
+                    <span className={styles["stat-number"]}>{test.total_subcategories || 0}</span>
+                    <span className={styles["stat-label"]}>Subcategories</span>
                   </div>
-                  <div className="stat-item">
-                    <span className="stat-number">{test.timePerQuestion || 0}s</span>
-                    <span className="stat-label">Time per Question</span>
+                  <div className={styles["stat-item"]}>
+                    <span className={styles["stat-number"]}>{test.timePerQuestion || 0}s</span>
+                    <span className={styles["stat-label"]}>Time per Question</span>
                   </div>
-                  <div className="stat-item">
-                    <span className="stat-number">{participants.length}</span>
-                    <span className="stat-label">Registered Users</span>
+                  <div className={styles["stat-item"]}>
+                    <span className={styles["stat-number"]}>{participants.length}</span>
+                    <span className={styles["stat-label"]}>Registered Users</span>
                   </div>
-                  <div className="stat-item">
-                    <span className="stat-number">{participants.filter(p => p.status === 'completed').length}</span>
-                    <span className="stat-label">Completed</span>
+                  <div className={styles["stat-item"]}>
+                    <span className={styles["stat-number"]}>{participants.filter(p => p.status === 'completed').length}</span>
+                    <span className={styles["stat-label"]}>Completed</span>
                   </div>
                 </div>
               </div>
 
-              <div className="hierarchy-card">
+              <div className={styles["hierarchy-card"]}>
                 <h3>Test Structure</h3>
-                <div className="hierarchy-list">
+                <div className={styles["hierarchy-list"]}>
                   {Object.values(questionsByCategory).map(category => (
-                    <div key={category.id} className="category-item">
-                      <div className="category-header">
-                        <span className="category-name">{category.name}</span>
-                        <span className="category-count">({category.questionCount} questions)</span>
+                    <div key={category.id} className={styles["category-item"]}>
+                      <div className={styles["category-header"]}>
+                        <span className={styles["category-name"]}>{category.name}</span>
+                        <span className={styles["category-count"]}>({category.questionCount} questions)</span>
                       </div>
-                      <div className="subcategories-list">
+                      <div className={styles["subcategories-list"]}>
                         {category.subcategories.map(subcategory => (
-                          <div key={subcategory.id} className="subcategory-item">
-                            <span className="subcategory-name">{subcategory.name}</span>
-                            <span className="subcategory-count">
+                          <div key={subcategory.id} className={styles["subcategory-item"]}>
+                            <span className={styles["subcategory-name"]}>{subcategory.name}</span>
+                            <span className={styles["subcategory-count"]}>
                               ({questionsBySubcategory[subcategory.id]?.questionCount || 0} questions)
                             </span>
                           </div>
@@ -534,26 +534,26 @@ const TestDetail = () => {
 
         {/* Questions Tab */}
         {activeTab === 'questions' && (
-          <div className="questions-section">
+          <div className={styles["questions-section"]}>
             {questions.length === 0 ? (
-              <div className="no-questions">
-                <div className="no-questions-icon">❓</div>
+              <div className={styles["no-questions"]}>
+                <div className={styles["no-questions-icon"]}>❓</div>
                 <h3>No questions added yet</h3>
                 <p>Add questions to this test to get started</p>
                 <button 
                   onClick={() => navigate(`/admin/edit-test/${testId}`)}
-                  className="add-questions-btn"
+                  className={styles["add-questions-btn"]}
                 >
                   Add Questions
                 </button>
               </div>
             ) : (
-              <div className="questions-by-category">
+              <div className={styles["questions-by-category"]}>
                 {Object.values(questionsByCategory).map(category => (
-                  <div key={category.id} className="category-section">
-                    <div className="category-header-section">
-                      <h3 className="category-title">{category.name}</h3>
-                      <span className="category-question-count">
+                  <div key={category.id} className={styles["category-section"]}>
+                    <div className={styles["category-header-section"]}>
+                      <h3 className={styles["category-title"]}>{category.name}</h3>
+                      <span className={styles["category-question-count"]}>
                         {category.questionCount} questions
                       </span>
                     </div>
@@ -564,52 +564,52 @@ const TestDetail = () => {
                       if (subcategoryQuestions.length === 0) return null;
                       
                       return (
-                        <div key={subcategory.id} className="subcategory-section">
-                          <div className="subcategory-header">
-                            <h4 className="subcategory-title">{subcategory.name}</h4>
-                            <span className="subcategory-question-count">
+                        <div key={subcategory.id} className={styles["subcategory-section"]}>
+                          <div className={styles["subcategory-header"]}>
+                            <h4 className={styles["subcategory-title"]}>{subcategory.name}</h4>
+                            <span className={styles["subcategory-question-count"]}>
                               {subcategoryQuestions.length} questions
                             </span>
                           </div>
                           
-                          <div className="questions-list">
+                          <div className={styles["questions-list"]}>
                             {subcategoryQuestions.map((question, index) => (
-                              <div key={question.id} className="question-card">
-                                <div className="question-header" onClick={() => toggleQuestionExpand(question.id)}>
-                                  <div className="question-info">
-                                    <span className="question-number">Q{question.questionOrder}</span>
-                                    <span className="question-text">{question.questionText}</span>
+                              <div key={question.id} className={styles["question-card"]}>
+                                <div className={styles["question-header"]} onClick={() => toggleQuestionExpand(question.id)}>
+                                  <div className={styles["question-info"]}>
+                                    <span className={styles["question-number"]}>Q{question.questionOrder}</span>
+                                    <span className={styles["question-text"]}>{question.questionText}</span>
                                   </div>
-                                  <button className="expand-btn">
+                                  <button className={styles["expand-btn"]}>
                                     {expandedQuestion === question.id ? '▼' : '▶'}
                                   </button>
                                 </div>
                                 
                                 {expandedQuestion === question.id && (
-                                  <div className="question-details">
-                                    <div className="question-meta">
-                                      <span className="question-category">
+                                  <div className={styles["question-details"]}>
+                                    <div className={styles["question-meta"]}>
+                                      <span className={styles["question-category"]}>
                                         Category: {question.categoryName || getCategoryName(question.categoryId)}
                                       </span>
-                                      <span className="question-subcategory">
+                                      <span className={styles["question-subcategory"]}>
                                         Subcategory: {question.subcategoryName || getSubcategoryName(question.subcategoryId)}
                                       </span>
                                     </div>
                                     
-                                    <div className="fixed-options-info">
+                                    <div className={styles["fixed-options-info"]}>
                                       <h5>Response Options (Fixed for all questions):</h5>
-                                      <div className="options-list">
+                                      <div className={styles["options-list"]}>
                                         {(question.options || FIXED_OPTIONS).map((option) => (
-                                          <div key={option.id} className="option-item fixed-option">
-                                            <span className="option-letter">{option.label}</span>
-                                            <span className="option-text">{option.text}</span>
-                                            <span className="option-marks">({option.marks} marks)</span>
+                                          <div key={option.id} className={`${styles["option-item"]} ${styles["fixed-option"]}`}>
+                                            <span className={styles["option-letter"]}>{option.label}</span>
+                                            <span className={styles["option-text"]}>{option.text}</span>
+                                            <span className={styles["option-marks"]}>({option.marks} marks)</span>
                                           </div>
                                         ))}
                                       </div>
                                     </div>
                                     
-                                    <div className="scoring-info">
+                                    <div className={styles["scoring-info"]}>
                                       <p><strong>Scoring:</strong> Each question uses the same 5-point scale above.</p>
                                       <p><strong>Subcategory Score Formula:</strong> (Sum of all question scores / (Number of questions × 5)) × 100</p>
                                     </div>
@@ -630,15 +630,15 @@ const TestDetail = () => {
 
         {/* Participants Tab */}
         {activeTab === 'participants' && (
-          <div className="participants-section">
+          <div className={styles["participants-section"]}>
             {participants.length === 0 ? (
-              <div className="no-participants">
-                <div className="no-participants-icon">👥</div>
+              <div className={styles["no-participants"]}>
+                <div className={styles["no-participants-icon"]}>👥</div>
                 <h3>No participants yet</h3>
                 <p>Participants will appear here once they register for the test</p>
               </div>
             ) : (
-              <div className="participants-table">
+              <div className={styles["participants-table"]}>
                 <table>
                   <thead>
                     <tr>
@@ -657,22 +657,22 @@ const TestDetail = () => {
                         <td>{participant.email}</td>
                         <td>{participant.phone}</td>
                         <td>
-                          <span className={`participant-status ${participant.status}`}>
+                          <span className={`${styles["participant-status"]} ${styles[participant.status]}`}>
                             {participant.status}
                           </span>
                         </td>
                         <td>{formatDate(participant.registered_at)}</td>
                         <td>
                           {participant.status === 'completed' ? (
-                            <span className="progress-completed">
+                            <span className={styles["progress-completed"]}>
                               {participant.current_question_order || test.totalQuestions}/{test.totalQuestions}
                             </span>
                           ) : participant.status === 'in_progress' ? (
-                            <span className="progress-active">
+                            <span className={styles["progress-active"]}>
                               {participant.current_question_order || 0}/{test.totalQuestions}
                             </span>
                           ) : (
-                            <span className="progress-waiting">Waiting</span>
+                            <span className={styles["progress-waiting"]}>Waiting</span>
                           )}
                         </td>
                       </tr>
@@ -687,37 +687,37 @@ const TestDetail = () => {
 
       {/* Code Generation Modal */}
       {showCodeModal && (
-        <div className="modal-overlay">
-          <div className="modal code-modal">
-            <div className="modal-header">
+        <div className={styles["modal-overlay"]}>
+          <div className={`${styles["modal"]} ${styles["code-modal"]}`}>
+            <div className={styles["modal-header"]}>
               <h3>Test Code Generated</h3>
             </div>
-            <div className="modal-body">
-              <div className="generated-code-display">
-                <div className="code-box">
-                  <span className="code-text">{generatedCode}</span>
+            <div className={styles["modal-body"]}>
+              <div className={styles["generated-code-display"]}>
+                <div className={styles["code-box"]}>
+                  <span className={styles["code-text"]}>{generatedCode}</span>
                   <button 
                     onClick={copyCodeToClipboard}
-                    className="copy-btn"
+                    className={styles["copy-btn"]}
                     title="Copy to clipboard"
                   >
                     📋
                   </button>
                 </div>
-                <p className="code-instructions">
+                <p className={styles["code-instructions"]}>
                   Share this code with participants. They will need to enter this code to access the test.
                 </p>
-                <div className="code-info">
+                <div className={styles["code-info"]}>
                   <p>✅ Test is now ACTIVE</p>
                   <p>✅ Participants can now join using this code</p>
                   <p>✅ You can start the test when ready</p>
                 </div>
               </div>
             </div>
-            <div className="modal-actions">
+            <div className={styles["modal-actions"]}>
               <button 
                 onClick={() => setShowCodeModal(false)}
-                className="modal-btn primary"
+                className={`${styles["modal-btn"]} ${styles["primary"]}`}
               >
                 Got it!
               </button>
@@ -728,30 +728,30 @@ const TestDetail = () => {
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div className="modal-overlay">
-          <div className="modal confirm-modal">
-            <div className="modal-header">
+        <div className={styles["modal-overlay"]}>
+          <div className={`${styles["modal"]} ${styles["confirm-modal"]}`}>
+            <div className={styles["modal-header"]}>
               <h3>Confirm Action</h3>
             </div>
-            <div className="modal-body">
+            <div className={styles["modal-body"]}>
               <p>Are you sure you want to {confirmAction?.replace('_', ' ')} this test?</p>
               {confirmAction === 'end_test' && (
-                <p className="warning-text">This will end the test for all active participants and they won't be able to continue.</p>
+                <p className={styles["warning-text"]}>This will end the test for all active participants and they won't be able to continue.</p>
               )}
               {confirmAction === 'unpublish' && (
-                <p className="warning-text">This will make the test unavailable to users and stop any ongoing sessions.</p>
+                <p className={styles["warning-text"]}>This will make the test unavailable to users and stop any ongoing sessions.</p>
               )}
             </div>
-            <div className="modal-actions">
+            <div className={styles["modal-actions"]}>
               <button 
                 onClick={() => setShowConfirmModal(false)}
-                className="modal-btn secondary"
+                className={`${styles["modal-btn"]} ${styles["secondary"]}`}
               >
                 Cancel
               </button>
               <button 
                 onClick={() => handleTestAction(confirmAction)}
-                className="modal-btn primary"
+                className={`${styles["modal-btn"]} ${styles["primary"]}`}
               >
                 Confirm
               </button>

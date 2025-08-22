@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../assets/styles/ManageTests.css';
+import styles from '../assets/styles/ManageTests.module.css';
 
 const ManageTests = () => {
   const [tests, setTests] = useState([]);
@@ -182,11 +182,11 @@ useEffect(() => {
 
   const getStatusBadge = (status) => {
     switch(status) {
-      case 'draft': return 'ManageTests-status-draft';
-      case 'published': return 'ManageTests-status-published';
-      case 'active': return 'ManageTests-status-active';
-      case 'completed': return 'ManageTests-status-completed';
-      default: return 'ManageTests-status-draft';
+      case 'draft': return styles['ManageTests-status-draft'];
+      case 'published': return styles['ManageTests-status-published'];
+      case 'active': return styles['ManageTests-status-active'];
+      case 'completed': return styles['ManageTests-status-completed'];
+      default: return styles['ManageTests-status-draft'];
     }
   };
 
@@ -234,9 +234,9 @@ useEffect(() => {
   // Show loading only on initial load
   if (loading && tests.length === 0) {
     return (
-      <div className="ManageTests-loading-container">
-        <div className="ManageTests-loading-spinner">
-          <div className="ManageTests-spinner"></div>
+      <div className={styles["ManageTests-loading-container"]}>
+        <div className={styles["ManageTests-loading-spinner"]}>
+          <div className={styles["ManageTests-spinner"]}></div>
           <p>Loading Tests...</p>
         </div>
       </div>
@@ -244,22 +244,22 @@ useEffect(() => {
   }
 
   return (
-    <div className="ManageTests-container">
+    <div className={styles["ManageTests-container"]}>
       {/* Header */}
-      <header className="ManageTests-page-header">
-        <div className="ManageTests-header-content">
-          <div className="ManageTests-header-left">
+      <header className={styles["ManageTests-page-header"]}>
+        <div className={styles["ManageTests-header-content"]}>
+          <div className={styles["ManageTests-header-left"]}>
             <button 
               onClick={handleLogout}
-              className="ManageTests-back-button"
+              className={styles["ManageTests-back-button"]}
             >
               Logout
             </button>
-            <h1 className="ManageTests-page-title">Manage Tests</h1>
+            <h1 className={styles["ManageTests-page-title"]}>Manage Tests</h1>
           </div>
           <button 
             onClick={() => navigate('/admin/create-test')}
-            className="ManageTests-create-test-btn"
+            className={styles["ManageTests-create-test-btn"]}
           >
             + Create New Test
           </button>
@@ -268,29 +268,29 @@ useEffect(() => {
 
       {/* Error Message */}
       {error && (
-        <div className="ManageTests-error-message">
+        <div className={styles["ManageTests-error-message"]}>
           <p>{error}</p>
           <button onClick={() => setError(null)}>×</button>
         </div>
       )}
 
       {/* Filters */}
-      <div className="ManageTests-filters-section">
-        <div className="ManageTests-search-bar">
+      <div className={styles["ManageTests-filters-section"]}>
+        <div className={styles["ManageTests-search-bar"]}>
           <input
             type="text"
             placeholder="Search tests by title or description..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="ManageTests-search-input"
+            className={styles["ManageTests-search-input"]}
           />
         </div>
         
-        <div className="ManageTests-filter-dropdown">
+        <div className={styles["ManageTests-filter-dropdown"]}>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="ManageTests-filter-select"
+            className={styles["ManageTests-filter-select"]}
           >
             <option value="all">All Status</option>
             <option value="draft">Draft</option>
@@ -302,10 +302,10 @@ useEffect(() => {
       </div>
 
       {/* Tests Grid */}
-      <div className="ManageTests-tests-grid">
+      <div className={styles["ManageTests-tests-grid"]}>
         {tests.length === 0 && !loading ? (
-          <div className="ManageTests-no-tests">
-            <div className="ManageTests-no-tests-icon">📝</div>
+          <div className={styles["ManageTests-no-tests"]}>
+            <div className={styles["ManageTests-no-tests-icon"]}>📝</div>
             <h3>No tests found</h3>
             <p>Create your first test or adjust your search filters</p>
           </div>
@@ -313,69 +313,69 @@ useEffect(() => {
           tests.map(test => (
             <div 
               key={test.id} 
-              className={`ManageTests-test-card ${(test.status === 'published' || test.status === 'active') ? 'ManageTests-clickable' : ''}`}
+              className={`${styles["ManageTests-test-card"]} ${(test.status === 'published' || test.status === 'active') ? styles["ManageTests-clickable"] : ''}`}
               onClick={() => handleTestCardClick(test)}
               style={{ 
                 cursor: (test.status === 'published' || test.status === 'active') ? 'pointer' : 'default' 
               }}
             >
-              <div className="ManageTests-test-card-header">
-                <div className="ManageTests-test-title-section">
-                  <h3 className="ManageTests-test-title">{test.title}</h3>
-                  <span className={`ManageTests-status-badge ${getStatusBadge(test.status)}`}>
+              <div className={styles["ManageTests-test-card-header"]}>
+                <div className={styles["ManageTests-test-title-section"]}>
+                  <h3 className={styles["ManageTests-test-title"]}>{test.title}</h3>
+                  <span className={`${styles["ManageTests-status-badge"]} ${getStatusBadge(test.status)}`}>
                     {getStatusText(test.status)}
                   </span>
                 </div>
                 {/* Show test code only if it exists */}
                 {test.testCode && (
-                  <div className="ManageTests-test-code">
-                    Code: <span className="ManageTests-code-text">{test.testCode}</span>
+                  <div className={styles["ManageTests-test-code"]}>
+                    Code: <span className={styles["ManageTests-code-text"]}>{test.testCode}</span>
                   </div>
                 )}
               </div>
 
-              <div className="ManageTests-test-card-body">
-                <p className="ManageTests-test-description">{test.description || 'No description available'}</p>
+              <div className={styles["ManageTests-test-card-body"]}>
+                <p className={styles["ManageTests-test-description"]}>{test.description || 'No description available'}</p>
                 
-                <div className="ManageTests-test-info">
-                  <div className="ManageTests-info-item">
-                    <span className="ManageTests-info-label">Questions:</span>
-                    <span className="ManageTests-info-value">{test.totalQuestions || 0}</span>
+                <div className={styles["ManageTests-test-info"]}>
+                  <div className={styles["ManageTests-info-item"]}>
+                    <span className={styles["ManageTests-info-label"]}>Questions:</span>
+                    <span className={styles["ManageTests-info-value"]}>{test.totalQuestions || 0}</span>
                   </div>
-                  <div className="ManageTests-info-item">
-                    <span className="ManageTests-info-label">Categories:</span>
-                    <span className="ManageTests-info-value">{test.totalCategories || 0}</span>
+                  <div className={styles["ManageTests-info-item"]}>
+                    <span className={styles["ManageTests-info-label"]}>Categories:</span>
+                    <span className={styles["ManageTests-info-value"]}>{test.totalCategories || 0}</span>
                   </div>
-                  <div className="ManageTests-info-item">
-                    <span className="ManageTests-info-label">Subcategories:</span>
-                    <span className="ManageTests-info-value">{test.totalSubcategories || 0}</span>
+                  <div className={styles["ManageTests-info-item"]}>
+                    <span className={styles["ManageTests-info-label"]}>Subcategories:</span>
+                    <span className={styles["ManageTests-info-value"]}>{test.totalSubcategories || 0}</span>
                   </div>
-                  <div className="ManageTests-info-item">
-                    <span className="ManageTests-info-label">Time per Q:</span>
-                    <span className="ManageTests-info-value">{test.timePerQuestion || 0}s</span>
+                  <div className={styles["ManageTests-info-item"]}>
+                    <span className={styles["ManageTests-info-label"]}>Time per Q:</span>
+                    <span className={styles["ManageTests-info-value"]}>{test.timePerQuestion || 0}s</span>
                   </div>
-                  <div className="ManageTests-info-item">
-                    <span className="ManageTests-info-label">Participants:</span>
-                    <span className="ManageTests-info-value">{test.participants || 0}</span>
+                  <div className={styles["ManageTests-info-item"]}>
+                    <span className={styles["ManageTests-info-label"]}>Participants:</span>
+                    <span className={styles["ManageTests-info-value"]}>{test.participants || 0}</span>
                   </div>
-                  <div className="ManageTests-info-item">
-                    <span className="ManageTests-info-label">Completed:</span>
-                    <span className="ManageTests-info-value">{test.completedParticipants || 0}</span>
+                  <div className={styles["ManageTests-info-item"]}>
+                    <span className={styles["ManageTests-info-label"]}>Completed:</span>
+                    <span className={styles["ManageTests-info-value"]}>{test.completedParticipants || 0}</span>
                   </div>
                 </div>
 
                 {/* Show category and subcategory breakdown if available */}
                 {test.categoryBreakdown && test.categoryBreakdown.length > 0 && (
-                  <div className="ManageTests-category-breakdown">
-                    <span className="ManageTests-breakdown-label">Structure:</span>
-                    <div className="ManageTests-breakdown-list">
+                  <div className={styles["ManageTests-category-breakdown"]}>
+                    <span className={styles["ManageTests-breakdown-label"]}>Structure:</span>
+                    <div className={styles["ManageTests-breakdown-list"]}>
                       {test.categoryBreakdown.slice(0, 2).map((category, index) => (
-                        <span key={index} className="ManageTests-category-tag">
+                        <span key={index} className={styles["ManageTests-category-tag"]}>
                           {category.name} ({category.subcategories} subcats)
                         </span>
                       ))}
                       {test.categoryBreakdown.length > 2 && (
-                        <span className="ManageTests-category-tag ManageTests-more">
+                        <span className={`${styles["ManageTests-category-tag"]} ${styles["ManageTests-more"]}`}>
                           +{test.categoryBreakdown.length - 2} more
                         </span>
                       )}
@@ -383,25 +383,25 @@ useEffect(() => {
                   </div>
                 )}
 
-                <div className="ManageTests-test-meta">
-                  <span className="ManageTests-created-date">Created: {formatDate(test.createdAt)}</span>
+                <div className={styles["ManageTests-test-meta"]}>
+                  <span className={styles["ManageTests-created-date"]}>Created: {formatDate(test.createdAt)}</span>
                 </div>
 
                 {/* Show click instruction for published/active tests */}
                 {(test.status === 'published' || test.status === 'active') && (
-                  <div className="ManageTests-click-instruction">
+                  <div className={styles["ManageTests-click-instruction"]}>
                     <small>💡 Click card to view test details and manage participants</small>
                   </div>
                 )}
               </div>
 
-              <div className="ManageTests-test-card-actions">
-                <div className="ManageTests-action-row">
+              <div className={styles["ManageTests-test-card-actions"]}>
+                <div className={styles["ManageTests-action-row"]}>
                   {/* Edit Button - Available for all statuses except completed */}
                   {test.status !== 'completed' && (
                     <button 
                       onClick={(e) => handleEditClick(test.id, e)}
-                      className="ManageTests-action-btn ManageTests-edit-btn"
+                      className={`${styles["ManageTests-action-btn"]} ${styles["ManageTests-edit-btn"]}`}
                     >
                       Edit
                     </button>
@@ -411,7 +411,7 @@ useEffect(() => {
                   {test.status === 'draft' && (
                     <button 
                       onClick={(e) => handleConfirmAction('publish', test.id, e)}
-                      className="ManageTests-action-btn ManageTests-publish-btn"
+                      className={`${styles["ManageTests-action-btn"]} ${styles["ManageTests-publish-btn"]}`}
                     >
                       Publish
                     </button>
@@ -421,7 +421,7 @@ useEffect(() => {
                   {test.status === 'published' && (
                     <button 
                       onClick={(e) => handleConfirmAction('unpublish', test.id, e)}
-                      className="ManageTests-action-btn ManageTests-unpublish-btn"
+                      className={`${styles["ManageTests-action-btn"]} ${styles["ManageTests-unpublish-btn"]}`}
                     >
                       Unpublish
                     </button>
@@ -431,7 +431,7 @@ useEffect(() => {
                   {(test.status === 'completed' || (test.status === 'active' && test.completedParticipants > 0)) && (
                     <button 
                       onClick={(e) => handleResultsClick(test.id, e)}
-                      className="ManageTests-action-btn ManageTests-results-btn"      
+                      className={`${styles["ManageTests-action-btn"]} ${styles["ManageTests-results-btn"]}`}      
                     >
                       Results
                     </button>
@@ -441,7 +441,7 @@ useEffect(() => {
                   {(test.status === 'draft' || test.status === 'completed') && (
                     <button 
                       onClick={(e) => handleConfirmAction('delete', test.id, e)}
-                      className="ManageTests-action-btn ManageTests-delete-btn"
+                      className={`${styles["ManageTests-action-btn"]} ${styles["ManageTests-delete-btn"]}`}
                     >
                       Delete
                     </button>
@@ -455,23 +455,23 @@ useEffect(() => {
 
       {/* Pagination */}
       {pagination.totalPages > 1 && (
-        <div className="ManageTests-pagination">
+        <div className={styles["ManageTests-pagination"]}>
           <button 
             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
             disabled={!pagination.hasPrev}
-            className="ManageTests-pagination-btn"
+            className={styles["ManageTests-pagination-btn"]}
           >
             Previous
           </button>
           
-          <span className="ManageTests-pagination-info">
+          <span className={styles["ManageTests-pagination-info"]}>
             Page {pagination.currentPage} of {pagination.totalPages}
           </span>
           
           <button 
             onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
             disabled={!pagination.hasNext}
-            className="ManageTests-pagination-btn"
+            className={styles["ManageTests-pagination-btn"]}
           >
             Next
           </button>
@@ -480,33 +480,33 @@ useEffect(() => {
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div className="ManageTests-modal-overlay">
-          <div className="ManageTests-modal ManageTests-confirm-modal">
-            <div className="ManageTests-modal-header">
+        <div className={styles["ManageTests-modal-overlay"]}>
+          <div className={`${styles["ManageTests-modal"]} ${styles["ManageTests-confirm-modal"]}`}>
+            <div className={styles["ManageTests-modal-header"]}>
               <h3>Confirm Action</h3>
             </div>
-            <div className="ManageTests-modal-body">
+            <div className={styles["ManageTests-modal-body"]}>
               <p>Are you sure you want to {confirmAction?.action.replace(/([A-Z])/g, ' $1').toLowerCase()} this test?</p>
               {confirmAction?.action === 'delete' && (
-                <p className="ManageTests-warning-text">This action cannot be undone.</p>
+                <p className={styles["ManageTests-warning-text"]}>This action cannot be undone.</p>
               )}
               {confirmAction?.action === 'publish' && (
-                <p className="ManageTests-info-text">Once published, the test will be available for activation and user registration.</p>
+                <p className={styles["ManageTests-info-text"]}>Once published, the test will be available for activation and user registration.</p>
               )}
               {confirmAction?.action === 'unpublish' && (
-                <p className="ManageTests-warning-text">This will make the test unavailable and deactivate it if currently active.</p>
+                <p className={styles["ManageTests-warning-text"]}>This will make the test unavailable and deactivate it if currently active.</p>
               )}
             </div>
-            <div className="ManageTests-modal-actions">
+            <div className={styles["ManageTests-modal-actions"]}>
               <button 
                 onClick={() => setShowConfirmModal(false)}
-                className="ManageTests-modal-btn ManageTests-secondary"
+                className={`${styles["ManageTests-modal-btn"]} ${styles["ManageTests-secondary"]}`}
               >
                 Cancel
               </button>
               <button 
                 onClick={executeAction}
-                className="ManageTests-modal-btn ManageTests-primary"
+                className={`${styles["ManageTests-modal-btn"]} ${styles["ManageTests-primary"]}`}
               >
                 Confirm
               </button>

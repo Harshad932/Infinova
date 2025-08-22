@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import '../assets/styles/EditTest.css';
+import styles from '../assets/styles/EditTest.module.css';
 
 const EditTest = () => {
   const { id } = useParams();
@@ -584,9 +584,9 @@ const getQuestionsForSubcategory = (subcategoryId) => {
 
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
+      <div className={styles["loading-container"]}>
+        <div className={styles["loading-spinner"]}>
+          <div className={styles["spinner"]}></div>
           <p>Loading Test Data...</p>
         </div>
       </div>
@@ -594,23 +594,23 @@ const getQuestionsForSubcategory = (subcategoryId) => {
   }
 
   return (
-    <div className="edit-test-container">
+    <div className={styles["edit-test-container"]}>
       {/* Header */}
-      <header className="page-header">
-        <div className="header-content">
-          <div className="header-left">
+      <header className={styles["page-header"]}>
+        <div className={styles["header-content"]}>
+          <div className={styles["header-left"]}>
             <button 
               onClick={() => navigate('/admin/manage-tests')}
-              className="back-button"
+              className={styles["back-button"]}
             >
               ← Back to Manage Tests
             </button>
-            <h1 className="page-title">Edit Test</h1>
+            <h1 className={styles["page-title"]}>Edit Test</h1>
           </div>
-          <div className="header-actions">
+          <div className={styles["header-actions"]}>
             <button 
               onClick={() => navigate(`/admin/test-results/${id}`)}
-              className="view-results-btn"
+              className={styles["view-results-btn"]}
             >
               View Results
             </button>
@@ -620,36 +620,36 @@ const getQuestionsForSubcategory = (subcategoryId) => {
 
       {/* Success/Error Messages */}
       {success && (
-        <div className="success-message">
+        <div className={styles["success-message"]}>
           <p>{success}</p>
           <button onClick={() => setSuccess(null)}>×</button>
         </div>
       )}
 
       {error && (
-        <div className="error-message">
+        <div className={styles["error-message"]}>
           <p>{error}</p>
           <button onClick={() => setError(null)}>×</button>
         </div>
       )}
 
       {/* Tabs */}
-      <div className="tabs-container">
-        <div className="tabs">
+      <div className={styles["tabs-container"]}>
+        <div className={styles["tabs"]}>
           <button 
-            className={`tab ${activeTab === 'info' ? 'active' : ''}`}
+            className={`${styles["tab"]} ${activeTab === 'info' ? styles["active"] : ''}`}
             onClick={() => setActiveTab('info')}
           >
             Test Information
           </button>
           <button 
-            className={`tab ${activeTab === 'structure' ? 'active' : ''}`}
+            className={`${styles["tab"]} ${activeTab === 'structure' ? styles["active"] : ''}`}
             onClick={() => setActiveTab('structure')}
           >
             Test Structure ({categories.length} Categories)
           </button>
           <button 
-            className={`tab ${activeTab === 'questions' ? 'active' : ''}`}
+            className={`${styles["tab"]} ${activeTab === 'questions' ? styles["active"] : ''}`}
             onClick={() => setActiveTab('questions')}
           >
             Questions ({questions.length})
@@ -658,12 +658,12 @@ const getQuestionsForSubcategory = (subcategoryId) => {
       </div>
 
       {/* Tab Content */}
-      <div className="tab-content">
+      <div className={styles["tab-content"]}>
         {/* Test Information Tab */}
         {activeTab === 'info' && (
-          <div className="test-info-section">
-            <div className="form-container">
-              <div className="form-group">
+          <div className={styles["test-info-section"]}>
+            <div className={styles["form-container"]}>
+              <div className={styles["form-group"]}>
                 <label htmlFor="title">Test Title *</label>
                 <input
                   type="text"
@@ -675,7 +675,7 @@ const getQuestionsForSubcategory = (subcategoryId) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles["form-group"]}>
                 <label htmlFor="description">Description</label>
                 <textarea
                   id="description"
@@ -686,7 +686,7 @@ const getQuestionsForSubcategory = (subcategoryId) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles["form-group"]}>
                 <label htmlFor="instructions">Instructions</label>
                 <textarea
                   id="instructions"
@@ -697,7 +697,7 @@ const getQuestionsForSubcategory = (subcategoryId) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles["form-group"]}>
                 <label htmlFor="rules">Rules</label>
                 <textarea
                   id="rules"
@@ -708,7 +708,7 @@ const getQuestionsForSubcategory = (subcategoryId) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className={styles["form-group"]}>
                 <label htmlFor="timePerQuestion">Time per Question (seconds)</label>
                 <input
                   type="number"
@@ -720,11 +720,11 @@ const getQuestionsForSubcategory = (subcategoryId) => {
                 />
               </div>
 
-              <div className="form-actions">
+              <div className={styles["form-actions"]}>
                 <button 
                   onClick={saveTestInfo}
                   disabled={saving}
-                  className="save-btn primary"
+                  className={`${styles["save-btn"]} ${styles["primary"]}`}
                 >
                   {saving ? 'Saving...' : 'Save Test Information'}
                 </button>
@@ -735,39 +735,39 @@ const getQuestionsForSubcategory = (subcategoryId) => {
 
         {/* Test Structure Tab */}
         {activeTab === 'structure' && (
-          <div className="structure-section">
-            <div className="structure-header">
+          <div className={styles["structure-section"]}>
+            <div className={styles["structure-header"]}>
               <h3>Test Structure</h3>
               <button 
                 onClick={() => {
                   resetCategoryForm();
                   setShowCategoryModal(true);
                 }}
-                className="add-category-btn"
+                className={styles["add-category-btn"]}
               >
                 + Add Category
               </button>
             </div>
 
             {categories.length === 0 ? (
-              <div className="no-categories">
-                <div className="no-categories-icon">📋</div>
+              <div className={styles["no-categories"]}>
+                <div className={styles["no-categories-icon"]}>📋</div>
                 <h4>No categories added yet</h4>
                 <p>Start by adding your first category</p>
               </div>
             ) : (
-              <div className="categories-list">
+              <div className={styles["categories-list"]}>
                 {categories.map((category) => (
-                  <div key={category.id} className="category-card">
-                    <div className="category-header">
-                      <div className="category-info">
+                  <div key={category.id} className={styles["category-card"]}>
+                    <div className={styles["category-header"]}>
+                      <div className={styles["category-info"]}>
                         <h4>{category.name}</h4>
-                        <p className="category-description">{category.description}</p>
-                        <span className="category-stats">
+                        <p className={styles["category-description"]}>{category.description}</p>
+                        <span className={styles["category-stats"]}>
                           {getSubcategoriesForCategory(category.id).length} subcategories
                         </span>
                       </div>
-                      <div className="category-actions">
+                      <div className={styles["category-actions"]}>
                         <button 
                           onClick={() => {
                             setNewCategory({
@@ -778,13 +778,13 @@ const getQuestionsForSubcategory = (subcategoryId) => {
                             setEditingCategory(category.id);
                             setShowCategoryModal(true);
                           }}
-                          className="edit-btn"
+                          className={styles["edit-btn"]}
                         >
                           Edit
                         </button>
                         <button 
                           onClick={() => setShowDeleteConfirm({ type: 'category', id: category.id })}
-                          className="delete-btn"
+                          className={styles["delete-btn"]}
                         >
                           Delete
                         </button>
@@ -792,8 +792,8 @@ const getQuestionsForSubcategory = (subcategoryId) => {
                     </div>
 
                     {/* Subcategories */}
-                    <div className="subcategories-section">
-                      <div className="subcategories-header">
+                    <div className={styles["subcategories-section"]}>
+                      <div className={styles["subcategories-header"]}>
                         <h5>Subcategories</h5>
                         <button 
                           onClick={() => {
@@ -801,28 +801,28 @@ const getQuestionsForSubcategory = (subcategoryId) => {
                             setNewSubcategory(prev => ({ ...prev, categoryId: category.id }));
                             setShowSubcategoryModal(true);
                           }}
-                          className="add-subcategory-btn"
+                          className={styles["add-subcategory-btn"]}
                         >
                           + Add Subcategory
                         </button>
                       </div>
 
                       {getSubcategoriesForCategory(category.id).length === 0 ? (
-                        <div className="no-subcategories">
+                        <div className={styles["no-subcategories"]}>
                           <p>No subcategories in this category</p>
                         </div>
                       ) : (
-                        <div className="subcategories-list">
+                        <div className={styles["subcategories-list"]}>
                           {getSubcategoriesForCategory(category.id).map((subcategory) => (
-                            <div key={subcategory.id} className="subcategory-card">
-                              <div className="subcategory-info">
+                            <div key={subcategory.id} className={styles["subcategory-card"]}>
+                              <div className={styles["subcategory-info"]}>
                                 <h6>{subcategory.name}</h6>
-                                <p className="subcategory-description">{subcategory.description}</p>
-                                <span className="subcategory-stats">
+                                <p className={styles["subcategory-description"]}>{subcategory.description}</p>
+                                <span className={styles["subcategory-stats"]}>
                                   {getQuestionsForSubcategory(subcategory.id).length} questions
                                 </span>
                               </div>
-                              <div className="subcategory-actions">
+                              <div className={styles["subcategory-actions"]}>
                                 <button 
                                   onClick={() => {
                                     setNewSubcategory({
@@ -834,13 +834,13 @@ const getQuestionsForSubcategory = (subcategoryId) => {
                                     setEditingSubcategory(subcategory.id);
                                     setShowSubcategoryModal(true);
                                   }}
-                                  className="edit-btn small"
+                                  className={`${styles["edit-btn"]} ${styles["small"]}`}
                                 >
                                   Edit
                                 </button>
                                 <button 
                                   onClick={() => setShowDeleteConfirm({ type: 'subcategory', id: subcategory.id })}
-                                  className="delete-btn small"
+                                  className={`${styles["delete-btn"]} ${styles["small"]}`}
                                 >
                                   Delete
                                 </button>
@@ -858,15 +858,15 @@ const getQuestionsForSubcategory = (subcategoryId) => {
         )}
         {/* Questions Tab */}
         {activeTab === 'questions' && (
-          <div className="questions-section">
-            <div className="questions-header">
+          <div className={styles["questions-section"]}>
+            <div className={styles["questions-header"]}>
               <h3>Questions</h3>
               <button 
                 onClick={() => {
                   resetQuestionForm();
                   setShowQuestionModal(true);
                 }}
-                className="add-question-btn"
+                className={styles["add-question-btn"]}
                 disabled={categories.length === 0}
               >
                 + Add Question
@@ -874,41 +874,41 @@ const getQuestionsForSubcategory = (subcategoryId) => {
             </div>
 
             {questions.length === 0 ? (
-              <div className="no-questions">
-                <div className="no-questions-icon">❓</div>
+              <div className={styles["no-questions"]}>
+                <div className={styles["no-questions-icon"]}>❓</div>
                 <h4>No questions added yet</h4>
                 <p>Add categories and subcategories first, then add questions</p>
               </div>
             ) : (
-              <div className="questions-list">
+              <div className={styles["questions-list"]}>
                 {categories.map((category) => (
-                  <div key={category.id} className="category-questions">
-                    <h4 className="category-title">{category.name}</h4>
+                  <div key={category.id} className={styles["category-questions"]}>
+                    <h4 className={styles["category-title"]}>{category.name}</h4>
                     
                     {getSubcategoriesForCategory(category.id).map((subcategory) => {
                       const subcategoryQuestions = getQuestionsForSubcategory(subcategory.id);
                       
                       return (
-                        <div key={subcategory.id} className="subcategory-questions">
-                          <h5 className="subcategory-title">
+                        <div key={subcategory.id} className={styles["subcategory-questions"]}>
+                          <h5 className={styles["subcategory-title"]}>
                             {subcategory.name} ({subcategoryQuestions.length} questions)
                           </h5>
                           
                           {subcategoryQuestions.length === 0 ? (
-                            <div className="no-subcategory-questions">
+                            <div className={styles["no-subcategory-questions"]}>
                               <p>No questions in this subcategory</p>
                             </div>
                           ) : (
-                            <div className="questions-grid">
+                            <div className={styles["questions-grid"]}>
                               {subcategoryQuestions
                                 .sort((a, b) => a.subcategoryOrder - b.subcategoryOrder)
                                 .map((question) => (
-                                <div key={question.id} className="question-card">
-                                  <div className="question-header">
-                                    <span className="question-number">
+                                <div key={question.id} className={styles["question-card"]}>
+                                  <div className={styles["question-header"]}>
+                                    <span className={styles["question-number"]}>
                                       Q{question.subcategoryOrder}
                                     </span>
-                                    <div className="question-actions">
+                                    <div className={styles["question-actions"]}>
                                       <button 
                                         onClick={() => {
                                           setNewQuestion({
@@ -921,25 +921,25 @@ const getQuestionsForSubcategory = (subcategoryId) => {
                                           setEditingQuestion(question.id);
                                           setShowQuestionModal(true);
                                         }}
-                                        className="edit-btn small"
+                                        className={`${styles["edit-btn"]} ${styles["small"]}`}
                                       >
                                         Edit
                                       </button>
                                       <button 
                                         onClick={() => setShowDeleteConfirm({ type: 'question', id: question.id })}
-                                        className="delete-btn small"
+                                        className={`${styles["delete-btn"]} ${styles["small"]}`}
                                       >
                                         Delete
                                       </button>
                                     </div>
                                   </div>
-                                  <div className="question-content">
-                                    <p className="question-text">{question.questionText}</p>
-                                    <div className="fixed-options">
-                                      <p className="options-label">Options (Fixed for all questions):</p>
-                                      <div className="options-list">
+                                  <div className={styles["question-content"]}>
+                                    <p className={styles["question-text"]}>{question.questionText}</p>
+                                    <div className={styles["fixed-options"]}>
+                                      <p className={styles["options-label"]}>Options (Fixed for all questions):</p>
+                                      <div className={styles["options-list"]}>
                                         {fixedOptions.map((option, index) => (
-                                          <span key={index} className="option-item">
+                                          <span key={index} className={styles["option-item"]}>
                                             {option.label}. {option.text} ({option.marks} marks)
                                           </span>
                                         ))}
@@ -955,7 +955,7 @@ const getQuestionsForSubcategory = (subcategoryId) => {
                     })}
                     
                     {getSubcategoriesForCategory(category.id).length === 0 && (
-                      <div className="no-subcategories-for-questions">
+                      <div className={styles["no-subcategories-for-questions"]}>
                         <p>No subcategories in this category. Add subcategories first.</p>
                       </div>
                     )}
@@ -969,22 +969,22 @@ const getQuestionsForSubcategory = (subcategoryId) => {
 
       {/* Category Modal */}
       {showCategoryModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
+        <div className={styles["modal-overlay"]}>
+          <div className={styles["modal"]}>
+            <div className={styles["modal-header"]}>
               <h3>{editingCategory ? 'Edit Category' : 'Add New Category'}</h3>
               <button 
                 onClick={() => {
                   setShowCategoryModal(false);
                   resetCategoryForm();
                 }}
-                className="close-btn"
+                className={styles["close-btn"]}
               >
                 ×
               </button>
             </div>
-            <div className="modal-body">
-              <div className="form-group">
+            <div className={styles["modal-body"]}>
+              <div className={styles["form-group"]}>
                 <label htmlFor="categoryName">Category Name *</label>
                 <input
                   type="text"
@@ -995,7 +995,7 @@ const getQuestionsForSubcategory = (subcategoryId) => {
                   required
                 />
               </div>
-              <div className="form-group">
+              <div className={styles["form-group"]}>
                 <label htmlFor="categoryDescription">Description</label>
                 <textarea
                   id="categoryDescription"
@@ -1006,20 +1006,20 @@ const getQuestionsForSubcategory = (subcategoryId) => {
                 />
               </div>
             </div>
-            <div className="modal-footer">
+            <div className={styles["modal-footer"]}>
               <button 
                 onClick={() => {
                   setShowCategoryModal(false);
                   resetCategoryForm();
                 }}
-                className="cancel-btn"
+                className={styles["cancel-btn"]}
               >
                 Cancel
               </button>
               <button 
                 onClick={editingCategory ? updateCategory : addCategory}
                 disabled={saving || !newCategory.name.trim()}
-                className="save-btn primary"
+                className={`${styles["save-btn"]} ${styles["primary"]}`}
               >
                 {saving ? 'Saving...' : editingCategory ? 'Update Category' : 'Add Category'}
               </button>
@@ -1030,22 +1030,22 @@ const getQuestionsForSubcategory = (subcategoryId) => {
 
       {/* Subcategory Modal */}
       {showSubcategoryModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
+        <div className={styles["modal-overlay"]}>
+          <div className={styles["modal"]}>
+            <div className={styles["modal-header"]}>
               <h3>{editingSubcategory ? 'Edit Subcategory' : 'Add New Subcategory'}</h3>
               <button 
                 onClick={() => {
                   setShowSubcategoryModal(false);
                   resetSubcategoryForm();
                 }}
-                className="close-btn"
+                className={styles["close-btn"]}
               >
                 ×
               </button>
             </div>
-            <div className="modal-body">
-              <div className="form-group">
+            <div className={styles["modal-body"]}>
+              <div className={styles["form-group"]}>
                 <label htmlFor="subcategoryCategory">Category *</label>
                 <select
                   id="subcategoryCategory"
@@ -1062,7 +1062,7 @@ const getQuestionsForSubcategory = (subcategoryId) => {
                   ))}
                 </select>
               </div>
-              <div className="form-group">
+              <div className={styles["form-group"]}>
                 <label htmlFor="subcategoryName">Subcategory Name *</label>
                 <input
                   type="text"
@@ -1073,7 +1073,7 @@ const getQuestionsForSubcategory = (subcategoryId) => {
                   required
                 />
               </div>
-              <div className="form-group">
+              <div className={styles["form-group"]}>
                 <label htmlFor="subcategoryDescription">Description</label>
                 <textarea
                   id="subcategoryDescription"
@@ -1084,20 +1084,20 @@ const getQuestionsForSubcategory = (subcategoryId) => {
                 />
               </div>
             </div>
-            <div className="modal-footer">
+            <div className={styles["modal-footer"]}>
               <button 
                 onClick={() => {
                   setShowSubcategoryModal(false);
                   resetSubcategoryForm();
                 }}
-                className="cancel-btn"
+                className={styles["cancel-btn"]}
               >
                 Cancel
               </button>
               <button 
                 onClick={editingSubcategory ? updateSubcategory : addSubcategory}
                 disabled={saving || !newSubcategory.name.trim() || !newSubcategory.categoryId}
-                className="save-btn primary"
+                className={`${styles["save-btn"]} ${styles["primary"]}`}
               >
                 {saving ? 'Saving...' : editingSubcategory ? 'Update Subcategory' : 'Add Subcategory'}
               </button>
@@ -1108,22 +1108,22 @@ const getQuestionsForSubcategory = (subcategoryId) => {
 
       {/* Question Modal */}
       {showQuestionModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
+        <div className={styles["modal-overlay"]}>
+          <div className={styles["modal"]}>
+            <div className={styles["modal-header"]}>
               <h3>{editingQuestion ? 'Edit Question' : 'Add New Question'}</h3>
               <button 
                 onClick={() => {
                   setShowQuestionModal(false);
                   resetQuestionForm();
                 }}
-                className="close-btn"
+                className={styles["close-btn"]}
               >
                 ×
               </button>
             </div>
-            <div className="modal-body">
-              <div className="form-group">
+            <div className={styles["modal-body"]}>
+              <div className={styles["form-group"]}>
                 <label htmlFor="questionCategory">Category *</label>
                 <select
                   id="questionCategory"
@@ -1147,7 +1147,7 @@ const getQuestionsForSubcategory = (subcategoryId) => {
                 </select>
               </div>
               
-              <div className="form-group">
+              <div className={styles["form-group"]}>
                 <label htmlFor="questionSubcategory">Subcategory *</label>
                 <select
                   id="questionSubcategory"
@@ -1174,7 +1174,7 @@ const getQuestionsForSubcategory = (subcategoryId) => {
                 )}
               </div>
 
-              <div className="form-group">
+              <div className={styles["form-group"]}>
                 <label htmlFor="questionText">Question Text *</label>
                 <textarea
                   id="questionText"
@@ -1186,33 +1186,33 @@ const getQuestionsForSubcategory = (subcategoryId) => {
                 />
               </div>
 
-              <div className="fixed-options-preview">
+              <div className={styles["fixed-options-preview"]}>
                 <h4>Fixed Options for All Questions:</h4>
-                <div className="options-preview">
+                <div className={styles["options-preview"]}>
                   {fixedOptions.map((option, index) => (
-                    <div key={index} className="option-preview">
-                      <span className="option-label">{option.label}.</span>
-                      <span className="option-text">{option.text}</span>
-                      <span className="option-marks">({option.marks} marks)</span>
+                    <div key={index} className={styles["option-preview"]}>
+                      <span className={styles["option-label"]}>{option.label}.</span>
+                      <span className={styles["option-text"]}>{option.text}</span>
+                      <span className={styles["option-marks"]}>({option.marks} marks)</span>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-            <div className="modal-footer">
+            <div className={styles["modal-footer"]}>
               <button 
                 onClick={() => {
                   setShowQuestionModal(false);
                   resetQuestionForm();
                 }}
-                className="cancel-btn"
+                className={styles["cancel-btn"]}
               >
                 Cancel
               </button>
               <button 
                 onClick={editingQuestion ? updateQuestion : addQuestion}
                 disabled={saving || !newQuestion.questionText.trim() || !newQuestion.categoryId || !newQuestion.subcategoryId}
-                className="save-btn primary"
+                className={`${styles["save-btn"]} ${styles["primary"]}`}
               >
                 {saving ? 'Saving...' : editingQuestion ? 'Update Question' : 'Add Question'}
               </button>
@@ -1223,40 +1223,40 @@ const getQuestionsForSubcategory = (subcategoryId) => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="modal-overlay">
-          <div className="modal delete-modal">
-            <div className="modal-header">
+        <div className={styles["modal-overlay"]}>
+          <div className={`${styles["modal"]} ${styles["delete-modal"]}`}>
+            <div className={styles["modal-header"]}>
               <h3>Confirm Delete</h3>
               <button 
                 onClick={() => setShowDeleteConfirm(null)}
-                className="close-btn"
+                className={styles["close-btn"]}
               >
                 ×
               </button>
             </div>
-            <div className="modal-body">
-              <div className="delete-warning">
-                <div className="warning-icon">⚠️</div>
+            <div className={styles["modal-body"]}>
+              <div className={styles["delete-warning"]}>
+                <div className={styles["warning-icon"]}>⚠️</div>
                 <p>
                   Are you sure you want to delete this {showDeleteConfirm.type}?
                   {showDeleteConfirm.type === 'category' && (
-                    <span className="warning-text">
+                    <span className={styles["warning-text"]}>
                       <br />This will also delete all subcategories and questions in this category.
                     </span>
                   )}
                   {showDeleteConfirm.type === 'subcategory' && (
-                    <span className="warning-text">
+                    <span className={styles["warning-text"]}>
                       <br />This will also delete all questions in this subcategory.
                     </span>
                   )}
                 </p>
-                <p className="delete-confirmation">This action cannot be undone.</p>
+                <p className={styles["delete-confirmation"]}>This action cannot be undone.</p>
               </div>
             </div>
-            <div className="modal-footer">
+            <div className={styles["modal-footer"]}>
               <button 
                 onClick={() => setShowDeleteConfirm(null)}
-                className="cancel-btn"
+                className={styles["cancel-btn"]}
               >
                 Cancel
               </button>
@@ -1271,7 +1271,7 @@ const getQuestionsForSubcategory = (subcategoryId) => {
                   }
                 }}
                 disabled={saving}
-                className="delete-btn primary"
+                className={`${styles["delete-btn"]} ${styles["primary"]}`}
               >
                 {saving ? 'Deleting...' : 'Delete'}
               </button>

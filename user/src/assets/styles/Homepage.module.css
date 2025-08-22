@@ -912,22 +912,27 @@ body {
 }
 
 .info-list li {
-  padding: 15px 0;
+  padding: 15px 20px;
   border-bottom: 1px solid #e2e8f0;
   color: #374151;
   font-size: 1rem;
   line-height: 1.5;
   position: relative;
-  padding-left: 25px;
+  background: #EFF6FF;
+  border-left: 4px solid var(--blue);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .info-list li::before {
   content: "✓";
-  position: absolute;
-  left: 0;
-  color: #16A34A; /* Green-600 for success status */
+  color: #16A34A;
   font-weight: bold;
   font-size: 1.1rem;
+  margin-right: 10px;
 }
 
 .info-list li:last-child {
