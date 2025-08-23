@@ -1,853 +1,83 @@
+/* ManageTests.module.css - Matching Homepage Theme */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+/* CSS Variables - Matching Homepage Palette */
 :root {
-  /* Color Palette - Trust & Professionalism Theme */
-  /* Primary colors evoke trust, reliability, and competence */
-  --primary-cyan: #16EFF7;        /* Energizing accent - draws attention to CTAs */
-  --primary-blue: #0199D5;        /* Professional trust - primary actions */
-  --secondary-blue: #217BCE;      /* Corporate stability - secondary elements */
-  --pure-white: #FFFFFF;          /* Clean, professional backgrounds */
-  --off-white: #FEFEFE;           /* Subtle variation for depth */
-  
-  /* Extended palette for semantic meaning */
-  --success-green: #10B981;       /* Positive reinforcement */
-  --warning-orange: #F59E0B;      /* Attention without alarm */
-  --error-red: #EF4444;           /* Clear error indication */
-  --neutral-gray-50: #F9FAFB;     /* Light backgrounds */
-  --neutral-gray-100: #F3F4F6;    /* Card backgrounds */
-  --neutral-gray-200: #E5E7EB;    /* Borders, dividers */
-  --neutral-gray-400: #9CA3AF;    /* Placeholder text */
-  --neutral-gray-600: #4B5563;    /* Secondary text */
-  --neutral-gray-800: #1F2937;    /* Primary text */
-  --neutral-gray-900: #111827;    /* High emphasis text */
-  
-  /* Typography - Modern, professional font stack */
-  --font-family-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  --font-family-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
-  
-  /* Font weights for clear hierarchy */
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
-  
-  /* Spacing scale based on 8px grid system */
-  --spacing-xs: 0.25rem;   /* 4px */
-  --spacing-sm: 0.5rem;    /* 8px */
-  --spacing-md: 1rem;      /* 16px */
-  --spacing-lg: 1.5rem;    /* 24px */
-  --spacing-xl: 2rem;      /* 32px */
-  --spacing-2xl: 3rem;     /* 48px */
-  --spacing-3xl: 4rem;     /* 64px */
-  
-  /* Border radius for modern, friendly feel */
-  --border-radius-sm: 0.375rem;   /* 6px */
-  --border-radius-md: 0.5rem;     /* 8px */
-  --border-radius-lg: 0.75rem;    /* 12px */
-  --border-radius-xl: 1rem;       /* 16px */
-  
-  /* Shadows for depth and hierarchy */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  
-  /* Transitions for smooth interactions */
-  --transition-fast: 150ms ease-in-out;
-  --transition-normal: 250ms ease-in-out;
-  --transition-slow: 350ms ease-in-out;
+  --cyan: #16EFF7;
+  --white: #FFFFFF;
+  --blue: #0199D5;
+  --navy: #217BCE;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #374151;
+  --gray-700: #111827;
+  --green-500: #16A34A;
+  --green-50: #ECFEFF;
+  --blue-50: #EFF6FF;
+  --blue-600: #2563EB;
+  --red-500: #dc2626;
+  --red-50: #fef2f2;
+  --red-100: #fecaca;
+  --yellow-400: #FBBF24;
+  --yellow-50: #fffbeb;
+  --orange-400: #FB923C;
 }
 
-/* Reset and base styles */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* Body setup with professional color scheme */
 body {
-  font-family: var(--font-family-primary);
-  font-size: 16px;
-  line-height: 1.6; /* Improved readability */
-  color: var(--neutral-gray-800);
-  background-color: var(--neutral-gray-50);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-family: 'Poppins', 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  color: var(--gray-700);
+  background: linear-gradient(135deg, var(--cyan) 0%, var(--blue) 50%, var(--navy) 100%);
+  min-height: 100vh;
 }
 
-/* Main Container - Creates focused workspace */
+/* Container */
 .ManageTests-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--neutral-gray-50) 0%, var(--pure-white) 100%);
-  padding: 0;
-}
-
-/* Header Section - Establishes authority and clear navigation */
-.ManageTests-page-header {
-  background: var(--pure-white);
-  border-bottom: 2px solid var(--primary-blue); /* Reinforces brand trust */
-  box-shadow: var(--shadow-sm);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  padding: var(--spacing-lg) var(--spacing-xl);
-}
-
-.ManageTests-header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.ManageTests-header-left {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-lg);
-}
-
-/* Page Title - Clear hierarchy and professional presence */
-.ManageTests-page-title {
-  font-size: 2rem;
-  font-weight: var(--font-weight-bold);
-  color: var(--neutral-gray-900);
-  margin: 0;
-  letter-spacing: -0.025em; /* Tighter spacing for headings */
-}
-
-/* Logout Button - Subtle but accessible */
-.ManageTests-back-button {
-  background: transparent;
-  border: 2px solid var(--neutral-gray-200);
-  color: var(--neutral-gray-600);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--border-radius-md);
-  font-family: var(--font-family-primary);
-  font-weight: var(--font-weight-medium);
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.ManageTests-back-button:hover {
-  border-color: var(--secondary-blue);
-  color: var(--secondary-blue);
-  background: var(--neutral-gray-50);
-}
-
-.ManageTests-back-button:focus {
-  outline: 2px solid var(--primary-cyan);
-  outline-offset: 2px;
-}
-
-/* Create Test Button - Primary CTA with trust-building color */
-.ManageTests-create-test-btn {
-  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
-  border: none;
-  color: var(--pure-white);
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-radius: var(--border-radius-md);
-  font-family: var(--font-family-primary);
-  font-weight: var(--font-weight-semibold);
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all var(--transition-normal);
-  box-shadow: var(--shadow-md);
+  background: linear-gradient(135deg, var(--cyan) 0%, var(--blue) 50%, var(--navy) 100%);
+  padding: 20px;
   position: relative;
-  overflow: hidden;
 }
 
-.ManageTests-create-test-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  transition: left var(--transition-slow);
-}
-
-.ManageTests-create-test-btn:hover::before {
-  left: 100%;
-}
-
-.ManageTests-create-test-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-  background: linear-gradient(135deg, var(--secondary-blue) 0%, var(--primary-blue) 100%);
-}
-
-.ManageTests-create-test-btn:focus {
-  outline: 2px solid var(--primary-cyan);
-  outline-offset: 3px;
-}
-
-.ManageTests-create-test-btn:active {
-  transform: translateY(0);
-  box-shadow: var(--shadow-md);
-}
-
-/* Error Message - Clear, non-threatening error communication */
-.ManageTests-error-message {
-  background: linear-gradient(135deg, #FEF2F2 0%, #FECACA 100%);
-  border: 1px solid #FECACA;
-  border-radius: var(--border-radius-md);
-  color: var(--error-red);
-  padding: var(--spacing-md);
-  margin: var(--spacing-lg) var(--spacing-xl);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
-  box-shadow: var(--shadow-sm);
-}
-
-.ManageTests-error-message button {
-  background: none;
-  border: none;
-  color: var(--error-red);
-  font-size: 1.25rem;
-  cursor: pointer;
-  padding: var(--spacing-xs);
-  border-radius: var(--border-radius-sm);
-  transition: background var(--transition-fast);
-}
-
-.ManageTests-error-message button:hover {
-  background: rgba(239, 68, 68, 0.1);
-}
-
-/* Filters Section - Intuitive search and filter controls */
-.ManageTests-filters-section {
-  display: flex;
-  gap: var(--spacing-lg);
-  align-items: center;
-  padding: var(--spacing-xl);
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-/* Search Bar - Prominent but not overwhelming */
-.ManageTests-search-bar {
-  flex: 1;
-  max-width: 400px;
-}
-
-.ManageTests-search-input {
-  width: 100%;
-  padding: var(--spacing-md);
-  border: 2px solid var(--neutral-gray-200);
-  border-radius: var(--border-radius-md);
-  font-family: var(--font-family-primary);
-  font-size: 1rem;
-  color: var(--neutral-gray-800);
-  background: var(--pure-white);
-  transition: all var(--transition-fast);
-  box-shadow: var(--shadow-sm);
-}
-
-.ManageTests-search-input::placeholder {
-  color: var(--neutral-gray-400);
-  font-style: italic;
-}
-
-.ManageTests-search-input:focus {
-  outline: none;
-  border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(1, 153, 213, 0.1);
-  background: var(--pure-white);
-}
-
-/* Filter Dropdown - Clean, professional selection */
-.ManageTests-filter-dropdown {
-  min-width: 150px;
-}
-
-.ManageTests-filter-select {
-  width: 100%;
-  padding: var(--spacing-md);
-  border: 2px solid var(--neutral-gray-200);
-  border-radius: var(--border-radius-md);
-  font-family: var(--font-family-primary);
-  font-size: 1rem;
-  color: var(--neutral-gray-800);
-  background: var(--pure-white);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  box-shadow: var(--shadow-sm);
-}
-
-.ManageTests-filter-select:focus {
-  outline: none;
-  border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(1, 153, 213, 0.1);
-}
-
-/* Tests Grid - Card-based layout for easy scanning */
-.ManageTests-tests-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: var(--spacing-xl);
-  padding: 0 var(--spacing-xl) var(--spacing-2xl);
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-/* Individual Test Cards - Professional, scannable design */
-.ManageTests-test-card {
-  background: var(--pure-white);
-  border: 1px solid var(--neutral-gray-200);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-lg);
-  box-shadow: var(--shadow-md);
-  transition: all var(--transition-normal);
-  position: relative;
-  overflow: hidden;
-}
-
-.ManageTests-test-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--primary-cyan) 0%, var(--primary-blue) 50%, var(--secondary-blue) 100%);
-  opacity: 0;
-  transition: opacity var(--transition-normal);
-}
-
-.ManageTests-test-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-xl);
-  border-color: var(--primary-blue);
-}
-
-.ManageTests-test-card:hover::before {
-  opacity: 1;
-}
-
-/* Clickable cards get enhanced hover states */
-.ManageTests-clickable:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-xl);
-  border-color: var(--primary-cyan);
-}
-
-.ManageTests-clickable:hover::before {
-  background: linear-gradient(90deg, var(--primary-cyan) 0%, var(--primary-blue) 100%);
-}
-
-/* Card Header - Clear title hierarchy */
-.ManageTests-test-card-header {
-  margin-bottom: var(--spacing-lg);
-  border-bottom: 1px solid var(--neutral-gray-100);
-  padding-bottom: var(--spacing-md);
-}
-
-.ManageTests-test-title-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-sm);
-}
-
-.ManageTests-test-title {
-  font-size: 1.25rem;
-  font-weight: var(--font-weight-semibold);
-  color: var(--neutral-gray-900);
-  margin: 0;
-  line-height: 1.4;
-  flex: 1;
-}
-
-/* Status Badges - Clear visual status communication */
-.ManageTests-status-badge {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--border-radius-sm);
-  font-size: 0.75rem;
-  font-weight: var(--font-weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-}
-
-.ManageTests-status-draft {
-  background: var(--neutral-gray-100);
-  color: var(--neutral-gray-600);
-  border: 1px solid var(--neutral-gray-200);
-}
-
-.ManageTests-status-published {
-  background: #DBEAFE;
-  color: var(--secondary-blue);
-  border: 1px solid #93C5FD;
-}
-
-.ManageTests-status-active {
-  background: #D1FAE5;
-  color: var(--success-green);
-  border: 1px solid #6EE7B7;
-}
-
-.ManageTests-status-completed {
-  background: #F3E8FF;
-  color: #7C3AED;
-  border: 1px solid #C4B5FD;
-}
-
-/* Test Code Display - Monospace for technical information */
-.ManageTests-test-code {
-  font-size: 0.875rem;
-  color: var(--neutral-gray-600);
-  margin-top: var(--spacing-xs);
-}
-
-.ManageTests-code-text {
-  font-family: var(--font-family-mono);
-  background: var(--neutral-gray-100);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--border-radius-sm);
-  color: var(--secondary-blue);
-  font-weight: var(--font-weight-medium);
-}
-
-/* Card Body - Organized information display */
-.ManageTests-test-card-body {
-  margin-bottom: var(--spacing-lg);
-}
-
-.ManageTests-test-description {
-  color: var(--neutral-gray-600);
-  margin-bottom: var(--spacing-lg);
-  line-height: 1.6;
-  font-size: 0.9375rem;
-}
-
-/* Test Info Grid - Structured data presentation */
-.ManageTests-test-info {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--spacing-sm) var(--spacing-md);
-  margin-bottom: var(--spacing-lg);
-  padding: var(--spacing-md);
-  background: var(--neutral-gray-50);
-  border-radius: var(--border-radius-md);
-  border: 1px solid var(--neutral-gray-100);
-}
-
-.ManageTests-info-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.875rem;
-}
-.ManageTests-info-label {
-  color: var(--neutral-gray-600);
-  font-weight: var(--font-weight-medium);
-}
-
-.ManageTests-info-value {
-  color: var(--neutral-gray-900);
-  font-weight: var(--font-weight-semibold);
-  font-family: var(--font-family-mono);
-}
-
-/* Category Breakdown - Visual organization of content structure */
-.ManageTests-category-breakdown {
-  margin-bottom: var(--spacing-md);
-}
-
-.ManageTests-breakdown-label {
-  font-size: 0.875rem;
-  font-weight: var(--font-weight-medium);
-  color: var(--neutral-gray-600);
-  margin-bottom: var(--spacing-xs);
-  display: block;
-}
-
-.ManageTests-breakdown-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-xs);
-}
-
-.ManageTests-category-tag {
-  background: var(--primary-blue);
-  color: var(--pure-white);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--border-radius-sm);
-  font-size: 0.75rem;
-  font-weight: var(--font-weight-medium);
-  white-space: nowrap;
-}
-
-.ManageTests-category-tag.ManageTests-more {
-  background: var(--neutral-gray-400);
-  color: var(--pure-white);
-}
-
-/* Test Meta Information */
-.ManageTests-test-meta {
-  margin-bottom: var(--spacing-md);
-}
-
-.ManageTests-created-date {
-  font-size: 0.8125rem;
-  color: var(--neutral-gray-400);
-  font-style: italic;
-}
-
-/* Click Instruction - Helpful user guidance */
-.ManageTests-click-instruction {
-  background: linear-gradient(135deg, var(--primary-cyan), var(--primary-blue));
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-size: 0.8125rem;
-  font-weight: var(--font-weight-medium);
-  text-align: center;
-  padding: var(--spacing-sm);
-  border-radius: var(--border-radius-sm);
-  border: 1px dashed var(--primary-blue);
-  margin-top: var(--spacing-md);
-}
-
-/* Action Buttons Section - Clear call-to-actions */
-.ManageTests-test-card-actions {
-  border-top: 1px solid var(--neutral-gray-100);
-  padding-top: var(--spacing-md);
-}
-
-.ManageTests-action-row {
-  display: flex;
-  gap: var(--spacing-sm);
-  flex-wrap: wrap;
-}
-
-/* Action Button Base Styles */
-.ManageTests-action-btn {
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--border-radius-md);
-  font-family: var(--font-family-primary);
-  font-size: 0.875rem;
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  border: 2px solid transparent;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 80px;
-}
-
-.ManageTests-action-btn:focus {
-  outline: 2px solid var(--primary-cyan);
-  outline-offset: 2px;
-}
-
-/* Edit Button - Secondary action with professional feel */
-.ManageTests-edit-btn {
-  background: var(--neutral-gray-100);
-  color: var(--neutral-gray-700);
-  border-color: var(--neutral-gray-200);
-}
-
-.ManageTests-edit-btn:hover {
-  background: var(--secondary-blue);
-  color: var(--pure-white);
-  border-color: var(--secondary-blue);
-  transform: translateY(-1px);
-}
-
-/* Publish Button - Positive, encouraging action */
-.ManageTests-publish-btn {
-  background: var(--success-green);
-  color: var(--pure-white);
-  border-color: var(--success-green);
-}
-
-.ManageTests-publish-btn:hover {
-  background: #059669;
-  border-color: #059669;
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-/* Unpublish Button - Cautionary but not alarming */
-.ManageTests-unpublish-btn {
-  background: var(--warning-orange);
-  color: var(--pure-white);
-  border-color: var(--warning-orange);
-}
-
-.ManageTests-unpublish-btn:hover {
-  background: #D97706;
-  border-color: #D97706;
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-/* Results Button - Information-seeking action */
-.ManageTests-results-btn {
-  background: var(--primary-blue);
-  color: var(--pure-white);
-  border-color: var(--primary-blue);
-}
-
-.ManageTests-results-btn:hover {
-  background: var(--secondary-blue);
-  border-color: var(--secondary-blue);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-/* Delete Button - Clear but not aggressive warning */
-.ManageTests-delete-btn {
-  background: transparent;
-  color: var(--error-red);
-  border-color: var(--error-red);
-}
-
-.ManageTests-delete-btn:hover {
-  background: var(--error-red);
-  color: var(--pure-white);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-/* No Tests State - Encouraging empty state */
-.ManageTests-no-tests {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: var(--spacing-3xl);
-  background: var(--pure-white);
-  border-radius: var(--border-radius-lg);
-  border: 2px dashed var(--neutral-gray-200);
-}
-
-.ManageTests-no-tests-icon {
-  font-size: 3rem;
-  margin-bottom: var(--spacing-lg);
-  opacity: 0.7;
-}
-
-.ManageTests-no-tests h3 {
-  font-size: 1.5rem;
-  color: var(--neutral-gray-700);
-  margin-bottom: var(--spacing-md);
-  font-weight: var(--font-weight-semibold);
-}
-
-.ManageTests-no-tests p {
-  color: var(--neutral-gray-500);
-  font-size: 1rem;
-}
-
-/* Pagination - Clean navigation */
-.ManageTests-pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: var(--spacing-lg);
-  padding: var(--spacing-xl);
-  margin-top: var(--spacing-xl);
-}
-
-.ManageTests-pagination-btn {
-  padding: var(--spacing-sm) var(--spacing-lg);
-  background: var(--pure-white);
-  border: 2px solid var(--neutral-gray-200);
-  border-radius: var(--border-radius-md);
-  color: var(--neutral-gray-700);
-  font-family: var(--font-family-primary);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.ManageTests-pagination-btn:not(:disabled):hover {
-  border-color: var(--primary-blue);
-  color: var(--primary-blue);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-.ManageTests-pagination-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.ManageTests-pagination-info {
-  font-weight: var(--font-weight-medium);
-  color: var(--neutral-gray-600);
-  font-family: var(--font-family-mono);
-}
-
-/* Modal System - Professional dialog design */
-.ManageTests-modal-overlay {
+/* Loading Container */
+.ManageTests-loading-container {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(17, 24, 39, 0.7);
-  backdrop-filter: blur(4px);
+  width: 100vw;
+  height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  padding: var(--spacing-lg);
-  animation: fadeIn 200ms ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.ManageTests-modal {
-  background: var(--pure-white);
-  border-radius: var(--border-radius-xl);
-  box-shadow: var(--shadow-xl);
-  max-width: 500px;
-  width: 100%;
-  animation: slideIn 250ms ease-out;
-  overflow: hidden;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.ManageTests-modal-header {
-  padding: var(--spacing-lg);
-  border-bottom: 1px solid var(--neutral-gray-200);
-  background: var(--neutral-gray-50);
-}
-
-.ManageTests-modal-header h3 {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: var(--font-weight-semibold);
-  color: var(--neutral-gray-900);
-}
-
-.ManageTests-modal-body {
-  padding: var(--spacing-lg);
-  line-height: 1.6;
-}
-
-.ManageTests-modal-body p {
-  margin-bottom: var(--spacing-md);
-  color: var(--neutral-gray-700);
-}
-
-.ManageTests-modal-body p:last-child {
-  margin-bottom: 0;
-}
-
-/* Modal specific text styles */
-.ManageTests-warning-text {
-  color: var(--error-red);
-  font-weight: var(--font-weight-medium);
-  background: #FEF2F2;
-  padding: var(--spacing-sm);
-  border-radius: var(--border-radius-sm);
-  border-left: 4px solid var(--error-red);
-}
-
-.ManageTests-info-text {
-  color: var(--primary-blue);
-  font-weight: var(--font-weight-medium);
-  background: #EFF6FF;
-  padding: var(--spacing-sm);
-  border-radius: var(--border-radius-sm);
-  border-left: 4px solid var(--primary-blue);
-}
-
-.ManageTests-modal-actions {
-  padding: var(--spacing-lg);
-  border-top: 1px solid var(--neutral-gray-200);
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-md);
-  background: var(--neutral-gray-50);
-}
-
-/* Modal Action Buttons */
-.ManageTests-modal-btn {
-  padding: var(--spacing-sm) var(--spacing-lg);
-  border-radius: var(--border-radius-md);
-  font-family: var(--font-family-primary);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  border: 2px solid transparent;
-  min-width: 100px;
-}
-
-.ManageTests-modal-btn:focus {
-  outline: 2px solid var(--primary-cyan);
-  outline-offset: 2px;
-}
-
-.ManageTests-secondary {
-  background: var(--pure-white);
-  color: var(--neutral-gray-700);
-  border-color: var(--neutral-gray-300);
-}
-
-.ManageTests-secondary:hover {
-  background: var(--neutral-gray-100);
-  border-color: var(--neutral-gray-400);
-}
-
-.ManageTests-primary {
-  background: var(--primary-blue);
-  color: var(--pure-white);
-  border-color: var(--primary-blue);
-}
-
-.ManageTests-primary:hover {
-  background: var(--secondary-blue);
-  border-color: var(--secondary-blue);
-  box-shadow: var(--shadow-md);
-}
-
-/* Loading States - Professional loading indication */
-.ManageTests-loading-container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--neutral-gray-50);
+  background: linear-gradient(135deg, var(--cyan) 0%, var(--blue) 50%, var(--navy) 100%);
+  z-index: 9999;
 }
 
 .ManageTests-loading-spinner {
   text-align: center;
+  color: var(--white);
 }
 
 .ManageTests-spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid var(--neutral-gray-200);
-  border-top: 4px solid var(--primary-blue);
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid var(--white);
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto var(--spacing-lg);
+  margin: 0 auto 20px;
 }
 
 @keyframes spin {
@@ -856,250 +86,674 @@ body {
 }
 
 .ManageTests-loading-spinner p {
-  color: var(--neutral-gray-600);
-  font-weight: var(--font-weight-medium);
-  font-size: 1.125rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--white);
 }
 
-/* Responsive Design - Mobile-first approach */
-@media (max-width: 768px) {
-  /* Header adjustments for mobile */
-  .ManageTests-page-header {
-    padding: var(--spacing-md);
-  }
-  
-  .ManageTests-header-content {
-    flex-direction: column;
-    gap: var(--spacing-md);
-    align-items: stretch;
-  }
-  
-  .ManageTests-header-left {
-    justify-content: space-between;
-    width: 100%;
-  }
-  
-  .ManageTests-page-title {
-    font-size: 1.5rem;
-  }
-  
-  .ManageTests-create-test-btn {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  /* Filters stack on mobile */
-  .ManageTests-filters-section {
-    flex-direction: column;
-    gap: var(--spacing-md);
-    padding: var(--spacing-md);
-  }
-  
-  .ManageTests-search-bar {
-    max-width: none;
-  }
-  
-  .ManageTests-filter-dropdown {
-    min-width: auto;
-  }
-  
-  /* Grid adjustments for mobile */
-  .ManageTests-tests-grid {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-lg);
-    padding: 0 var(--spacing-md) var(--spacing-xl);
-  }
-  
-  /* Card adjustments for mobile */
-  .ManageTests-test-card {
-    padding: var(--spacing-md);
-  }
-  
-  .ManageTests-test-title-section {
-    flex-direction: column;
-    gap: var(--spacing-sm);
-    align-items: flex-start;
-  }
-  
-  .ManageTests-test-info {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-sm);
-  }
-  
-  .ManageTests-action-row {
-    flex-wrap: wrap;
-    gap: var(--spacing-xs);
-  }
-  
-  .ManageTests-action-btn {
-    flex: 1;
-    min-width: calc(50% - var(--spacing-xs));
-  }
-  
-  /* Modal adjustments for mobile */
-  .ManageTests-modal-overlay {
-    padding: var(--spacing-md);
-  }
-  
-  .ManageTests-modal-actions {
-    flex-direction: column;
-    gap: var(--spacing-sm);
-  }
-  
-  .ManageTests-modal-btn {
-    width: 100%;
-  }
-  
-  /* Pagination adjustments for mobile */
-  .ManageTests-pagination {
-    flex-direction: column;
-    gap: var(--spacing-md);
-  }
-  
-  .ManageTests-pagination-info {
-    order: -1;
-  }
+/* Page Header */
+.ManageTests-page-header {
+  background: var(--white);
+  border-radius: 20px;
+  padding: 25px 30px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--gray-200);
 }
 
-@media (max-width: 480px) {
-  /* Extra small screen adjustments */
-  .ManageTests-test-card {
-    padding: var(--spacing-sm);
-  }
-  
-  .ManageTests-test-title {
-    font-size: 1.125rem;
-  }
-  
-  .ManageTests-action-btn {
-    padding: var(--spacing-xs) var(--spacing-sm);
-    font-size: 0.8125rem;
-  }
+.ManageTests-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
-/* High contrast mode support - Accessibility enhancement */
-@media (prefers-contrast: high) {
-  .ManageTests-test-card {
-    border-width: 2px;
-    border-color: var(--neutral-gray-400);
-  }
-  
-  .ManageTests-status-badge {
-    border-width: 2px;
-  }
-  
-  .ManageTests-action-btn {
-    border-width: 3px;
-  }
+.ManageTests-header-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 
-/* Reduced motion support - Respect user preferences */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-  
-  .ManageTests-test-card:hover {
-    transform: none;
-  }
-  
-  .ManageTests-action-btn:hover {
-    transform: none;
-  }
-  
-  .ManageTests-create-test-btn:hover {
-    transform: none;
-  }
+.ManageTests-page-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--gray-700);
+  letter-spacing: -0.02em;
+  margin: 0;
 }
 
-/* Dark mode support - Future-proofing */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --pure-white: #1F2937;
-    --off-white: #374151;
-    --neutral-gray-50: #111827;
-    --neutral-gray-100: #1F2937;
-    --neutral-gray-200: #374151;
-    --neutral-gray-400: #9CA3AF;
-    --neutral-gray-600: #D1D5DB;
-    --neutral-gray-800: #F3F4F6;
-    --neutral-gray-900: #F9FAFB;
-  }
-  
-  .ManageTests-container {
-    background: linear-gradient(135deg, var(--neutral-gray-50) 0%, var(--neutral-gray-100) 100%);
-  }
-  
-  .ManageTests-test-card {
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-  }
-  
-  .ManageTests-modal-overlay {
-    background: rgba(0, 0, 0, 0.8);
-  }
+.ManageTests-back-button {
+  background: linear-gradient(135deg, var(--red-500), #b91c1c);
+  color: var(--white);
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
 }
 
-/* Print styles - Professional document printing */
-@media print {
-  .ManageTests-page-header,
-  .ManageTests-filters-section,
-  .ManageTests-pagination,
-  .ManageTests-modal-overlay,
-  .ManageTests-test-card-actions {
-    display: none !important;
-  }
-  
-  .ManageTests-container {
-    background: white !important;
-  }
-  
-  .ManageTests-test-card {
-    border: 1px solid #000 !important;
-    box-shadow: none !important;
-    page-break-inside: avoid;
-    margin-bottom: var(--spacing-lg) !important;
-  }
-  
-  .ManageTests-tests-grid {
-    grid-template-columns: 1fr !important;
-    gap: var(--spacing-lg) !important;
-  }
+.ManageTests-back-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+  background: linear-gradient(135deg, #b91c1c, #991b1b);
 }
 
-/* Focus management for better accessibility */
-.ManageTests-container:focus-within {
-  /* Enhanced focus states when any child has focus */
+.ManageTests-create-test-btn {
+  background: linear-gradient(135deg, var(--cyan) 0%, var(--blue) 50%, var(--navy) 100%);
+  color: var(--white);
+  border: none;
+  padding: 15px 25px;
+  border-radius: 15px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(1, 153, 213, 0.3);
 }
 
-/* Utility classes for dynamic states */
-.ManageTests-hidden {
-  display: none !important;
+.ManageTests-create-test-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(1, 153, 213, 0.4);
 }
 
-.ManageTests-visually-hidden {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  padding: 0 !important;
-  margin: -1px !important;
-  overflow: hidden !important;
-  clip: rect(0, 0, 0, 0) !important;
-  white-space: nowrap !important;
-  border: 0 !important;
+/* Error Message */
+.ManageTests-error-message {
+  background: var(--red-50);
+  border: 1px solid var(--red-100);
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  color: var(--red-500);
+  box-shadow: 0 2px 10px rgba(220, 38, 38, 0.1);
 }
 
-/* Animation for card entrance */
+.ManageTests-error-message p {
+  margin: 0;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.ManageTests-error-message button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--red-500);
+  cursor: pointer;
+  padding: 0 5px;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ManageTests-error-message button:hover {
+  background: rgba(220, 38, 38, 0.1);
+}
+
+/* Filters Section */
+.ManageTests-filters-section {
+  background: var(--white);
+  border-radius: 20px;
+  padding: 25px 30px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--gray-200);
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ManageTests-search-bar {
+  flex: 1;
+  min-width: 300px;
+}
+
+.ManageTests-search-input {
+  width: 100%;
+  padding: 15px 20px;
+  border: 2px solid var(--gray-200);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-family: 'Poppins', sans-serif;
+  color: var(--gray-700);
+  background: var(--white);
+  transition: all 0.3s ease;
+}
+
+.ManageTests-search-input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(1, 153, 213, 0.1);
+}
+
+.ManageTests-search-input::placeholder {
+  color: var(--gray-400);
+}
+
+.ManageTests-filter-dropdown {
+  min-width: 200px;
+}
+
+.ManageTests-filter-select {
+  width: 100%;
+  padding: 15px 20px;
+  border: 2px solid var(--gray-200);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-family: 'Poppins', sans-serif;
+  color: var(--gray-700);
+  background: var(--white);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.ManageTests-filter-select:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(1, 153, 213, 0.1);
+}
+
+/* Tests Grid */
+.ManageTests-tests-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 25px;
+  margin-bottom: 30px;
+}
+
+.ManageTests-no-tests {
+  grid-column: 1 / -1;
+  text-align: center;
+  background: var(--white);
+  border-radius: 20px;
+  padding: 60px 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 2px dashed var(--gray-300);
+}
+
+.ManageTests-no-tests-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  color: var(--blue-600);
+}
+
+.ManageTests-no-tests h3 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: 15px;
+}
+
+.ManageTests-no-tests p {
+  font-size: 1.1rem;
+  color: var(--gray-500);
+  margin: 0;
+}
+
+/* Test Cards */
 .ManageTests-test-card {
-  animation: cardFadeIn 400ms ease-out;
-  animation-fill-mode: both;
+  background: var(--white);
+  border-radius: 20px;
+  padding: 25px;
+  border: 2px solid var(--gray-200);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
-@keyframes cardFadeIn {
+.ManageTests-test-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(1, 153, 213, 0.2);
+  border-color: var(--blue);
+}
+
+.ManageTests-clickable {
+  cursor: pointer;
+}
+
+.ManageTests-test-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--cyan), var(--blue), var(--navy));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.ManageTests-test-card:hover::before {
+  opacity: 1;
+}
+
+/* Test Card Header */
+.ManageTests-test-card-header {
+  margin-bottom: 20px;
+}
+
+.ManageTests-test-title-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+  gap: 15px;
+}
+
+.ManageTests-test-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--gray-700);
+  margin: 0;
+  line-height: 1.3;
+  flex: 1;
+}
+
+.ManageTests-status-badge {
+  padding: 8px 16px;
+  border-radius: 25px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.ManageTests-status-draft {
+  background: var(--gray-100);
+  color: var(--gray-600);
+}
+
+.ManageTests-status-published {
+  background: var(--blue-50);
+  color: var(--blue-600);
+}
+
+.ManageTests-status-active {
+  background: var(--green-50);
+  color: var(--green-500);
+}
+
+.ManageTests-status-completed {
+  background: var(--gray-100);
+  color: var(--gray-500);
+}
+
+.ManageTests-test-code {
+  background: var(--blue-50);
+  color: var(--blue-600);
+  padding: 8px 15px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: 'Poppins', monospace;
+}
+
+.ManageTests-code-text {
+  font-weight: 700;
+}
+
+/* Test Card Body */
+.ManageTests-test-card-body {
+  margin-bottom: 20px;
+}
+
+.ManageTests-test-description {
+  color: var(--gray-600);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.ManageTests-test-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.ManageTests-info-item {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  background: var(--gray-50);
+  border-radius: 10px;
+  border-left: 3px solid var(--blue);
+}
+
+.ManageTests-info-label {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.ManageTests-info-value {
+  font-size: 1rem;
+  color: var(--gray-700);
+  font-weight: 600;
+}
+
+.ManageTests-category-breakdown {
+  margin-bottom: 15px;
+}
+
+.ManageTests-breakdown-label {
+  font-size: 0.9rem;
+  color: var(--gray-500);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.ManageTests-breakdown-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ManageTests-category-tag {
+  background: var(--blue-50);
+  color: var(--blue-600);
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.ManageTests-category-tag.ManageTests-more {
+  background: var(--gray-100);
+  color: var(--gray-600);
+}
+
+.ManageTests-test-meta {
+  margin-bottom: 10px;
+}
+
+.ManageTests-created-date {
+  font-size: 0.9rem;
+  color: var(--gray-500);
+  font-weight: 500;
+}
+
+.ManageTests-click-instruction {
+  background: var(--yellow-50);
+  border: 1px solid var(--yellow-400);
+  border-radius: 10px;
+  padding: 10px 15px;
+  margin-top: 15px;
+}
+
+.ManageTests-click-instruction small {
+  color: #d97706;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+/* Test Card Actions */
+.ManageTests-test-card-actions {
+  border-top: 1px solid var(--gray-200);
+  padding-top: 20px;
+}
+
+.ManageTests-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ManageTests-action-btn {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+  min-width: 80px;
+}
+
+.ManageTests-edit-btn {
+  background: var(--blue-50);
+  color: var(--blue-600);
+  border: 1px solid var(--blue-600);
+}
+
+.ManageTests-edit-btn:hover {
+  background: var(--blue-600);
+  color: var(--white);
+  transform: translateY(-2px);
+}
+
+.ManageTests-publish-btn {
+  background: var(--green-50);
+  color: var(--green-500);
+  border: 1px solid var(--green-500);
+}
+
+.ManageTests-publish-btn:hover {
+  background: var(--green-500);
+  color: var(--white);
+  transform: translateY(-2px);
+}
+
+.ManageTests-unpublish-btn {
+  background: var(--yellow-50);
+  color: #d97706;
+  border: 1px solid #d97706;
+}
+
+.ManageTests-unpublish-btn:hover {
+  background: #d97706;
+  color: var(--white);
+  transform: translateY(-2px);
+}
+
+.ManageTests-results-btn {
+  background: var(--blue-50);
+  color: var(--blue-600);
+  border: 1px solid var(--blue-600);
+}
+
+.ManageTests-results-btn:hover {
+  background: var(--blue-600);
+  color: var(--white);
+  transform: translateY(-2px);
+}
+
+.ManageTests-delete-btn {
+  background: var(--red-50);
+  color: var(--red-500);
+  border: 1px solid var(--red-500);
+}
+
+.ManageTests-delete-btn:hover {
+  background: var(--red-500);
+  color: var(--white);
+  transform: translateY(-2px);
+}
+
+/* Pagination */
+.ManageTests-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  background: var(--white);
+  border-radius: 15px;
+  padding: 20px 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--gray-200);
+  margin-bottom: 30px;
+}
+
+.ManageTests-pagination-btn {
+  background: var(--blue-50);
+  color: var(--blue-600);
+  border: 1px solid var(--blue-600);
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.ManageTests-pagination-btn:hover:not(:disabled) {
+  background: var(--blue-600);
+  color: var(--white);
+  transform: translateY(-2px);
+}
+
+.ManageTests-pagination-btn:disabled {
+  background: var(--gray-100);
+  color: var(--gray-400);
+  border-color: var(--gray-300);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ManageTests-pagination-info {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+/* Modal Overlay */
+.ManageTests-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+.ManageTests-modal {
+  background: var(--white);
+  border-radius: 20px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(-50px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ManageTests-modal-header {
+  padding: 25px 30px 15px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.ManageTests-modal-header h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--gray-700);
+  margin: 0;
+}
+
+.ManageTests-modal-body {
+  padding: 20px 30px;
+}
+
+.ManageTests-modal-body p {
+  font-size: 1rem;
+  color: var(--gray-600);
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+.ManageTests-modal-body p:last-child {
+  margin-bottom: 0;
+}
+
+.ManageTests-warning-text {
+  color: var(--red-500);
+  font-weight: 600;
+}
+
+.ManageTests-info-text {
+  color: var(--blue-600);
+  font-weight: 500;
+}
+
+.ManageTests-modal-actions {
+  padding: 15px 30px 30px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+}
+
+.ManageTests-modal-btn {
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 100px;
+}
+
+.ManageTests-modal-btn.ManageTests-secondary {
+  background: var(--gray-100);
+  color: var(--gray-600);
+  border: 1px solid var(--gray-300);
+}
+
+.ManageTests-modal-btn.ManageTests-secondary:hover {
+  background: var(--gray-200);
+  transform: translateY(-2px);
+}
+
+.ManageTests-modal-btn.ManageTests-primary {
+  background: linear-gradient(135deg, var(--cyan) 0%, var(--blue) 50%, var(--navy) 100%);
+  color: var(--white);
+  box-shadow: 0 4px 15px rgba(1, 153, 213, 0.3);
+}
+
+.ManageTests-modal-btn.ManageTests-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(1, 153, 213, 0.4);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
   }
   to {
     opacity: 1;
@@ -1107,46 +761,967 @@ body {
   }
 }
 
-/* Staggered animation delay for cards */
-.ManageTests-test-card:nth-child(1) { animation-delay: 0ms; }
-.ManageTests-test-card:nth-child(2) { animation-delay: 50ms; }
-.ManageTests-test-card:nth-child(3) { animation-delay: 100ms; }
-.ManageTests-test-card:nth-child(4) { animation-delay: 150ms; }
-.ManageTests-test-card:nth-child(5) { animation-delay: 200ms; }
-.ManageTests-test-card:nth-child(6) { animation-delay: 250ms; }
+.ManageTests-test-card {
+  animation: fadeInUp 0.6s ease-out;
+}
 
-/* Hover effects for enhanced interactivity */
-.ManageTests-clickable {
+.ManageTests-test-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.ManageTests-test-card:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.ManageTests-test-card:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .ManageTests-container {
+    padding: 15px;
+  }
+
+  .ManageTests-page-header {
+    padding: 20px;
+    border-radius: 15px;
+  }
+
+  .ManageTests-header-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+
+  .ManageTests-header-left {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+
+  .ManageTests-page-title {
+    font-size: 1.8rem;
+    text-align: center;
+  }
+
+  .ManageTests-back-button,
+  .ManageTests-create-test-btn {
+    width: 100%;
+    text-align: center;
+    padding: 15px;
+    font-size: 1rem;
+  }
+
+  .ManageTests-filters-section {
+    padding: 20px;
+    border-radius: 15px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ManageTests-search-bar {
+    min-width: auto;
+  }
+
+  .ManageTests-filter-dropdown {
+    min-width: auto;
+  }
+
+  .ManageTests-search-input,
+  .ManageTests-filter-select {
+    padding: 12px 15px;
+    font-size: 1rem;
+  }
+
+  .ManageTests-tests-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .ManageTests-test-card {
+    padding: 20px;
+    border-radius: 15px;
+  }
+
+  .ManageTests-test-title-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .ManageTests-test-title {
+    font-size: 1.3rem;
+  }
+
+  .ManageTests-test-info {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .ManageTests-info-item {
+    padding: 10px;
+  }
+
+  .ManageTests-info-label {
+    font-size: 0.8rem;
+  }
+
+  .ManageTests-info-value {
+    font-size: 0.9rem;
+  }
+
+  .ManageTests-action-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .ManageTests-action-btn {
+    flex: none;
+    width: 100%;
+    padding: 12px 20px;
+  }
+
+  .ManageTests-pagination {
+    padding: 12px 15px;
+    border-radius: 10px;
+  }
+
+  .ManageTests-pagination-btn {
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+
+  .ManageTests-pagination-info {
+    font-size: 0.9rem;
+  }
+
+  .ManageTests-no-tests {
+    padding: 40px 20px;
+  }
+
+  .ManageTests-no-tests-icon {
+    font-size: 3rem;
+  }
+
+  .ManageTests-no-tests h3 {
+    font-size: 1.5rem;
+  }
+
+  .ManageTests-no-tests p {
+    font-size: 1rem;
+  }
+
+  .ManageTests-modal-overlay {
+    padding: 15px;
+  }
+
+  .ManageTests-modal-header h3 {
+    font-size: 1.2rem;
+  }
+
+  .ManageTests-modal-body {
+    padding: 12px 15px;
+  }
+
+  .ManageTests-modal-body p {
+    font-size: 0.9rem;
+  }
+
+  .ManageTests-modal-actions {
+    padding: 12px 15px 15px;
+  }
+
+  .ManageTests-modal-btn {
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+
+  .ManageTests-error-message {
+    padding: 15px;
+    border-radius: 12px;
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .ManageTests-error-message button {
+    align-self: flex-end;
+    margin-top: 10px;
+  }
+
+  .ManageTests-breakdown-list {
+    justify-content: center;
+  }
+
+  .ManageTests-test-meta {
+    text-align: center;
+  }
+
+  .ManageTests-created-date {
+    font-size: 0.8rem;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 360px) {
+  .ManageTests-page-title {
+    font-size: 1.3rem;
+  }
+
+  .ManageTests-test-title {
+    font-size: 1.1rem;
+  }
+
+  .ManageTests-test-description {
+    font-size: 0.85rem;
+  }
+
+  .ManageTests-info-label {
+    font-size: 0.7rem;
+  }
+
+  .ManageTests-info-value {
+    font-size: 0.8rem;
+  }
+
+  .ManageTests-action-btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+
+  .ManageTests-status-badge {
+    font-size: 0.7rem;
+    padding: 5px 10px;
+  }
+
+  .ManageTests-test-code {
+    font-size: 0.75rem;
+    padding: 5px 8px;
+  }
+}
+
+/* Loading animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.ManageTests-loading-spinner p {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Hover effects for touch devices */
+@media (hover: none) {
+  .ManageTests-test-card:hover {
+    transform: none;
+  }
+
+  .ManageTests-action-btn:hover {
+    transform: none;
+  }
+
+  .ManageTests-pagination-btn:hover:not(:disabled) {
+    transform: none;
+  }
+
+  .ManageTests-back-button:hover {
+    transform: none;
+  }
+
+  .ManageTests-create-test-btn:hover {
+    transform: none;
+  }
+
+  .ManageTests-modal-btn:hover {
+    transform: none;
+  }
+}
+
+/* Focus styles for accessibility */
+.ManageTests-search-input:focus,
+.ManageTests-filter-select:focus {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.ManageTests-action-btn:focus,
+.ManageTests-pagination-btn:focus,
+.ManageTests-back-button:focus,
+.ManageTests-create-test-btn:focus,
+.ManageTests-modal-btn:focus {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .ManageTests-test-card {
+    border-width: 3px;
+  }
+
+  .ManageTests-status-badge,
+  .ManageTests-test-code,
+  .ManageTests-action-btn {
+    border-width: 2px;
+  }
+
+  .ManageTests-info-item {
+    border-left-width: 4px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .ManageTests-test-card,
+  .ManageTests-action-btn,
+  .ManageTests-pagination-btn,
+  .ManageTests-back-button,
+  .ManageTests-create-test-btn,
+  .ManageTests-modal-btn,
+  .ManageTests-modal,
+  .ManageTests-spinner {
+    animation: none;
+    transition: none;
+  }
+
+  .ManageTests-test-card:hover,
+  .ManageTests-action-btn:hover,
+  .ManageTests-pagination-btn:hover:not(:disabled),
+  .ManageTests-back-button:hover,
+  .ManageTests-create-test-btn:hover,
+  .ManageTests-modal-btn:hover {
+    transform: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .ManageTests-container {
+    background: var(--white);
+    padding: 0;
+  }
+
+  .ManageTests-page-header,
+  .ManageTests-filters-section,
+  .ManageTests-pagination,
+  .ManageTests-modal-overlay {
+    display: none;
+  }
+
+  .ManageTests-test-card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid var(--gray-400);
+  }
+
+  .ManageTests-test-card-actions {
+    display: none;
+  }
+}
+
+/* Dark mode support (if needed in future) */
+@media (prefers-color-scheme: dark) {
+  /* This is commented out as per requirement to not use dark theme */
+  /*
+  :root {
+    --white: #1f2937;
+    --gray-700: #f9fafb;
+    --gray-600: #e5e7eb;
+    --gray-500: #9ca3af;
+    --gray-200: #374151;
+    --gray-100: #4b5563;
+    --gray-50: #6b7280;
+  }
+  */
+}
+
+/* Sticky header on scroll (optional enhancement) */
+.ManageTests-page-header.sticky {
+  position: sticky;
+  top: 20px;
+  z-index: 100;
+}
+
+/* Custom scrollbar */
+.ManageTests-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.ManageTests-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.ManageTests-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.ManageTests-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Tooltip styles (if needed) */
+.ManageTests-tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.ManageTests-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--gray-700);
+  color: var(--white);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s;
+  z-index: 1000;
+}
+
+.ManageTests-tooltip:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Badge animations */
+.ManageTests-status-badge {
+  animation: badgeGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes badgeGlow {
+  0% {
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  }
+  100% {
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* Card shimmer effect on hover */
+.ManageTests-test-card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 70%
+  );
+  transform: rotate(45deg);
+  transition: all 0.6s;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ManageTests-test-card:hover::after {
+  opacity: 1;
+  animation: shimmer 1.5s ease-in-out;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+/* Button ripple effect */
+.ManageTests-action-btn {
   position: relative;
   overflow: hidden;
 }
 
-.ManageTests-clickable::after {
+.ManageTests-action-btn::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(22, 239, 247, 0.1), transparent);
-  transition: left var(--transition-slow);
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
 }
 
-.ManageTests-clickable:hover::after {
-  left: 100%;
+.ManageTests-action-btn:active::before {
+  width: 300px;
+  height: 300px;
 }
 
-/* Enhanced focus indicators for better accessibility */
-.ManageTests-test-card:focus-within {
-  outline: 3px solid var(--primary-cyan);
+/* Enhanced floating animation for create button */
+.ManageTests-create-test-btn {
+  animation: floatButton 3s ease-in-out infinite;
+}
+
+@keyframes floatButton {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+/* Card stacking effect */
+.ManageTests-test-card {
+  position: relative;
+  z-index: 1;
+}
+
+.ManageTests-test-card:hover {
+  z-index: 10;
+}
+
+/* Enhanced search input animation */
+.ManageTests-search-input:focus {
+  transform: scale(1.02);
+}
+
+/* Loading skeleton styles */
+.ManageTests-skeleton {
+  background: linear-gradient(90deg, 
+    var(--gray-100) 25%, 
+    var(--gray-50) 50%, 
+    var(--gray-100) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonLoading 1.5s infinite;
+}
+
+@keyframes skeletonLoading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Notification styles */
+.ManageTests-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--white);
+  border: 1px solid var(--green-500);
+  border-left: 4px solid var(--green-500);
+  border-radius: 12px;
+  padding: 15px 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 10001;
+  animation: slideInRight 0.4s ease-out;
+  max-width: 400px;
+}
+
+.ManageTests-notification.error {
+  border-color: var(--red-500);
+  border-left-color: var(--red-500);
+}
+
+.ManageTests-notification.warning {
+  border-color: var(--yellow-400);
+  border-left-color: var(--yellow-400);
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Enhanced modal animations */
+.ManageTests-modal {
+  animation: modalBounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes modalBounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-50px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) translateY(0);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Gradient text effects */
+.ManageTests-gradient-text {
+  background: linear-gradient(135deg, var(--cyan) 0%, var(--blue) 50%, var(--navy) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Status indicator animations */
+.ManageTests-status-active .ManageTests-status-badge {
+  animation: pulseGreen 2s infinite;
+}
+
+@keyframes pulseGreen {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(22, 163, 74, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(22, 163, 74, 0.6);
+  }
+}
+
+/* Enhanced pagination */
+.ManageTests-pagination-btn {
+  position: relative;
+}
+
+.ManageTests-pagination-btn:not(:disabled):hover {
+  background: linear-gradient(135deg, var(--blue) 0%, var(--navy) 100%);
+  color: var(--white);
+}
+
+/* Card entrance animations with delays */
+.ManageTests-test-card:nth-child(1) { animation-delay: 0s; }
+.ManageTests-test-card:nth-child(2) { animation-delay: 0.1s; }
+.ManageTests-test-card:nth-child(3) { animation-delay: 0.2s; }
+.ManageTests-test-card:nth-child(4) { animation-delay: 0.3s; }
+.ManageTests-test-card:nth-child(5) { animation-delay: 0.4s; }
+.ManageTests-test-card:nth-child(6) { animation-delay: 0.5s; }
+
+/* Enhanced mobile styles */
+@media (max-width: 480px) {
+  .ManageTests-page-title {
+    font-size: 1.6rem;
+    line-height: 1.2;
+  }
+
+  .ManageTests-test-title {
+    font-size: 1.2rem;
+    line-height: 1.3;
+  }
+
+  .ManageTests-test-description {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .ManageTests-info-label {
+    font-size: 0.75rem;
+  }
+
+  .ManageTests-info-value {
+    font-size: 0.85rem;
+  }
+
+  .ManageTests-status-badge {
+    font-size: 0.75rem;
+    padding: 6px 12px;
+  }
+
+  .ManageTests-test-code {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+  }
+
+  .ManageTests-action-btn {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+  }
+
+  .ManageTests-search-input,
+  .ManageTests-filter-select {
+    font-size: 0.9rem;
+    padding: 12px 16px;
+  }
+
+  .ManageTests-modal-header h3 {
+    font-size: 1.3rem;
+  }
+
+  .ManageTests-modal-body p {
+    font-size: 0.95rem;
+  }
+}
+
+/* Very small mobile devices */
+@media (max-width: 320px) {
+  .ManageTests-container {
+    padding: 10px;
+  }
+
+  .ManageTests-page-title {
+    font-size: 1.4rem;
+  }
+
+  .ManageTests-test-title {
+    font-size: 1.1rem;
+  }
+
+  .ManageTests-test-description {
+    font-size: 0.8rem;
+  }
+
+  .ManageTests-info-label {
+    font-size: 0.7rem;
+  }
+
+  .ManageTests-info-value {
+    font-size: 0.8rem;
+  }
+
+  .ManageTests-test-info {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .ManageTests-action-btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+
+  .ManageTests-status-badge {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+  }
+}
+
+/* Landscape mobile orientation */
+@media (max-width: 768px) and (orientation: landscape) {
+  .ManageTests-tests-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+
+  .ManageTests-test-card {
+    padding: 15px;
+  }
+
+  .ManageTests-page-header {
+    padding: 15px 20px;
+  }
+
+  .ManageTests-filters-section {
+    padding: 15px 20px;
+  }
+}
+
+/* Tablet styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .ManageTests-tests-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .ManageTests-test-card {
+    padding: 20px;
+  }
+
+  .ManageTests-test-info {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Large screens */
+@media (min-width: 1200px) {
+  .ManageTests-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 30px;
+  }
+
+  .ManageTests-tests-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+  }
+
+  .ManageTests-test-card {
+    padding: 30px;
+  }
+}
+
+/* Ultra-wide screens */
+@media (min-width: 1600px) {
+  .ManageTests-tests-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Enhanced accessibility */
+@media (prefers-reduced-motion: no-preference) {
+  .ManageTests-test-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .ManageTests-action-btn {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .ManageTests-test-card {
+    border-width: 0.5px;
+  }
+
+  .ManageTests-status-badge {
+    border-width: 0.5px;
+  }
+}
+
+/* Focus visible for better accessibility */
+.ManageTests-action-btn:focus-visible,
+.ManageTests-pagination-btn:focus-visible,
+.ManageTests-back-button:focus-visible,
+.ManageTests-create-test-btn:focus-visible {
+  outline: 2px solid var(--blue);
   outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(1, 153, 213, 0.2);
 }
 
-/* Status-specific card enhancements */
-.ManageTests-test-card[data-status="active"]::before {
-  background: linear-gradient(90deg, var(--success-green) 0%, #10B981 100%);
+/* Enhanced loading states */
+.ManageTests-loading .ManageTests-test-card {
+  pointer-events: none;
+  opacity: 0.6;
 }
 
-.ManageTests-test-card[data-status="completed"]::before {
-  background: linear-gradient(90deg, #7C3AED 0%, #8B5CF6 100%);
+.ManageTests-loading .ManageTests-action-btn {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Error state styles */
+.ManageTests-error .ManageTests-test-card {
+  border-color: var(--red-200);
+  background: var(--red-50);
+}
+
+/* Success state styles */
+.ManageTests-success .ManageTests-test-card {
+  border-color: var(--green-200);
+  background: var(--green-50);
+}
+
+/* Enhanced card interactions */
+.ManageTests-test-card:active {
+  transform: translateY(-2px) scale(0.98);
+}
+
+/* Improved button states */
+.ManageTests-action-btn:active {
+  transform: translateY(1px) scale(0.95);
+}
+
+/* Custom selection styles */
+::selection {
+  background: rgba(1, 153, 213, 0.2);
+  color: var(--gray-700);
+}
+
+.ManageTests-test-title::selection,
+.ManageTests-test-description::selection {
+  background: rgba(22, 239, 247, 0.3);
+}
+
+/* Smooth scrolling */
+.ManageTests-container {
+  scroll-behavior: smooth;
+}
+
+/* Enhanced z-index stacking */
+.ManageTests-page-header {
+  z-index: 100;
+}
+
+.ManageTests-filters-section {
+  z-index: 90;
+}
+
+.ManageTests-test-card {
+  z-index: 1;
+}
+
+.ManageTests-test-card:hover {
+  z-index: 10;
+}
+
+.ManageTests-modal-overlay {
+  z-index: 10000;
+}
+
+/* Improved contrast for better readability */
+.ManageTests-info-label {
+  color: var(--gray-600);
+  font-weight: 600;
+}
+
+.ManageTests-info-value {
+  color: var(--gray-800);
+  font-weight: 700;
+}
+
+.ManageTests-test-description {
+  color: var(--gray-700);
+  font-weight: 400;
+}
+
+/* Enhanced border styles */
+.ManageTests-test-card {
+  border: 2px solid transparent;
+  background: var(--white);
+  background-clip: padding-box;
+}
+
+/* Final mobile optimization */
+@media (max-width: 375px) {
+  .ManageTests-test-card-header {
+    margin-bottom: 15px;
+  }
+
+  .ManageTests-test-card-body {
+    margin-bottom: 15px;
+  }
+
+  .ManageTests-test-card-actions {
+    padding-top: 15px;
+  }
+
+  .ManageTests-category-breakdown {
+    margin-bottom: 12px;
+  }
+
+  .ManageTests-breakdown-list {
+    gap: 6px;
+  }
+
+  .ManageTests-category-tag {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+  }
 }

@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
 import {findAdminByEmail} from "../models/adminModel.js";
 import bcrypt from "bcrypt";
-import crypto from "crypto";
 import nodemailer from 'nodemailer';
 import PDFDocument from 'pdfkit';
 import ExcelJS from 'exceljs';
@@ -30,7 +29,7 @@ export const loginAdmin = async (req, res) => {
   const token = jwt.sign(
     { id: admin.id, email: admin.email, role: admin.role },
     process.env.JWT_SECRET,
-    { expiresIn: '1h' }
+    { expiresIn: '10h' }
     );
 
   res.json({ token ,admin: { username: admin.username, email: admin.email }});
@@ -57,8 +56,6 @@ export const createTest = async (req, res) => {
   } = req.body;
   
   const adminId = req.user.id;
-
-  console.log('Received test data:', { title, categories, subcategories, questions });
 
   // Validation
   if (!title || !title.trim()) {

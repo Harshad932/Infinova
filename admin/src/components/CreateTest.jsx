@@ -1,14 +1,7 @@
 import React, { useState } from "react";
+import { useNavigate} from 'react-router-dom';
 import {
-  ArrowLeft,
-  Plus,
-  Trash2,
-  Save,
-  Upload,
-  Clock,
-  FileText,
-  BookOpen,
-  Users,
+  ArrowLeft,Plus,Trash2,Save,FileText,BookOpen,Users,
 } from "lucide-react";
 import styles from "../assets/styles/CreateTest.module.css";
 
@@ -26,6 +19,8 @@ const CreateTest = () => {
   const [questions, setQuestions] = useState([]);
   const [activeTab, setActiveTab] = useState("basic");
   const [isLoading, setIsLoading] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -239,8 +234,6 @@ const CreateTest = () => {
       isDraft,
     };
 
-    console.log("Saving test:", testPayload);
-
     // Use environment variable for backend URL like your working code
     fetch(
       `${process.env.REACT_APP_BACKEND_URL}/api/admin/create-test`,
@@ -257,6 +250,8 @@ const CreateTest = () => {
         return response.json().then(result => {
           if (response.ok) {
             alert(result.message);
+            navigate("/admin/manage-tests");
+            
           } else {
             // Handle different error status codes
             if (response.status === 401) {
@@ -318,14 +313,6 @@ const CreateTest = () => {
             >
               <Save size={16} />
               <span>{isLoading ? "Saving..." : "Save Draft"}</span>
-            </button>
-            <button
-              onClick={() => handleSave(false)}
-              className={styles["publish-button"]}
-              disabled={isLoading || !isFormValid}
-            >
-              <Upload size={16} />
-              <span>{isLoading ? "Publishing..." : "Publish Test"}</span>
             </button>
           </div>
         </div>

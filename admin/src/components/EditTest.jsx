@@ -94,9 +94,7 @@ const EditTest = () => {
       }
 
       const data = await response.json();
-      console.log('Fetched test data:', data);
-      
-      
+  
       setTestInfo({
         title: data.title || '',
         description: data.description || '',
@@ -416,8 +414,6 @@ const updateSubcategory = async () => {
       subcategoryOrder: maxSubcategoryOrder + 1
     };
 
-    console.log('Sending question data:', questionData); // Debug log
-
     const response = await fetch(`${API_BASE_URL}/admin/tests/${id}/questions`, {
       method: 'POST',
       headers: getApiHeaders(),
@@ -430,7 +426,6 @@ const updateSubcategory = async () => {
     }
 
     const responseData = await response.json();
-    console.log('Question response:', responseData); // Debug log
     
     // Handle different response structures
     const addedQuestion = responseData.question || responseData;
@@ -471,8 +466,6 @@ const updateQuestion = async () => {
       subcategoryId: parseInt(newQuestion.subcategoryId)
     };
 
-    console.log('Updating question data:', questionData); // Debug log
-
     const response = await fetch(`${API_BASE_URL}/admin/tests/${id}/questions/${editingQuestion}`, {
       method: 'PUT',
       headers: getApiHeaders(),
@@ -485,7 +478,6 @@ const updateQuestion = async () => {
     }
 
     const responseData = await response.json();
-    console.log('Question update response:', responseData); // Debug log
     
     // Handle different response structures
     const updatedQuestion = responseData.question || responseData;
@@ -555,18 +547,6 @@ const updateQuestion = async () => {
     setEditingQuestion(null);
   };
 
-  // Get category name by ID
-  const getCategoryName = (categoryId) => {
-    const category = categories.find(c => c.id === categoryId);
-    return category ? category.name : 'Unknown Category';
-  };
-
-  // Get subcategory name by ID
-  const getSubcategoryName = (subcategoryId) => {
-    const subcategory = subcategories.find(s => s.id === subcategoryId);
-    return subcategory ? subcategory.name : 'Unknown Subcategory';
-  };
-
 const getSubcategoriesForCategory = (categoryId) => {
   return subcategories.filter(s => {
     // Convert both to numbers for comparison
@@ -606,14 +586,6 @@ const getQuestionsForSubcategory = (subcategoryId) => {
               ← Back to Manage Tests
             </button>
             <h1 className={styles["page-title"]}>Edit Test</h1>
-          </div>
-          <div className={styles["header-actions"]}>
-            <button 
-              onClick={() => navigate(`/admin/test-results/${id}`)}
-              className={styles["view-results-btn"]}
-            >
-              View Results
-            </button>
           </div>
         </div>
       </header>

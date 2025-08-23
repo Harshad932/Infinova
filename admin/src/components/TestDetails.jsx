@@ -111,8 +111,6 @@ const TestDetail = () => {
       }
 
       const testData = await testResponse.json();
-
-      console.log('Test Data:', testData);
       
       // Set test status based on backend flags
       let status = 'draft';
@@ -132,7 +130,6 @@ const TestDetail = () => {
       if (categoriesResponse.ok) {
         const categoriesResult = await categoriesResponse.json();
         categoriesData = categoriesResult.categories || [];
-        console.log("categories:", categoriesData);
         setCategories(categoriesData);
       }
 
@@ -146,7 +143,6 @@ const TestDetail = () => {
       if (subcategoriesResponse.ok) {
         const subcategoriesResult = await subcategoriesResponse.json();
         subcategoriesData = subcategoriesResult.subcategories || [];
-        console.log("subcategories:", subcategoriesData);
         setSubcategories(subcategoriesData);
       }
 
@@ -160,7 +156,6 @@ const TestDetail = () => {
       if (questionsResponse.ok) {
         const questionsResult = await questionsResponse.json();
         questionsData = questionsResult.questions || questionsResult || []; // Handle both wrapped and direct array response
-        console.log("Questions:", questionsData);
         setQuestions(questionsData);
       }
 
@@ -175,7 +170,6 @@ const TestDetail = () => {
 
       if (participantsResponse.ok) {
         const participantsData = await participantsResponse.json();
-        console.log("Participants:", participantsData);
         setParticipants(participantsData.participants || []);
       }
 
@@ -367,12 +361,23 @@ const TestDetail = () => {
               </button>
             )}
             
+            {(test.status === 'published' || test.status === 'active') && (
             <button 
               onClick={() => navigate(`/admin/edit-test/${testId}`)}
               className={`${styles["action-btn"]} ${styles["edit-btn"]}`}
             >
               ✏️ Edit Test
             </button>
+            )}
+
+            {(test.status === 'completed') && (
+            <button 
+              onClick={() => navigate(`/admin/test-results/${testId}`)}
+              className={`${styles["action-btn"]} ${styles["results-btn"]}`}
+            >
+              ✏️ Results
+            </button>
+            )}
             
             {(test.status === 'published' || test.status === 'active') && (
               <button 
