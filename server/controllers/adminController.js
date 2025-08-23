@@ -2898,6 +2898,17 @@ const generateParticipantPDF = async (participantData) => {
         resolve(pdfBuffer);
       });
 
+      // Company Header Section
+      doc.fontSize(24).font('Helvetica-Bold')
+         .fillColor('#1F2937')
+         .text('Infinova Test Platform', { align: 'center' });
+      
+      doc.fontSize(12).font('Helvetica')
+         .fillColor('#6B7280')
+         .text('Comprehensive Assessment Solutions', { align: 'center' });
+      
+      doc.moveDown(0.5);
+
       // Header with better styling
       doc.fontSize(20).font('Helvetica-Bold')
          .fillColor('#1F2937')
@@ -2934,37 +2945,64 @@ const generateParticipantPDF = async (participantData) => {
 
       doc.y = cardY + 90;
 
-      // Category Performance Charts
+      // Category Performance Charts - Enhanced for many categories
       participantData.categoryResults.forEach((category, categoryIndex) => {
         const categorySubcategories = participantData.subcategoryResults.filter(
           sub => sub.categoryName === category.categoryName
         );
 
         if (categorySubcategories.length > 0) {
-          // Check if we need a new page
-          if (doc.y > 400) { // Adjusted for better spacing
+          // Check if we need a new page - more conservative spacing
+          if (doc.y > 450) {
             doc.addPage();
+            addPageHeader(doc); // Add company header on new pages
           }
 
           const chartTitle = `${category.categoryName} - Subcategory Performance`;
-          drawBarChart(doc, categorySubcategories, 50, doc.y, 500, 300, chartTitle); // Increased height
-          doc.y += 350; // Increased spacing
+          drawBarChart(doc, categorySubcategories, 50, doc.y, 500, 250, chartTitle); // Reduced height for more categories
+          doc.y += 280; // Reduced spacing
         }
       });
 
-      // Overall Category Performance - Now using Bar Chart instead of Pie Chart
+      // Overall Category Performance - Enhanced for many categories
       if (participantData.categoryResults.length > 0) {
-        if (doc.y > 300) {
-          doc.addPage();
-        }
+        // For many categories, split into multiple pages if needed
+        if (participantData.categoryResults.length > 8) {
+          // Split categories into chunks for better readability
+          const categoriesPerChart = 8;
+          const chunks = [];
+          for (let i = 0; i < participantData.categoryResults.length; i += categoriesPerChart) {
+            chunks.push(participantData.categoryResults.slice(i, i + categoriesPerChart));
+          }
 
-        drawBarChart(doc, participantData.categoryResults, 50, doc.y, 500, 300, 'Overall Category Performance');
-        doc.y += 350;
+          chunks.forEach((chunk, index) => {
+            if (doc.y > 350 || index > 0) {
+              doc.addPage();
+              addPageHeader(doc);
+            }
+            
+            const chartTitle = chunks.length > 1 
+              ? `Overall Category Performance (Part ${index + 1})`
+              : 'Overall Category Performance';
+            
+            drawBarChart(doc, chunk, 50, doc.y, 500, 250, chartTitle);
+            doc.y += 280;
+          });
+        } else {
+          if (doc.y > 350) {
+            doc.addPage();
+            addPageHeader(doc);
+          }
+
+          drawBarChart(doc, participantData.categoryResults, 50, doc.y, 500, 250, 'Overall Category Performance');
+          doc.y += 280;
+        }
       }
 
-      // Performance Summary Table
-      if (doc.y > 350) {
+      // Performance Summary Table - Enhanced for many categories
+      if (doc.y > 400 || participantData.categoryResults.length > 6) {
         doc.addPage();
+        addPageHeader(doc);
       }
 
       drawTable(doc, participantData.categoryResults, 50, doc.y, 'Performance Summary');
@@ -2972,6 +3010,7 @@ const generateParticipantPDF = async (participantData) => {
       // Question-wise Results Section
       if (participantData.questionResults && participantData.questionResults.length > 0) {
         doc.addPage();
+        addPageHeader(doc);
         
         // Questions Section Header
         doc.fontSize(16).font('Helvetica-Bold')
@@ -3002,6 +3041,7 @@ const generateParticipantPDF = async (participantData) => {
           // Check if we need a new page for category header
           if (doc.y > 700) {
             doc.addPage();
+            addPageHeader(doc);
           }
 
           // Category header
@@ -3015,6 +3055,7 @@ const generateParticipantPDF = async (participantData) => {
             // Check if we need a new page (allowing space for question content)
             if (doc.y > 650) {
               doc.addPage();
+              addPageHeader(doc);
             }
 
             // Question container
@@ -3084,10 +3125,8 @@ const generateParticipantPDF = async (participantData) => {
         });
       }
 
-      // Footer
-      doc.fontSize(8).font('Helvetica')
-         .fillColor('#6B7280')
-         .text(`Generated on ${new Date().toLocaleDateString()}`, 50, 750, { align: 'center', width: 500 });
+      // Enhanced Footer with Company Information and Social Links - only add once at the end
+      addFooterToCurrentPage(doc);
 
       doc.end();
 
@@ -3097,6 +3136,64 @@ const generateParticipantPDF = async (participantData) => {
   });
 };
 
+// Helper function to add company header on new pages
+const addPageHeader = (doc) => {
+  const currentY = doc.y;
+  
+  doc.fontSize(14).font('Helvetica-Bold')
+     .fillColor('#1F2937')
+     .text('Infinova Test Platform', 50, 50);
+  
+  doc.moveTo(50, 70)
+     .lineTo(550, 70)
+     .stroke('#E2E8F0');
+  
+  doc.y = currentY > 90 ? currentY : 90;
+};
+
+// Enhanced Footer function with social media and company links - single page footer
+const addFooterToCurrentPage = (doc) => {
+  // Check if there's enough space for footer, if not add new page
+  if (doc.y > 650) {
+    doc.addPage();
+  }
+  
+  // Position footer at bottom of current page
+  const footerY = 700; // Moved up to fit better
+  
+  // Company info section
+  doc.rect(50, footerY, 500, 90) // Increased height to accommodate all content
+     .fill('#F8FAFC')
+     .stroke('#E2E8F0');
+
+  // Company name and tagline
+  doc.fontSize(12).font('Helvetica-Bold')
+     .fillColor('#1F2937')
+     .text('Infinova Test Platform', 70, footerY + 10);
+  
+  doc.fontSize(8).font('Helvetica')
+     .fillColor('#6B7280')
+     .text('Your Partner in Assessment Excellence', 70, footerY + 28);
+
+  // Contact and social media links
+  doc.fontSize(8).font('Helvetica')
+     .fillColor('#374151')
+     .text('Connect with us:', 70, footerY + 45);
+
+  // All links in compact layout within the box
+  doc.fontSize(7).font('Helvetica')
+     .fillColor('#3B82F6')
+     .text('Website: www.infinova.com  |  Email: contact@infinova.com', 70, footerY + 58);
+  
+  doc.fontSize(7).font('Helvetica')
+     .fillColor('#3B82F6')
+     .text('LinkedIn: linkedin.com/company/infinova  |  Instagram: @infinova_platform', 70, footerY + 68);
+
+  // Generation date - positioned within the footer box
+  doc.fontSize(7).font('Helvetica')
+     .fillColor('#6B7280')
+     .text(`Generated on ${new Date().toLocaleDateString()}`, 70, footerY + 78);
+};
 // Export participant results as PDF
 export const exportParticipantPDF = async (req, res) => {
   const { participantId } = req.params;
@@ -4061,46 +4158,120 @@ export const sendEmailToAllParticipants = async (req, res) => {
   }
 };
 
-// Helper function to generate PDF report
+// Helper function to generate PDF report (identical to admin download)
 const generateParticipantPDFReport = async (testId, participantId) => {
-  const doc = new PDFDocument();
-  const chunks = [];
+  try {
+    // Get participant data using the same structure as admin download
+    const sessionQuery = `
+      SELECT ts.*, u.name, u.email, u.phone
+      FROM test_sessions ts
+      JOIN users u ON ts.user_id = u.id
+      WHERE ts.test_id = $1 AND ts.user_id = $2
+    `;
+    
+    const sessionResult = await pool.query(sessionQuery, [testId, participantId]);
+    
+    if (sessionResult.rows.length === 0) {
+      throw new Error('Participant not found');
+    }
+    
+    const sessionData = sessionResult.rows[0];
+    
+    // Get results data (same queries as admin download)
+    const categoryQuery = `
+      SELECT 
+        cr.*,
+        tc.name as category_name
+      FROM category_results cr
+      JOIN test_categories tc ON cr.category_id = tc.id
+      WHERE cr.session_id = $1
+      ORDER BY tc.display_order
+    `;
+    
+    const subcategoryQuery = `
+      SELECT 
+        sr.*,
+        tsc.name as subcategory_name,
+        tc.name as category_name
+      FROM subcategory_results sr
+      JOIN test_subcategories tsc ON sr.subcategory_id = tsc.id
+      JOIN test_categories tc ON sr.category_id = tc.id
+      WHERE sr.session_id = $1
+      ORDER BY tc.display_order, tsc.display_order
+    `;
 
-  doc.on('data', chunk => chunks.push(chunk));
-  doc.on('end', () => {});
-
-  // Get participant results
-  const participantResults = await getIndividualResults(testId, participantId);
-  
-  // Add content to PDF
-  doc.fontSize(20).text('Test Results Report', 100, 100);
-  doc.fontSize(14).text(`Participant: ${participantResults.participant.name}`, 100, 140);
-  doc.text(`Email: ${participantResults.participant.email}`, 100, 160);
-  doc.text(`Test: ${participantResults.test.title}`, 100, 180);
-  doc.text(`Completed: ${new Date(participantResults.session.completed_at).toLocaleDateString()}`, 100, 200);
-  
-  // Add overall performance
-  doc.fontSize(16).text('Overall Performance', 100, 240);
-  doc.fontSize(12).text(`Total Score: ${participantResults.totalScore}%`, 100, 260);
-  doc.text(`Questions Answered: ${participantResults.questionsAnswered}`, 100, 280);
-  
-  // Add category results
-  let yPosition = 320;
-  doc.fontSize(16).text('Category Performance', 100, yPosition);
-  yPosition += 20;
-  
-  participantResults.categoryResults.forEach(category => {
-    doc.fontSize(12).text(`${category.categoryName}: ${category.averagePercentage}%`, 100, yPosition);
-    yPosition += 20;
-  });
-  
-  doc.end();
-  
-  return new Promise((resolve) => {
-    doc.on('end', () => {
-      resolve(Buffer.concat(chunks));
-    });
-  });
+    const questionResultsQuery = `
+      SELECT 
+        ur.question_id,
+        ur.marks_obtained,
+        ur.selected_option_label,
+        ur.time_taken,
+        tq.question_text,
+        tq.question_order,
+        tc.name as category_name,
+        tsc.name as subcategory_name,
+        fqo.option_text as selected_option_text
+      FROM user_responses ur
+      JOIN test_questions tq ON ur.question_id = tq.id
+      JOIN test_categories tc ON ur.category_id = tc.id
+      JOIN test_subcategories tsc ON ur.subcategory_id = tsc.id
+      JOIN fixed_question_options fqo ON ur.selected_option_id = fqo.id
+      WHERE ur.session_id = $1
+      ORDER BY tq.question_order
+    `;
+    
+    const [categoryResults, subcategoryResults, questionResults] = await Promise.all([
+      pool.query(categoryQuery, [sessionData.id]),
+      pool.query(subcategoryQuery, [sessionData.id]),
+      pool.query(questionResultsQuery, [sessionData.id])
+    ]);
+    
+    const overallPercentage = categoryResults.rows.length > 0 
+      ? categoryResults.rows.reduce((sum, cat) => sum + parseFloat(cat.average_percentage), 0) / categoryResults.rows.length
+      : 0;
+    
+    const participantData = {
+      participant: {
+        name: sessionData.name,
+        email: sessionData.email,
+        phone: sessionData.phone
+      },
+      overallPercentage: overallPercentage.toFixed(2),
+      categoryResults: categoryResults.rows.map(cat => ({
+        categoryName: cat.category_name,
+        totalQuestions: cat.total_questions,
+        totalMarksObtained: cat.total_marks_obtained,
+        maxPossibleMarks: cat.max_possible_marks,
+        averagePercentage: parseFloat(cat.average_percentage).toFixed(2)
+      })),
+      subcategoryResults: subcategoryResults.rows.map(sub => ({
+        subcategoryName: sub.subcategory_name,
+        categoryName: sub.category_name,
+        totalQuestions: sub.total_questions,
+        percentageScore: parseFloat(sub.percentage_score).toFixed(2)
+      })),
+      questionResults: questionResults.rows.map(q => ({
+        questionId: q.question_id,
+        questionOrder: q.question_order,
+        questionText: q.question_text,
+        categoryName: q.category_name,
+        subcategoryName: q.subcategory_name,
+        selectedOptionLabel: q.selected_option_label,
+        selectedOptionText: q.selected_option_text,
+        marksObtained: q.marks_obtained,
+        maxMarks: 5,
+        timeTaken: q.time_taken
+      }))
+    };
+    
+    // Use the exact same PDF generation function as admin download
+    const pdfBuffer = await generateParticipantPDF(participantData);
+    return pdfBuffer;
+    
+  } catch (error) {
+    console.error('Error generating PDF report:', error);
+    throw error;
+  }
 };
 
 // Helper function to generate Excel report
