@@ -24,6 +24,7 @@ const TestResults = () => {
   const [showOverallResults, setShowOverallResults] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
   const [emailAllSending, setEmailAllSending] = useState(false);
+  const [showQuestionDetails, setShowQuestionDetails] = useState(false);
 
   const API_BASE_URL = `${process.env.REACT_APP_BACKEND_URL}/api/admin`;
   
@@ -87,7 +88,7 @@ const TestResults = () => {
         throw new Error('Failed to fetch participants');
       }
       
-      const data = await response.json();
+      const data = await response.json(); 
       setParticipants(data.participants);
       setPagination(data.pagination);
     } catch (err) {
@@ -170,7 +171,7 @@ const TestResults = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `participant_${participantId}_results.${format === 'excel' ? 'xlsx' : format}`;
+      a.download = `${participantResults.participant.name}_results.${format === 'excel' ? 'xlsx' : format}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -286,10 +287,11 @@ const TestResults = () => {
   };
 
   const closeParticipantDetail = () => {
-    setShowParticipantDetail(false);
-    setParticipantResults(null);
-    setSelectedParticipant(null);
-  };
+  setShowParticipantDetail(false);
+  setParticipantResults(null);
+  setSelectedParticipant(null);
+  setShowQuestionDetails(false);
+};
 
   const closeOverallResults = () => {
     setShowOverallResults(false);
@@ -319,6 +321,7 @@ const TestResults = () => {
 
   // Individual Participant Results Modal
   // Individual Participant Results Modal
+// Individual Participant Results Modal
 const ParticipantDetailModal = () => {
   if (!showParticipantDetail || !participantResults) return null;
 
@@ -329,6 +332,16 @@ const ParticipantDetailModal = () => {
     marksObtained: cat.totalMarksObtained,
     maxMarks: cat.maxPossibleMarks
   }));
+
+  // Group questions by category for better display
+  const questionsByCategory = participantResults.questionResults?.reduce((acc, question) => {
+    const category = question.categoryName;
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(question);
+    return acc;
+  }, {}) || {};
 
   return (
     <div className={styles["modal-overlay"]}>
@@ -365,6 +378,65 @@ const ParticipantDetailModal = () => {
               </div>
             </div>
           </div>
+
+          {/* Question Details Toggle */}
+          <div className={styles["section-toggle"]}>
+            <button
+              onClick={() => setShowQuestionDetails(!showQuestionDetails)}
+              className={`${styles["btn"]} ${styles["btn-primary"]}`}
+            >
+              <FileText size={16} />
+              {showQuestionDetails ? 'Hide Question Details' : 'Show Question Details'}
+            </button>
+          </div>
+
+          {/* Question-wise Results */}
+          {showQuestionDetails && (
+            <div className={styles["questions-section"]}>
+              <h3 className={styles["section-title"]}>Question-wise Results</h3>
+              {Object.entries(questionsByCategory).map(([categoryName, questions]) => (
+                <div key={categoryName} className={styles["category-questions"]}>
+                  <h4 className={styles["category-questions-title"]}>{categoryName}</h4>
+                  <div className={styles["questions-grid"]}>
+                    {questions.map((question) => (
+                      <div key={question.questionId} className={styles["question-card"]}>
+                        <div className={styles["question-header"]}>
+                          <span className={styles["question-number"]}>Q{question.questionOrder}</span>
+                          <span className={styles["question-subcategory"]}>{question.subcategoryName}</span>
+                        </div>
+                        <div className={styles["question-text"]}>
+                          {question.questionText}
+                        </div>
+                        <div className={styles["question-response"]}>
+                          <div className={styles["response-info"]}>
+                            <span className={styles["response-label"]}>Answer:</span>
+                            <span className={styles["response-value"]}>
+                              {question.selectedOptionLabel} - {question.selectedOptionText}
+                            </span>
+                          </div>
+                          <div className={styles["marks-info"]}>
+                            <span className={styles["marks-label"]}>Marks:</span>
+                            <span className={`${styles["marks-value"]} ${
+                              question.marksObtained >= 4 ? styles["marks-high"] :
+                              question.marksObtained >= 3 ? styles["marks-medium"] : styles["marks-low"]
+                            }`}>
+                              {question.marksObtained}/{question.maxMarks}
+                            </span>
+                          </div>
+                          {question.timeTaken && (
+                            <div className={styles["time-info"]}>
+                              <span className={styles["time-label"]}>Time:</span>
+                              <span className={styles["time-value"]}>{question.timeTaken}s</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Category-wise Performance with Subcategories */}
           {participantResults.categoryResults.map((category, index) => {
@@ -611,7 +683,7 @@ const ParticipantDetailModal = () => {
                 <h1 className={styles["header-title"]}>Test Results</h1>
                 {testData && (
                   <p className={styles["header-subtitle"]}>
-                    {testData.title} - {testData.completed_participants} participants completed
+                    {testData.title} - {participants.length} participants completed
                   </p>
                 )}
               </div>
@@ -646,7 +718,7 @@ const ParticipantDetailModal = () => {
               <Search className={styles["search-icon"]} size={20} />
               <input
                 type="text"
-                placeholder="Search participants..."
+                placeholder="Search by name, email, or phone..."
                 value={searchTerm}
                 onChange={handleSearch}
                 className={styles["search-input"]}

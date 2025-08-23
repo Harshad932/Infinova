@@ -2365,15 +2365,21 @@ export const getTestParticipantsForResults = async (req, res) => {
       return res.status(404).json({ message: 'Test not found' });
     }
     
-    const offset = (page - 1) * limit;
+    // Convert to integers early
+    const pageInt = parseInt(page);
+    const limitInt = parseInt(limit);
+    const offsetInt = (pageInt - 1) * limitInt;
+    
     let whereClause = 'WHERE ts.test_id = $1';
     let queryParams = [testId];
+    let paramIndex = 2;
     
     if (search.trim()) {
-      whereClause += ' AND (u.name ILIKE $3 OR u.email ILIKE $3)';
+      whereClause += ` AND (u.name ILIKE $${paramIndex} OR u.email ILIKE $${paramIndex} OR u.phone ILIKE $${paramIndex})`;
       queryParams.push(`%${search.trim()}%`);
+      paramIndex++;
     }
-    
+
     const participantsQuery = `
       SELECT 
         u.id,
@@ -2392,10 +2398,11 @@ export const getTestParticipantsForResults = async (req, res) => {
       ${whereClause}
       GROUP BY u.id, u.name, u.email, u.phone, ts.session_status, ts.started_at, ts.completed_at, ts.questions_answered, ts.total_questions
       ORDER BY ts.completed_at DESC NULLS LAST, ts.started_at DESC
-      LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
-    
-    queryParams.push(limit, offset);
+
+    // Add LIMIT and OFFSET as integers
+    queryParams.push(limitInt, offsetInt);
     
     const countQuery = `
       SELECT COUNT(DISTINCT u.id) as total
@@ -2404,23 +2411,26 @@ export const getTestParticipantsForResults = async (req, res) => {
       ${whereClause}
     `;
     
+    // For count query, use params without LIMIT and OFFSET
+    const countParams = queryParams.slice(0, -2);
+    
     const [participants, countResult] = await Promise.all([
       pool.query(participantsQuery, queryParams),
-      pool.query(countQuery, queryParams.slice(0, -2))
+      pool.query(countQuery, countParams)
     ]);
     
     const total = parseInt(countResult.rows[0].total);
-    const totalPages = Math.ceil(total / limit);
+    const totalPages = Math.ceil(total / limitInt);
     
     res.json({
       participants: participants.rows,
       pagination: {
-        currentPage: parseInt(page),
+        currentPage: pageInt,
         totalPages,
         totalItems: total,
-        itemsPerPage: parseInt(limit),
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1
+        itemsPerPage: limitInt,
+        hasNextPage: pageInt < totalPages,
+        hasPreviousPage: pageInt > 1
       }
     });
     
@@ -2483,9 +2493,33 @@ export const getParticipantResults = async (req, res) => {
       ORDER BY tc.display_order, tsc.display_order
     `;
     
-    const [categoryResults, subcategoryResults] = await Promise.all([
+    // Get question-wise results
+    const questionResultsQuery = `
+      SELECT 
+        ur.question_id,
+        ur.marks_obtained,
+        ur.selected_option_label,
+        ur.time_taken,
+        ur.answered_at,
+        tq.question_text,
+        tq.question_order,
+        tc.name as category_name,
+        tsc.name as subcategory_name,
+        fqo.option_text as selected_option_text,
+        fqo.marks as option_marks
+      FROM user_responses ur
+      JOIN test_questions tq ON ur.question_id = tq.id
+      JOIN test_categories tc ON ur.category_id = tc.id
+      JOIN test_subcategories tsc ON ur.subcategory_id = tsc.id
+      JOIN fixed_question_options fqo ON ur.selected_option_id = fqo.id
+      WHERE ur.session_id = $1
+      ORDER BY tq.question_order
+    `;
+    
+    const [categoryResults, subcategoryResults, questionResults] = await Promise.all([
       pool.query(categoryQuery, [sessionData.id]),
-      pool.query(subcategoryQuery, [sessionData.id])
+      pool.query(subcategoryQuery, [sessionData.id]),
+      pool.query(questionResultsQuery, [sessionData.id])
     ]);
     
     // Calculate overall percentage
@@ -2525,6 +2559,19 @@ export const getParticipantResults = async (req, res) => {
         totalMarksObtained: sub.total_marks_obtained,
         maxPossibleMarks: sub.max_possible_marks,
         percentageScore: parseFloat(sub.percentage_score).toFixed(2)
+      })),
+      questionResults: questionResults.rows.map(q => ({
+        questionId: q.question_id,
+        questionOrder: q.question_order,
+        questionText: q.question_text,
+        categoryName: q.category_name,
+        subcategoryName: q.subcategory_name,
+        selectedOptionLabel: q.selected_option_label,
+        selectedOptionText: q.selected_option_text,
+        marksObtained: q.marks_obtained,
+        maxMarks: 5, // Fixed max marks per question
+        timeTaken: q.time_taken,
+        answeredAt: q.answered_at
       }))
     });
     
@@ -2922,6 +2969,121 @@ const generateParticipantPDF = async (participantData) => {
 
       drawTable(doc, participantData.categoryResults, 50, doc.y, 'Performance Summary');
 
+      // Question-wise Results Section
+      if (participantData.questionResults && participantData.questionResults.length > 0) {
+        doc.addPage();
+        
+        // Questions Section Header
+        doc.fontSize(16).font('Helvetica-Bold')
+           .fillColor('#1E40AF')
+           .text('Question-wise Results', 50, doc.y);
+        
+        doc.moveDown(0.3);
+        
+        // Subtitle line
+        doc.moveTo(50, doc.y)
+           .lineTo(550, doc.y)
+           .stroke('#3B82F6');
+        
+        doc.moveDown(1);
+
+        // Group questions by category
+        const questionsByCategory = participantData.questionResults.reduce((acc, question) => {
+          const category = question.categoryName;
+          if (!acc[category]) {
+            acc[category] = [];
+          }
+          acc[category].push(question);
+          return acc;
+        }, {});
+
+        // Iterate through each category
+        Object.entries(questionsByCategory).forEach(([categoryName, questions]) => {
+          // Check if we need a new page for category header
+          if (doc.y > 700) {
+            doc.addPage();
+          }
+
+          // Category header
+          doc.fontSize(14).font('Helvetica-Bold')
+             .fillColor('#1F2937')
+             .text(categoryName, 50, doc.y);
+          
+          doc.moveDown(0.5);
+
+          questions.forEach((question, index) => {
+            // Check if we need a new page (allowing space for question content)
+            if (doc.y > 650) {
+              doc.addPage();
+            }
+
+            // Question container
+            const questionY = doc.y;
+            const questionHeight = 80;
+            
+            // Question background
+            doc.rect(50, questionY, 500, questionHeight)
+               .fill('#F9FAFB')
+               .stroke('#E5E7EB');
+
+            // Question number badge
+            doc.rect(60, questionY + 10, 30, 20)
+               .fill('#3B82F6')
+               .stroke('#2563EB');
+            
+            doc.fontSize(10).font('Helvetica-Bold')
+               .fillColor('#FFFFFF')
+               .text(`Q${question.questionOrder}`, 65, questionY + 16);
+
+            // Subcategory label
+            doc.fontSize(8).font('Helvetica')
+               .fillColor('#6B7280')
+               .text(question.subcategoryName, 100, questionY + 12);
+
+            // Question text
+            doc.fontSize(10).font('Helvetica')
+               .fillColor('#111827')
+               .text(question.questionText, 60, questionY + 35, { width: 400, height: 25 });
+
+            // Answer and marks section
+            const answerY = questionY + 55;
+            
+            // Answer
+            doc.fontSize(9).font('Helvetica-Bold')
+               .fillColor('#374151')
+               .text('Answer:', 60, answerY);
+            
+            doc.fontSize(9).font('Helvetica')
+               .fillColor('#111827')
+               .text(`${question.selectedOptionLabel} - ${question.selectedOptionText}`, 100, answerY);
+
+            // Marks
+            doc.fontSize(9).font('Helvetica-Bold')
+               .fillColor('#374151')
+               .text('Marks:', 350, answerY);
+
+            // Color-coded marks
+            const marksColor = question.marksObtained >= 4 ? '#059669' : 
+                              question.marksObtained >= 3 ? '#D97706' : '#DC2626';
+            
+            doc.fontSize(9).font('Helvetica-Bold')
+               .fillColor(marksColor)
+               .text(`${question.marksObtained}/5`, 385, answerY);
+
+            // Time taken (if available)
+            if (question.timeTaken) {
+              doc.fontSize(8).font('Helvetica')
+                 .fillColor('#6B7280')
+                 .text(`Time: ${question.timeTaken}s`, 450, answerY);
+            }
+
+            doc.y = questionY + questionHeight + 10;
+          });
+
+          doc.moveDown(1);
+        });
+      }
+
       // Footer
       doc.fontSize(8).font('Helvetica')
          .fillColor('#6B7280')
@@ -2986,10 +3148,31 @@ export const exportParticipantPDF = async (req, res) => {
       WHERE sr.session_id = $1
       ORDER BY tc.display_order, tsc.display_order
     `;
+
+    const questionResultsQuery = `
+      SELECT 
+        ur.question_id,
+        ur.marks_obtained,
+        ur.selected_option_label,
+        ur.time_taken,
+        tq.question_text,
+        tq.question_order,
+        tc.name as category_name,
+        tsc.name as subcategory_name,
+        fqo.option_text as selected_option_text
+      FROM user_responses ur
+      JOIN test_questions tq ON ur.question_id = tq.id
+      JOIN test_categories tc ON ur.category_id = tc.id
+      JOIN test_subcategories tsc ON ur.subcategory_id = tsc.id
+      JOIN fixed_question_options fqo ON ur.selected_option_id = fqo.id
+      WHERE ur.session_id = $1
+      ORDER BY tq.question_order
+    `;
     
-    const [categoryResults, subcategoryResults] = await Promise.all([
+    const [categoryResults, subcategoryResults, questionResults] = await Promise.all([
       pool.query(categoryQuery, [sessionData.id]),
-      pool.query(subcategoryQuery, [sessionData.id])
+      pool.query(subcategoryQuery, [sessionData.id]),
+      pool.query(questionResultsQuery, [sessionData.id])
     ]);
     
     const overallPercentage = categoryResults.rows.length > 0 
@@ -3015,13 +3198,27 @@ export const exportParticipantPDF = async (req, res) => {
         categoryName: sub.category_name,
         totalQuestions: sub.total_questions,
         percentageScore: parseFloat(sub.percentage_score).toFixed(2)
+      })),
+      questionResults: questionResults.rows.map(q => ({
+        questionId: q.question_id,
+        questionOrder: q.question_order,
+        questionText: q.question_text,
+        categoryName: q.category_name,
+        subcategoryName: q.subcategory_name,
+        selectedOptionLabel: q.selected_option_label,
+        selectedOptionText: q.selected_option_text,
+        marksObtained: q.marks_obtained,
+        maxMarks: 5,
+        timeTaken: q.time_taken
       }))
     };
     
     const pdfBuffer = await generateParticipantPDF(participantData);
     
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="participant_${participantId}_results.pdf"`);
+    // Create safe filename from participant name
+    const safeFileName = sessionData.name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}_test_results.pdf"`);
     res.send(pdfBuffer);
     
   } catch (error) {
@@ -3032,16 +3229,18 @@ export const exportParticipantPDF = async (req, res) => {
 
 // Export participant results as Excel
 export const exportParticipantExcel = async (req, res) => {
-  const {  participantId } = req.params;
+  const { participantId } = req.params;
   const testId = req.params.id;
   const adminId = req.user.id;
   
   try {
-    // Get participant data (similar to PDF export)
-    const testCheck = await pool.query('SELECT id FROM tests WHERE id = $1 AND created_by = $2', [testId, adminId]);
+    // Get participant data (same as PDF export)
+    const testCheck = await pool.query('SELECT id, title FROM tests WHERE id = $1 AND created_by = $2', [testId, adminId]);
     if (testCheck.rows.length === 0) {
       return res.status(404).json({ message: 'Test not found' });
     }
+    
+    const testInfo = testCheck.rows[0];
     
     const sessionQuery = `
       SELECT ts.*, u.name, u.email, u.phone
@@ -3058,6 +3257,7 @@ export const exportParticipantExcel = async (req, res) => {
     
     const sessionData = sessionResult.rows[0];
     
+    // Get all results data (same queries as PDF export)
     const categoryQuery = `
       SELECT 
         cr.*,
@@ -3079,56 +3279,322 @@ export const exportParticipantExcel = async (req, res) => {
       WHERE sr.session_id = $1
       ORDER BY tc.display_order, tsc.display_order
     `;
+
+    const questionResultsQuery = `
+      SELECT 
+        ur.question_id,
+        ur.marks_obtained,
+        ur.selected_option_label,
+        ur.time_taken,
+        tq.question_text,
+        tq.question_order,
+        tc.name as category_name,
+        tsc.name as subcategory_name,
+        fqo.option_text as selected_option_text
+      FROM user_responses ur
+      JOIN test_questions tq ON ur.question_id = tq.id
+      JOIN test_categories tc ON ur.category_id = tc.id
+      JOIN test_subcategories tsc ON ur.subcategory_id = tsc.id
+      JOIN fixed_question_options fqo ON ur.selected_option_id = fqo.id
+      WHERE ur.session_id = $1
+      ORDER BY tq.question_order
+    `;
     
-    const [categoryResults, subcategoryResults] = await Promise.all([
+    const [categoryResults, subcategoryResults, questionResults] = await Promise.all([
       pool.query(categoryQuery, [sessionData.id]),
-      pool.query(subcategoryQuery, [sessionData.id])
+      pool.query(subcategoryQuery, [sessionData.id]),
+      pool.query(questionResultsQuery, [sessionData.id])
     ]);
+
+    // Calculate overall percentage
+    const overallPercentage = categoryResults.rows.length > 0 
+      ? categoryResults.rows.reduce((sum, cat) => sum + parseFloat(cat.average_percentage), 0) / categoryResults.rows.length
+      : 0;
     
     const workbook = new ExcelJS.Workbook();
     
-    // Participant Info Sheet
-    const infoSheet = workbook.addWorksheet('Participant Info');
-    infoSheet.addRow(['Name', sessionData.name]);
-    infoSheet.addRow(['Email', sessionData.email]);
-    infoSheet.addRow(['Phone', sessionData.phone]);
-    infoSheet.addRow(['Test Status', sessionData.session_status]);
-    infoSheet.addRow(['Questions Answered', sessionData.questions_answered]);
-    infoSheet.addRow(['Total Questions', sessionData.total_questions]);
+    // 1. Test & Participant Summary Sheet
+    const summarySheet = workbook.addWorksheet('Test Summary');
     
-    // Category Results Sheet
+    // Add header styling
+    summarySheet.addRow(['TEST RESULTS REPORT']).font = { bold: true, size: 16 };
+    summarySheet.addRow([]);
+    
+    // Test Information
+    summarySheet.addRow(['Test Information']).font = { bold: true, size: 14 };
+    summarySheet.addRow(['Test Title', testInfo.title]);
+    summarySheet.addRow(['Test ID', testId]);
+    summarySheet.addRow(['Generated On', new Date().toLocaleDateString()]);
+    summarySheet.addRow([]);
+    
+    // Participant Information
+    summarySheet.addRow(['Participant Information']).font = { bold: true, size: 14 };
+    summarySheet.addRow(['Name', sessionData.name]);
+    summarySheet.addRow(['Email', sessionData.email]);
+    summarySheet.addRow(['Phone', sessionData.phone]);
+    summarySheet.addRow(['Test Status', sessionData.session_status]);
+    summarySheet.addRow(['Questions Answered', sessionData.questions_answered]);
+    summarySheet.addRow(['Total Questions', sessionData.total_questions]);
+    summarySheet.addRow(['Overall Score', `${overallPercentage.toFixed(2)}%`]);
+    summarySheet.addRow(['Started At', sessionData.started_at ? new Date(sessionData.started_at).toLocaleString() : 'N/A']);
+    summarySheet.addRow(['Completed At', sessionData.completed_at ? new Date(sessionData.completed_at).toLocaleString() : 'N/A']);
+    
+    // Auto-fit columns
+    summarySheet.columns = [
+      { width: 25 },
+      { width: 40 }
+    ];
+    
+    // 2. Category Results Sheet
     const categorySheet = workbook.addWorksheet('Category Results');
-    categorySheet.addRow(['Category Name', 'Questions', 'Marks Obtained', 'Max Marks', 'Percentage']);
+    
+    // Add headers with styling
+    const categoryHeaders = categorySheet.addRow([
+      'Category Name', 
+      'Total Subcategories',
+      'Total Questions', 
+      'Marks Obtained', 
+      'Max Possible Marks', 
+      'Average Percentage (%)'
+    ]);
+    categoryHeaders.font = { bold: true };
+    categoryHeaders.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE2E8F0' }
+    };
     
     categoryResults.rows.forEach(cat => {
-      categorySheet.addRow([
+      const row = categorySheet.addRow([
         cat.category_name,
+        cat.total_subcategories,
         cat.total_questions,
         cat.total_marks_obtained,
         cat.max_possible_marks,
         parseFloat(cat.average_percentage).toFixed(2)
       ]);
+      
+      // Color code based on percentage
+      const percentage = parseFloat(cat.average_percentage);
+      if (percentage >= 80) {
+        row.getCell(6).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD1FAE5' } };
+      } else if (percentage >= 60) {
+        row.getCell(6).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } };
+      } else {
+        row.getCell(6).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFECACA' } };
+      }
     });
     
-    // Subcategory Results Sheet
+    categorySheet.columns = [
+      { width: 30 }, { width: 18 }, { width: 16 }, { width: 16 }, { width: 18 }, { width: 20 }
+    ];
+    
+    // 3. Subcategory Results Sheet
     const subcategorySheet = workbook.addWorksheet('Subcategory Results');
-    subcategorySheet.addRow(['Subcategory Name', 'Category', 'Questions', 'Marks Obtained', 'Max Marks', 'Percentage']);
+    
+    const subcategoryHeaders = subcategorySheet.addRow([
+      'Category', 
+      'Subcategory Name', 
+      'Questions', 
+      'Marks Obtained', 
+      'Max Possible Marks', 
+      'Percentage (%)'
+    ]);
+    subcategoryHeaders.font = { bold: true };
+    subcategoryHeaders.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE2E8F0' }
+    };
     
     subcategoryResults.rows.forEach(sub => {
-      subcategorySheet.addRow([
-        sub.subcategory_name,
+      const row = subcategorySheet.addRow([
         sub.category_name,
+        sub.subcategory_name,
         sub.total_questions,
         sub.total_marks_obtained,
         sub.max_possible_marks,
         parseFloat(sub.percentage_score).toFixed(2)
       ]);
+      
+      // Color code based on percentage
+      const percentage = parseFloat(sub.percentage_score);
+      if (percentage >= 80) {
+        row.getCell(6).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD1FAE5' } };
+      } else if (percentage >= 60) {
+        row.getCell(6).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } };
+      } else {
+        row.getCell(6).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFECACA' } };
+      }
     });
+    
+    subcategorySheet.columns = [
+      { width: 25 }, { width: 30 }, { width: 12 }, { width: 16 }, { width: 18 }, { width: 16 }
+    ];
+    
+    // 4. Question-wise Results Sheet with Category/Subcategory Structure
+    if (questionResults.rows.length > 0) {
+      const questionSheet = workbook.addWorksheet('Question-wise Results');
+      
+      // Group questions by category and subcategory
+      const questionsByCategory = {};
+      questionResults.rows.forEach(q => {
+        if (!questionsByCategory[q.category_name]) {
+          questionsByCategory[q.category_name] = {};
+        }
+        if (!questionsByCategory[q.category_name][q.subcategory_name]) {
+          questionsByCategory[q.category_name][q.subcategory_name] = [];
+        }
+        questionsByCategory[q.category_name][q.subcategory_name].push(q);
+      });
+
+      let currentRow = 1;
+
+      Object.entries(questionsByCategory).forEach(([categoryName, subcategories]) => {
+        // Category Header
+        const categoryHeaderRow = questionSheet.addRow([`CATEGORY: ${categoryName}`]);
+        categoryHeaderRow.font = { bold: true, size: 14 };
+        categoryHeaderRow.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF3B82F6' }
+        };
+        categoryHeaderRow.getCell(1).font = { ...categoryHeaderRow.getCell(1).font, color: { argb: 'FFFFFFFF' } };
+        
+        // Merge cells for category header
+        questionSheet.mergeCells(`A${currentRow + 1}:I${currentRow + 1}`);
+        currentRow += 2;
+
+        // Find category results for summary
+        const categoryResult = categoryResults.rows.find(cat => cat.category_name === categoryName);
+        if (categoryResult) {
+          const summaryRow = questionSheet.addRow([
+            'Category Summary:', 
+            `Questions: ${categoryResult.total_questions}`,
+            `Marks: ${categoryResult.total_marks_obtained}/${categoryResult.max_possible_marks}`,
+            `Average: ${parseFloat(categoryResult.average_percentage).toFixed(2)}%`
+          ]);
+          summaryRow.font = { bold: true };
+          summaryRow.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFE0F2FE' }
+          };
+          currentRow += 2;
+        }
+
+        Object.entries(subcategories).forEach(([subcategoryName, questions]) => {
+          // Subcategory Header
+          const subcategoryHeaderRow = questionSheet.addRow([`  SUBCATEGORY: ${subcategoryName}`]);
+          subcategoryHeaderRow.font = { bold: true, size: 12 };
+          subcategoryHeaderRow.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF10B981' }
+          };
+          subcategoryHeaderRow.getCell(1).font = { ...subcategoryHeaderRow.getCell(1).font, color: { argb: 'FFFFFFFF' } };
+          
+          // Merge cells for subcategory header
+          questionSheet.mergeCells(`A${currentRow + 1}:I${currentRow + 1}`);
+          currentRow += 2;
+
+          // Find subcategory results for summary
+          const subcategoryResult = subcategoryResults.rows.find(sub => 
+            sub.category_name === categoryName && sub.subcategory_name === subcategoryName
+          );
+          if (subcategoryResult) {
+            const subSummaryRow = questionSheet.addRow([
+              '  Subcategory Summary:', 
+              `Questions: ${subcategoryResult.total_questions}`,
+              `Marks: ${subcategoryResult.total_marks_obtained}/${subcategoryResult.max_possible_marks}`,
+              `Percentage: ${parseFloat(subcategoryResult.percentage_score).toFixed(2)}%`
+            ]);
+            subSummaryRow.font = { bold: true };
+            subSummaryRow.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFD1FAE5' }
+            };
+            currentRow += 2;
+          }
+
+          // Question Headers
+          const questionHeaders = questionSheet.addRow([
+            'Q. No.',
+            'Question Text',
+            'Selected',
+            'Answer Text',
+            'Marks',
+            'Max',
+            'Performance',
+            'Time (sec)',
+            'Status'
+          ]);
+          questionHeaders.font = { bold: true };
+          questionHeaders.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFE2E8F0' }
+          };
+          currentRow++;
+
+          // Questions
+          questions.forEach(q => {
+            const performance = (q.marks_obtained / 5) * 100;
+            let status = 'Poor';
+            if (performance >= 80) status = 'Excellent';
+            else if (performance >= 60) status = 'Good';
+            else if (performance >= 40) status = 'Average';
+
+            const row = questionSheet.addRow([
+              q.question_order,
+              q.question_text,
+              q.selected_option_label,
+              q.selected_option_text,
+              q.marks_obtained,
+              5,
+              `${performance.toFixed(1)}%`,
+              q.time_taken || 'N/A',
+              status
+            ]);
+            
+            // Color code marks based on performance
+            const marksCell = row.getCell(5);
+            const statusCell = row.getCell(9);
+            if (q.marks_obtained >= 4) {
+              marksCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD1FAE5' } };
+              statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD1FAE5' } };
+            } else if (q.marks_obtained >= 3) {
+              marksCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } };
+              statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } };
+            } else {
+              marksCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFECACA' } };
+              statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFECACA' } };
+            }
+            currentRow++;
+          });
+
+          // Add spacing between subcategories
+          questionSheet.addRow([]);
+          currentRow++;
+        });
+
+        // Add spacing between categories
+        questionSheet.addRow([]);
+        currentRow++;
+      });
+      
+      questionSheet.columns = [
+        { width: 8 }, { width: 60 }, { width: 10 }, { width: 20 }, 
+        { width: 8 }, { width: 6 }, { width: 12 }, { width: 12 }, { width: 12 }
+      ];
+    }
     
     const buffer = await workbook.xlsx.writeBuffer();
     
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename="participant_${participantId}_results.xlsx"`);
+    const safeFileName = sessionData.name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}_detailed_test_results.xlsx"`);
     res.send(buffer);
     
   } catch (error) {
@@ -3137,18 +3603,19 @@ export const exportParticipantExcel = async (req, res) => {
   }
 };
 
-// Export participant results as CSV
 export const exportParticipantCSV = async (req, res) => {
-  const {  participantId } = req.params;
+  const { participantId } = req.params;
   const testId = req.params.id;
   const adminId = req.user.id;
   
   try {
-    // Get participant data (similar to other exports)
-    const testCheck = await pool.query('SELECT id FROM tests WHERE id = $1 AND created_by = $2', [testId, adminId]);
+    // Get participant data (same as other exports)
+    const testCheck = await pool.query('SELECT id, title FROM tests WHERE id = $1 AND created_by = $2', [testId, adminId]);
     if (testCheck.rows.length === 0) {
       return res.status(404).json({ message: 'Test not found' });
     }
+    
+    const testInfo = testCheck.rows[0];
     
     const sessionQuery = `
       SELECT ts.*, u.name, u.email, u.phone
@@ -3165,6 +3632,17 @@ export const exportParticipantCSV = async (req, res) => {
     
     const sessionData = sessionResult.rows[0];
     
+    // Get all results data
+    const categoryQuery = `
+      SELECT 
+        cr.*,
+        tc.name as category_name
+      FROM category_results cr
+      JOIN test_categories tc ON cr.category_id = tc.id
+      WHERE cr.session_id = $1
+      ORDER BY tc.display_order
+    `;
+    
     const subcategoryQuery = `
       SELECT 
         sr.*,
@@ -3176,18 +3654,174 @@ export const exportParticipantCSV = async (req, res) => {
       WHERE sr.session_id = $1
       ORDER BY tc.display_order, tsc.display_order
     `;
+
+    const questionResultsQuery = `
+      SELECT 
+        ur.question_id,
+        ur.marks_obtained,
+        ur.selected_option_label,
+        ur.time_taken,
+        tq.question_text,
+        tq.question_order,
+        tc.name as category_name,
+        tsc.name as subcategory_name,
+        fqo.option_text as selected_option_text
+      FROM user_responses ur
+      JOIN test_questions tq ON ur.question_id = tq.id
+      JOIN test_categories tc ON ur.category_id = tc.id
+      JOIN test_subcategories tsc ON ur.subcategory_id = tsc.id
+      JOIN fixed_question_options fqo ON ur.selected_option_id = fqo.id
+      WHERE ur.session_id = $1
+      ORDER BY tq.question_order
+    `;
     
-    const subcategoryResults = await pool.query(subcategoryQuery, [sessionData.id]);
+    const [categoryResults, subcategoryResults, questionResults] = await Promise.all([
+      pool.query(categoryQuery, [sessionData.id]),
+      pool.query(subcategoryQuery, [sessionData.id]),
+      pool.query(questionResultsQuery, [sessionData.id])
+    ]);
+
+    // Calculate overall percentage
+    const overallPercentage = categoryResults.rows.length > 0 
+      ? categoryResults.rows.reduce((sum, cat) => sum + parseFloat(cat.average_percentage), 0) / categoryResults.rows.length
+      : 0;
+
+    // Build CSV content with multiple sections
+    let csvContent = '';
     
-    let csvContent = 'Category,Subcategory,Questions,Marks Obtained,Max Marks,Percentage\n';
+    // Header Section
+    csvContent += '"TEST RESULTS REPORT"\n';
+    csvContent += '"Generated on:","' + new Date().toLocaleDateString() + '"\n';
+    csvContent += '\n';
     
-    subcategoryResults.rows.forEach(sub => {
-      csvContent += `"${sub.category_name}","${sub.subcategory_name}",${sub.total_questions},${sub.total_marks_obtained},${sub.max_possible_marks},${parseFloat(sub.percentage_score).toFixed(2)}\n`;
+    // Test Information Section
+    csvContent += '"TEST INFORMATION"\n';
+    csvContent += '"Test Title","' + testInfo.title.replace(/"/g, '""') + '"\n';
+    csvContent += '"Test ID","' + testId + '"\n';
+    csvContent += '\n';
+    
+    // Participant Information Section
+    csvContent += '"PARTICIPANT INFORMATION"\n';
+    csvContent += '"Name","' + sessionData.name.replace(/"/g, '""') + '"\n';
+    csvContent += '"Email","' + sessionData.email + '"\n';
+    csvContent += '"Phone","' + sessionData.phone + '"\n';
+    csvContent += '"Test Status","' + sessionData.session_status + '"\n';
+    csvContent += '"Questions Answered","' + sessionData.questions_answered + '"\n';
+    csvContent += '"Total Questions","' + sessionData.total_questions + '"\n';
+    csvContent += '"Overall Score","' + overallPercentage.toFixed(2) + '%"\n';
+    csvContent += '"Started At","' + (sessionData.started_at ? new Date(sessionData.started_at).toLocaleString() : 'N/A') + '"\n';
+    csvContent += '"Completed At","' + (sessionData.completed_at ? new Date(sessionData.completed_at).toLocaleString() : 'N/A') + '"\n';
+    csvContent += '\n';
+    
+    // Category Results Section
+    csvContent += '"CATEGORY RESULTS"\n';
+    csvContent += '"Category Name","Total Subcategories","Total Questions","Marks Obtained","Max Possible Marks","Average Percentage (%)"\n';
+    
+    categoryResults.rows.forEach(cat => {
+      csvContent += `"${cat.category_name.replace(/"/g, '""')}","${cat.total_subcategories}","${cat.total_questions}","${cat.total_marks_obtained}","${cat.max_possible_marks}","${parseFloat(cat.average_percentage).toFixed(2)}"\n`;
     });
     
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="participant_${participantId}_results.csv"`);
-    res.send(csvContent);
+    csvContent += '\n';
+    
+    // Subcategory Results Section
+    csvContent += '"SUBCATEGORY RESULTS"\n';
+    csvContent += '"Category","Subcategory Name","Questions","Marks Obtained","Max Possible Marks","Percentage (%)"\n';
+    
+    subcategoryResults.rows.forEach(sub => {
+      csvContent += `"${sub.category_name.replace(/"/g, '""')}","${sub.subcategory_name.replace(/"/g, '""')}","${sub.total_questions}","${sub.total_marks_obtained}","${sub.max_possible_marks}","${parseFloat(sub.percentage_score).toFixed(2)}"\n`;
+    });
+    
+    csvContent += '\n';
+    
+    // Question-wise Results Section with Category Structure
+    if (questionResults.rows.length > 0) {
+      csvContent += '"DETAILED QUESTION-WISE RESULTS"\n';
+      csvContent += '\n';
+
+      // Group questions by category and subcategory
+      const questionsByCategory = {};
+      questionResults.rows.forEach(q => {
+        if (!questionsByCategory[q.category_name]) {
+          questionsByCategory[q.category_name] = {};
+        }
+        if (!questionsByCategory[q.category_name][q.subcategory_name]) {
+          questionsByCategory[q.category_name][q.subcategory_name] = [];
+        }
+        questionsByCategory[q.category_name][q.subcategory_name].push(q);
+      });
+
+      Object.entries(questionsByCategory).forEach(([categoryName, subcategories]) => {
+        csvContent += `"CATEGORY: ${categoryName.replace(/"/g, '""')}"\n`;
+        
+        // Find category results for summary
+        const categoryResult = categoryResults.rows.find(cat => cat.category_name === categoryName);
+        if (categoryResult) {
+          csvContent += `"Category Summary","Questions: ${categoryResult.total_questions}","Marks: ${categoryResult.total_marks_obtained}/${categoryResult.max_possible_marks}","Average: ${parseFloat(categoryResult.average_percentage).toFixed(2)}%"\n`;
+        }
+        csvContent += '\n';
+
+        Object.entries(subcategories).forEach(([subcategoryName, questions]) => {
+          csvContent += `"  SUBCATEGORY: ${subcategoryName.replace(/"/g, '""')}"\n`;
+          
+          // Find subcategory results for summary
+          const subcategoryResult = subcategoryResults.rows.find(sub => 
+            sub.category_name === categoryName && sub.subcategory_name === subcategoryName
+          );
+          if (subcategoryResult) {
+            csvContent += `"  Subcategory Summary","Questions: ${subcategoryResult.total_questions}","Marks: ${subcategoryResult.total_marks_obtained}/${subcategoryResult.max_possible_marks}","Percentage: ${parseFloat(subcategoryResult.percentage_score).toFixed(2)}%"\n`;
+          }
+          csvContent += '\n';
+
+          // Question headers
+          csvContent += '"Q. No.","Question Text","Selected","Answer Text","Marks","Max","Performance %","Time (sec)","Status"\n';
+          
+          questions.forEach(q => {
+            const questionText = q.question_text.replace(/"/g, '""').replace(/\n/g, ' ').replace(/\r/g, ' ');
+            const answerText = q.selected_option_text.replace(/"/g, '""');
+            const performance = (q.marks_obtained / 5) * 100;
+            let status = 'Poor';
+            if (performance >= 80) status = 'Excellent';
+            else if (performance >= 60) status = 'Good';
+            else if (performance >= 40) status = 'Average';
+            
+            csvContent += `"${q.question_order}","${questionText}","${q.selected_option_label}","${answerText}","${q.marks_obtained}","5","${performance.toFixed(1)}%","${q.time_taken || 'N/A'}","${status}"\n`;
+          });
+
+          csvContent += '\n';
+        });
+
+        csvContent += '\n';
+      });
+
+      // Summary Statistics
+      csvContent += '"PERFORMANCE ANALYSIS"\n';
+      
+      // Calculate performance stats
+      const totalQuestions = questionResults.rows.length;
+      const excellentQuestions = questionResults.rows.filter(q => q.marks_obtained >= 4).length;
+      const goodQuestions = questionResults.rows.filter(q => q.marks_obtained === 3).length;
+      const poorQuestions = questionResults.rows.filter(q => q.marks_obtained <= 2).length;
+      
+      csvContent += `"Total Questions","${totalQuestions}"\n`;
+      csvContent += `"Excellent Performance (4-5 marks)","${excellentQuestions}","${((excellentQuestions/totalQuestions)*100).toFixed(1)}%"\n`;
+      csvContent += `"Good Performance (3 marks)","${goodQuestions}","${((goodQuestions/totalQuestions)*100).toFixed(1)}%"\n`;
+      csvContent += `"Needs Improvement (1-2 marks)","${poorQuestions}","${((poorQuestions/totalQuestions)*100).toFixed(1)}%"\n`;
+      
+      // Average time per question
+      const totalTime = questionResults.rows.reduce((sum, q) => sum + (q.time_taken || 0), 0);
+      const avgTime = totalTime / totalQuestions;
+      csvContent += `"Average Time per Question","${avgTime.toFixed(1)} seconds"\n`;
+    }
+    
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${sessionData.name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}_detailed_results.csv"`
+    );
+
+    // Send BOM + CSV together in one go
+    res.send('\ufeff' + csvContent);
+
     
   } catch (error) {
     console.error('Error generating CSV:', error);
