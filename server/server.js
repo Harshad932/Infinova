@@ -29,6 +29,8 @@ app.use(
   })
 );
 
+// app.use(cors());
+
 // Middleware to parse JSON bodies
 app.use(express.json());   
 
@@ -58,7 +60,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/user', userRoutes);
 
 try {
-  app.listen(PORT, () => {
+  app.listen(PORT,() => {
   console.log(`✅ Server is running on http://localhost:${PORT}`);
 });
 
