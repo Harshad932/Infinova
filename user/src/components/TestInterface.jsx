@@ -444,7 +444,7 @@ const handleAbandonTest = async () => {
           <div className={styles["error-icon"]}>⚠️</div>
           <h2>Error</h2>
           <p>{error}</p>
-          <button onClick={() => navigate('/login')} className={styles["error-button"]}>
+          <button onClick={() => navigate('/')} className={styles["error-button"]}>
             Go Back
           </button>
         </div>
